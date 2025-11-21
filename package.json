@@ -1,18 +1,22 @@
 {
-  "name": "tsdown-starter",
+  "name": "@nmi-agro/rvo-connector",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
+  "description": "A client to connect to RVO webservices for agricultural information.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/author/library#readme",
+  "homepage": "https://github.com/AgroCares/rvo-connector#readme",
   "bugs": {
-    "url": "https://github.com/author/library/issues"
+    "url": "https://github.com/AgroCares/rvo-connector/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/author/library.git"
+    "url": "git+https://github.com/AgroCares/rvo-connector.git"
   },
-  "author": "Author Name <author.name@mail.com>",
+  "author": {
+    "name": "Sven Verweij",
+    "email": "37927107+SvenVw@users.noreply.github.com",
+    "url": "https://github.com/SvenVw"
+  },
   "files": [
     "dist"
   ],
@@ -28,13 +32,36 @@
     "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "lint:fix-suggest": "oxlint --type-aware --fix-suggestions",
+    "lint:fix-suggest-unsafe": "oxlint --type-aware --fix --fix-suggestions",
+    "format": "oxfmt",
     "prepublishOnly": "pnpm run build"
   },
+  "keywords": [
+    "NMI",
+    "RVO",
+    "The Netherlands",
+    "agriculture",
+    "webservices",
+    "bedrijfspercelen",
+    "xml",
+    "soap",
+    "oauth2"
+  ],
   "devDependencies": {
     "@types/node": "^24.10.1",
     "bumpp": "^10.3.1",
+    "oxfmt": "^0.14.0",
+    "oxlint": "^1.29.0",
     "tsdown": "^0.16.4",
     "typescript": "^5.9.3",
     "vitest": "^4.0.9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
