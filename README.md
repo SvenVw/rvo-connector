@@ -178,8 +178,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 ## Configuration Options
 
 | Option | Type | Description |
-| basic | --- | --- |
-| `environment` | `'acceptance' \| 'production'` | Selects RVO endpoints. Defaults to `'acceptance'`. |
+|---|---|---|
 | `authMode` | `'TVS' \| 'ABA'` | Authentication method. Defaults to `'TVS'`. |
 | `clientId` | `string` | **Required**. Your organization's Client ID (e.g., OIN). |
 | `clientName` | `string` | **Required**. Your organization's name, used for Issuer and Sender in SOAP. |
