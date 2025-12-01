@@ -142,6 +142,25 @@ const abaClient = new RvoClient({
 await abaClient.opvragenBedrijfspercelen({ ... });
 ```
 
+## Examples
+
+This project includes example scripts to demonstrate how to connect to RVO services using both ABA and TVS authentication.
+
+### Running Examples
+
+1.  Ensure you have configured your `.env` file as described in the "Development & Testing" section.
+2.  Run the example scripts using `tsdown`:
+
+    **ABA Authentication (Username/Password):**
+    ```bash
+    npx tsdown examples/request-bedrijfspercelen-aba.ts
+    ```
+
+    **TVS Authentication (eHerkenning/OAuth2):**
+    ```bash
+    npx tsdown examples/request-bedrijfspercelen-tvs.ts
+    ```
+
 ## Configuration Options
 
 | Option | Type | Description |
