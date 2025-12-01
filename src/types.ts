@@ -22,10 +22,8 @@ export interface RvoClientConfig {
   /** Environment to use for RVO services. Defaults to 'acceptance'. */
   environment?: "production" | "acceptance"
 
-  /** ID of the Issuer (e.g., your organization's code). */
-  issuerId?: string
-  /** ID of the Sender (e.g., your organization's code). */
-  senderId?: string
+  /** ID of the Client (e.g., your organization's code). This ID will be used for both Issuer and Sender in SOAP requests. */
+  clientId: string
 
   tvs?: RvoAuthTvsConfig
   aba?: RvoAuthAbaConfig

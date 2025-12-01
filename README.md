@@ -25,7 +25,7 @@ yarn add @nmi-agro/rvo-connector
 
 ### 1. Initialization
 
-First, instantiate the `RvoClient`. You must provide the `issuerId` and `senderId` (typically your organization's reference/OIN) and the target `environment`.
+First, instantiate the `RvoClient`. You must provide the `clientId` (typically your organization's reference/OIN) and the target `environment`. This `clientId` will be used for both the Issuer and Sender in SOAP requests.
 
 ```typescript
 import { RvoClient } from '@nmi-agro/rvo-connector';
@@ -34,9 +34,8 @@ const client = new RvoClient({
   // 'acceptance' or 'production'
   environment: 'acceptance', 
   
-  // Your organization's identifiers
-  issuerId: 'YOUR_ISSUER_ID',
-  senderId: 'YOUR_SENDER_ID',
+  // Your organization's identifier, used for both Issuer and Sender
+  clientId: 'YOUR_CLIENT_ID',
 
   // Configure Authentication Modes
   authMode: 'TVS', // 'TVS' (default) or 'ABA'
@@ -119,8 +118,7 @@ If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The 
 const abaClient = new RvoClient({
   authMode: 'ABA',
   environment: 'production',
-  issuerId: '...',
-  senderId: '...',
+  clientId: 'YOUR_CLIENT_ID',
   aba: {
     username: 'user',
     password: 'password'
@@ -137,8 +135,7 @@ await abaClient.opvragenBedrijfspercelen({ ... });
 | basic | --- | --- |
 | `environment` | `'acceptance' \| 'production'` | Selects RVO endpoints. Defaults to `'acceptance'`. |
 | `authMode` | `'TVS' \| 'ABA'` | Authentication method. Defaults to `'TVS'`. |
-| `issuerId` | `string` | **Required**. Your organization's Issuer ID. |
-| `senderId` | `string` | **Required**. Your organization's Sender ID. |
+| `clientId` | `string` | **Required**. Your organization's Client ID, used for both Issuer and Sender. |
 | `tvs` | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`. |
 | `aba` | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`. |
 

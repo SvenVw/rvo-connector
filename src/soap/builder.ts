@@ -26,12 +26,12 @@ export function buildBedrijfspercelenRequest(
 
   if (!params.issuerId) {
     throw new Error(
-      'Issuer ID is required for the SOAP request. Please configure "issuerId" in the client options.',
+      'Client ID is required for the SOAP request. Please configure "clientId" in the client options.',
     )
   }
   if (!params.senderId) {
     throw new Error(
-      'Sender ID is required for the SOAP request. Please configure "senderId" in the client options.',
+      'Client ID is required for the SOAP request. Please configure "clientId" in the client options.',
     )
   }
 

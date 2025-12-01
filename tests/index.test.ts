@@ -18,9 +18,6 @@ vi.mock("fs", () => ({
 const ABA_USERNAME = process.env.ABA_USERNAME
 const ABA_PASSWORD = process.env.ABA_PASSWORD
 const TVS_CLIENT_ID = process.env.CLIENT_ID
-const TVS_REDIRECT_URI = process.env.REDIRECT_URI
-const ISSUER_ID = process.env.ISSUER_ID
-const SENDER_ID = process.env.SENDER_ID
 
 describe("RvoClient (Acceptance Environment)", () => {
   beforeAll(() => {
@@ -29,8 +26,6 @@ describe("RvoClient (Acceptance Environment)", () => {
     if (!ABA_PASSWORD) missingEnvVars.push("ABA_PASSWORD")
     if (!TVS_CLIENT_ID) missingEnvVars.push("CLIENT_ID")
     if (!TVS_REDIRECT_URI) missingEnvVars.push("REDIRECT_URI")
-    if (!ISSUER_ID) missingEnvVars.push("ISSUER_ID")
-    if (!SENDER_ID) missingEnvVars.push("SENDER_ID")
 
     if (missingEnvVars.length > 0) {
       throw new Error(
@@ -50,8 +45,7 @@ describe("RvoClient (Acceptance Environment)", () => {
       const client = new RvoClient({
         authMode: "ABA",
         environment: "acceptance",
-        issuerId: ISSUER_ID!,
-        senderId: SENDER_ID!,
+        clientId: TVS_CLIENT_ID!,
         aba: {
           username: ABA_USERNAME!,
           password: ABA_PASSWORD!,
@@ -67,8 +61,7 @@ describe("RvoClient (Acceptance Environment)", () => {
 
       expect(url).toBe("https://edicrop-acc.agro.nl/edicrop/EdiCropService")
       expect(data).toContain(`<Username>${ABA_USERNAME}</Username>`)
-      expect(data).toContain(`<exc:ID>${ISSUER_ID}</exc:ID>`)
-      expect(data).toContain(`<exc:ID>${SENDER_ID}</exc:ID>`)
+      expect(data).toContain(`<exc:ID>${TVS_CLIENT_ID}</exc:ID>`)
     })
   })
 
@@ -83,8 +76,7 @@ describe("RvoClient (Acceptance Environment)", () => {
       const client = new RvoClient({
         authMode: "TVS",
         environment: "acceptance",
-        issuerId: ISSUER_ID!,
-        senderId: SENDER_ID!,
+        clientId: TVS_CLIENT_ID!,
         tvs: tvsConfig,
       })
       client.setAccessToken("fake-access-token")
