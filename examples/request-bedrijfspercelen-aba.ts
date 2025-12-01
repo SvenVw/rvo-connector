@@ -39,9 +39,9 @@ async function main() {
     '\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ',
     async (farmId) => {
       rl.question(
-        '\nChoose output format (xml/geojson) [default: xml]: ',
+        '\nChoose output format (xml/geojson) [default: geojson]: ',
         async (formatRaw) => {
-          const format = (formatRaw.trim().toLowerCase() || 'xml') as 'xml' | 'geojson';
+          const format = (formatRaw.trim().toLowerCase() || 'geojson') as 'xml' | 'geojson';
 
           console.log('\nFetching Bedrijfspercelen...');
           try {
