@@ -2,45 +2,34 @@ name: Publish to npm
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # For pnpm/action-setup to create a cache
+      id-token: write # Required for trusted publishing
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-folder
-          path: dist
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org/
-          cache: 'pnpm'
-      - uses: actions/download-artifact@v4
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
         with:
-          name: dist-folder
-          path: dist
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm publish --no-git-checks
+          version: 8
+          run_install: true
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
