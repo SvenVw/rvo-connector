@@ -2,6 +2,7 @@ import xml2js from 'xml2js';
 import type { RvoClientConfig, BedrijfspercelenOptions, BedrijfspercelenResponse, RvoAuthTvsConfig, RvoTokenResponse } from './types';
 import { TvsAuth } from './auth/tvs';
 import { buildBedrijfspercelenRequest } from './soap/builder';
+import { transformBedrijfspercelenToGeoJSON } from './transformers/bedrijfspercelen';
 
 // Default Endpoints for different environments
 const ENDPOINTS = {
@@ -210,8 +211,15 @@ export class RvoClient {
         throw new Error(`Request failed: ${response.status} - ${responseText}`)
       }
 
-      const parser = new xml2js.Parser({ explicitArray: false })
+      const parser = new xml2js.Parser({
+        explicitArray: false,
+        tagNameProcessors: [xml2js.processors.stripPrefix],
+      })
       const result = await parser.parseStringPromise(responseText)
+
+      if (options.outputFormat === "geojson") {
+        return transformBedrijfspercelenToGeoJSON(result)
+      }
 
       return result
     } catch (error: any) {

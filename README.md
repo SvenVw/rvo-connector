@@ -24,6 +24,7 @@ Before using this package, ensure you have completed the following steps with RV
 * **Environment Handling**: Built-in support for `acceptance` and `production` environments with automatic endpoint selection.
 * **Type Safety**: Written in TypeScript with full type definitions.
 * **SOAP Integration**: Automates XML request building and response parsing for RVO's SOAP services.
+* **GeoJSON Output**: Optionally convert `opvragenBedrijfspercelen` responses to standardized GeoJSON format (WGS84) for easy mapping and spatial analysis.
 
 ## Installation
 
@@ -113,13 +114,21 @@ Fetch data from RVO services. The client handles the SOAP envelope, security hea
 
 ```typescript
 try {
+  // Example 1: Get raw XML response (default)
   const result = await client.opvragenBedrijfspercelen({
-    farmId: 'KVK_NUMBER', // Optional: Query for a specific farm
+    farmId: 'KVK_NUMBER',
     periodBeginDate: '2024-01-01',
     periodEndDate: '2025-01-01'
   });
-  
-  console.log('Crop Data:', result);
+  console.log('Raw XML Data:', result);
+
+  // Example 2: Get as GeoJSON (reprojected to WGS84)
+  const geoJsonResult = await client.opvragenBedrijfspercelen({
+    farmId: 'KVK_NUMBER',
+    outputFormat: 'geojson'
+  });
+  console.log('GeoJSON Data:', geoJsonResult);
+
 } catch (error) {
   console.error('Error fetching data:', error);
 }
@@ -176,6 +185,15 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `clientName` | `string` | **Required**. Your organization's name, used for Issuer and Sender in SOAP. |
 | `tvs` | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`. |
 | `aba` | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`. |
+
+### Method Options: `opvragenBedrijfspercelen`
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `farmId` | `string` | Optional. KvK/BSN to query. |
+| `periodBeginDate` | `string` | Start date (YYYY-MM-DD). |
+| `periodEndDate` | `string` | End date (YYYY-MM-DD). |
+| `outputFormat` | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326). |
 
 ## Development & Testing
 

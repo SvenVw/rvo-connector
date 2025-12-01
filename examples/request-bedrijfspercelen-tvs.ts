@@ -63,18 +63,26 @@ async function main() {
         rl.question(
           '\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ',
           async (farmId) => {
-            console.log('\n3. Fetching Bedrijfspercelen...');
-            try {
-              const result = await client.opvragenBedrijfspercelen({
-                farmId: farmId.trim() || undefined,
-              });
-              console.log('\nSuccessfully fetched Bedrijfspercelen:');
-              console.log(JSON.stringify(result, null, 2));
-            } catch (error) {
-              console.error('\nFailed to fetch Bedrijfspercelen:', error);
-            } finally {
-              rl.close();
-            }
+            rl.question(
+              '\nChoose output format (xml/geojson) [default: xml]: ',
+              async (formatRaw) => {
+                const format = (formatRaw.trim().toLowerCase() || 'xml') as 'xml' | 'geojson';
+
+                console.log('\n3. Fetching Bedrijfspercelen...');
+                try {
+                  const result = await client.opvragenBedrijfspercelen({
+                    farmId: farmId.trim() || undefined,
+                    outputFormat: format,
+                  });
+                  console.log('\nSuccessfully fetched Bedrijfspercelen:');
+                  console.log(JSON.stringify(result, null, 2));
+                } catch (error) {
+                  console.error('\nFailed to fetch Bedrijfspercelen:', error);
+                } finally {
+                  rl.close();
+                }
+              }
+            );
           }
         );
       } catch (error) {

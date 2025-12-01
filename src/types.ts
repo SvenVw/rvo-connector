@@ -1,3 +1,5 @@
+import type { FeatureCollection } from "geojson"
+
 /**
  * Configuration for TVS (OAuth 2.0 / eHerkenning) authentication.
  */
@@ -90,15 +92,34 @@ export interface BedrijfspercelenOptions {
    * @default 'Current Year+2-01-01'
    */
   periodEndDate?: string
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'geojson'`: Converts the response to a GeoJSON FeatureCollection (always projected to WGS84 / EPSG:4326).
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "geojson"
 }
 
 /**
  * Generic interface for the parsed XML response from Bedrijfspercelen service.
  * The structure depends on the SOAP response.
  */
-export interface BedrijfspercelenResponse {
+export interface BedrijfspercelenXmlResponse {
   [key: string]: any
 }
+
+/**
+ * GeoJSON output for Bedrijfspercelen.
+ */
+export type BedrijfspercelenGeoJSONResponse = FeatureCollection
+
+/**
+ * Union type for the response of `opvragenBedrijfspercelen`.
+ */
+export type BedrijfspercelenResponse =
+  | BedrijfspercelenXmlResponse
+  | BedrijfspercelenGeoJSONResponse
 
 /**
  * Response from the RVO OAuth 2.0 Token Endpoint.
