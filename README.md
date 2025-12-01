@@ -1,5 +1,7 @@
 # @nmi-agro/rvo-connector
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SvenVw/rvo-connector)
+
 A TypeScript client library for connecting to RVO (Rijksdienst voor Ondernemend Nederland) webservices to exchange agricultural data. This package simplifies the process of making API calls for services like `OpvragenBedrijfspercelen` using either ABA (username/password) or TVS (OAuth2/eHerkenning) authentication.
 
 ## Disclaimer
