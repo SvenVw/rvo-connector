@@ -10,20 +10,20 @@ This package is **not officially supported by RVO**. It is developed and maintai
 
 Before using this package, ensure you have completed the following steps with RVO:
 
-1.  **Account & Connection**: Contact RVO to register your organization and request access to the webservices (e.g., EDI-Crop).
-2.  **PKIoverheid Certificate**: You must possess a valid PKIoverheid (PKIO) certificate for authentication, especially when using the TVS (eHerkenning) flow or signing requests.
-3.  **Official Documentation**: For detailed specifications, business rules, and connection procedures, refer to the official RVO documentation:
-    *   [RVO Webservices Documentation](https://www.rvo.nl/onderwerpen/webservices)
-4.  **IP Whitelisting**: Connections to RVO webservices are typically restricted to whitelisted IP addresses. Ensure your public IP address (or the IP address of your server/hosting environment) is registered and whitelisted with RVO. This means that testing and production environments must use whitelisted IPs to establish a connection.
+1. **Account & Connection**: Contact RVO to register your organization and request access to the webservices (e.g., EDI-Crop).
+2. **PKIoverheid Certificate**: You must possess a valid PKIoverheid (PKIO) certificate for authentication, especially when using the TVS (eHerkenning) flow or signing requests.
+3. **Official Documentation**: For detailed specifications, business rules, and connection procedures, refer to the official RVO documentation:
+    * [RVO Webservices Documentation](https://www.rvo.nl/onderwerpen/webservices)
+4. **IP Whitelisting**: Connections to RVO webservices are typically restricted to whitelisted IP addresses. Ensure your public IP address (or the IP address of your server/hosting environment) is registered and whitelisted with RVO. This means that testing and production environments must use whitelisted IPs to establish a connection.
 
 ## Features
 
-- **Authentication Support**:
-  - **ABA**: Direct username/password authentication.
-  - **TVS (OAuth2)**: Full support for eHerkenning flows, including generating authorization URLs and exchanging codes for tokens.
-- **Environment Handling**: Built-in support for `acceptance` and `production` environments with automatic endpoint selection.
-- **Type Safety**: Written in TypeScript with full type definitions.
-- **SOAP Integration**: Automates XML request building and response parsing for RVO's SOAP services.
+* **Authentication Support**:
+  * **ABA**: Direct username/password authentication.
+  * **TVS (OAuth2)**: Full support for eHerkenning flows, including generating authorization URLs and exchanging codes for tokens.
+* **Environment Handling**: Built-in support for `acceptance` and `production` environments with automatic endpoint selection.
+* **Type Safety**: Written in TypeScript with full type definitions.
+* **SOAP Integration**: Automates XML request building and response parsing for RVO's SOAP services.
 
 ## Installation
 
@@ -151,15 +151,17 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ### Running Examples
 
-1.  Ensure you have configured your `.env` file as described in the "Development & Testing" section.
-2.  Run the example scripts using `tsx`:
+1. Ensure you have configured your `.env` file as described in the "Development & Testing" section.
+2. Run the example scripts using `tsx`:
 
     **ABA Authentication (Username/Password):**
+
     ```bash
     npx tsx examples/request-bedrijfspercelen-aba.ts
     ```
 
     **TVS Authentication (eHerkenning/OAuth2):**
+
     ```bash
     npx tsx examples/request-bedrijfspercelen-tvs.ts
     ```
@@ -177,13 +179,15 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ## Development & Testing
 
-To run the tests locally, you need to configure your environment variables. 
+To run the tests locally, you need to configure your environment variables.
 
-1.  Copy the example environment file:
+1. Copy the example environment file:
+
     ```bash
     cp .env.example .env
     ```
-2.  Fill in the `.env` file with your credentials:
+
+2. Fill in the `.env` file with your credentials:
 
     ```dotenv
     # Authentication Settings (Required for running tests)
@@ -195,14 +199,15 @@ To run the tests locally, you need to configure your environment variables.
     PKIO_PRIVATE_KEY=your_pkio_private_key_content_or_path
     ```
 
-    *   `ABA_USERNAME`: Username for ABA authentication.
-    *   `ABA_PASSWORD`: Password for ABA authentication.
-    *   `CLIENT_ID`: Your Client ID / OIN.
-    *   `CLIENT_NAME`: Your Client Name (for SOAP Issuer/Sender).
-    *   `REDIRECT_URI`: The redirect URI registered for your eHerkenning service.
-    *   `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Can be the key string or a path to the key file.
+    * `ABA_USERNAME`: Username for ABA authentication.
+    * `ABA_PASSWORD`: Password for ABA authentication.
+    * `CLIENT_ID`: Your Client ID / OIN.
+    * `CLIENT_NAME`: Your Client Name (for SOAP Issuer/Sender).
+    * `REDIRECT_URI`: The redirect URI registered for your eHerkenning service.
+    * `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Can be the key string or a path to the key file.
 
-3.  Run the tests:
+3. Run the tests:
+
     ```bash
     pnpm test
     ```
