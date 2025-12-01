@@ -1,17 +1,33 @@
 import { v4 as uuidv4 } from "uuid"
 
+/**
+ * Parameters required to build the SOAP request for OpvragenBedrijfspercelen.
+ */
 export interface SoapRequestParams {
+  /** Farm ID to query (optional). */
   farmId?: string
+  /** Start date of the query period. */
   periodBeginDate?: string
+  /** End date of the query period. */
   periodEndDate?: string
+  /** ABA credentials if using ABA authentication. */
   abaCredentials?: {
     username: string
     password?: string
   }
+  /** ID of the Issuer (client). */
   issuerId?: string
+  /** ID of the Sender (client). */
   senderId?: string
 }
 
+/**
+ * Constructs the SOAP XML string for the OpvragenBedrijfspercelen request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
 export function buildBedrijfspercelenRequest(
   params: SoapRequestParams,
 ): string {
