@@ -1,4 +1,3 @@
-import axios from 'axios';
 import xml2js from 'xml2js';
 import type { RvoClientConfig, BedrijfspercelenOptions, BedrijfspercelenResponse, RvoAuthTvsConfig, RvoTokenResponse } from './types';
 import { TvsAuth } from './auth/tvs';
@@ -149,17 +148,23 @@ export class RvoClient {
     }
 
     try {
-      const response = await axios.post(url, soapXml, { headers })
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: soapXml,
+      })
+
+      const responseText = await response.text()
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status} - ${responseText}`)
+      }
 
       const parser = new xml2js.Parser({ explicitArray: false })
-      const result = await parser.parseStringPromise(response.data)
+      const result = await parser.parseStringPromise(responseText)
 
       return result
     } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        const msg = error.response?.data || error.message
-        throw new Error(`Request failed: ${error.response?.status} - ${msg}`)
-      }
       throw error
     }
   }

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
-import axios from "axios"
 import { RvoClient } from "../src/client"
 import "dotenv/config"
 
-vi.mock("axios")
+global.fetch = vi.fn()
+
 vi.mock("jsonwebtoken", () => ({
   default: {
     sign: vi.fn(() => "mocked-jwt"),
@@ -18,6 +18,7 @@ vi.mock("fs", () => ({
 const ABA_USERNAME = process.env.ABA_USERNAME
 const ABA_PASSWORD = process.env.ABA_PASSWORD
 const TVS_CLIENT_ID = process.env.CLIENT_ID
+const TVS_REDIRECT_URI = process.env.REDIRECT_URI
 
 describe("RvoClient (Acceptance Environment)", () => {
   beforeAll(() => {
@@ -52,16 +53,20 @@ describe("RvoClient (Acceptance Environment)", () => {
         },
       })
 
-      ;(axios.post as any).mockResolvedValue({ data: "<xml>response</xml>" })
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => "<xml>response</xml>",
+      })
 
       await client.opvragenBedrijfspercelen({ farmId: "12345678" })
 
-      expect(axios.post).toHaveBeenCalledTimes(1)
-      const [url, data] = (axios.post as any).mock.calls[0]
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, config] = mockFetch.mock.calls[0]
 
       expect(url).toBe("https://edicrop-acc.agro.nl/edicrop/EdiCropService")
-      expect(data).toContain(`<Username>${ABA_USERNAME}</Username>`)
-      expect(data).toContain(`<exc:ID>${TVS_CLIENT_ID}</exc:ID>`)
+      expect(config.body).toContain(`<Username>${ABA_USERNAME}</Username>`)
+      expect(config.body).toContain(`<exc:ID>${TVS_CLIENT_ID}</exc:ID>`)
     })
   })
 
@@ -81,26 +86,29 @@ describe("RvoClient (Acceptance Environment)", () => {
       })
       client.setAccessToken("fake-access-token")
 
-      ;(axios.post as any).mockResolvedValue({ data: "<xml>response</xml>" })
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => "<xml>response</xml>",
+      })
 
       await client.opvragenBedrijfspercelen({ farmId: "87654321" })
 
-      expect(axios.post).toHaveBeenCalledTimes(1)
-      const [url, data, config] = (axios.post as any).mock.calls[0]
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, config] = mockFetch.mock.calls[0]
 
       expect(url).toBe(
         "https://edicrop-acc.agro.nl/edicrop/EdiCrop-WebService/v2",
       )
       expect(config.headers["Authorization"]).toBe("Bearer fake-access-token")
-      expect(data).not.toContain("<UsernameToken>")
+      expect(config.body).not.toContain("<UsernameToken>")
     })
 
     it("getAuthorizationUrl should return acceptance URL with correct scopes", () => {
       const client = new RvoClient({
         authMode: "TVS",
         environment: "acceptance",
-        issuerId: ISSUER_ID!,
-        senderId: SENDER_ID!,
+        clientId: TVS_CLIENT_ID!,
         tvs: tvsConfig,
       })
       const authUrl = client.getAuthorizationUrl() // Defaults to 'opvragenBedrijfspercelen'

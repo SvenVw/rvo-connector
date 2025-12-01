@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid"
 import qs from "qs"
-import axios from "axios"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
@@ -70,18 +69,23 @@ export class TvsAuth {
     })
 
     try {
-      const response = await axios.post(tokenEndpoint, requestBody, {
+      const response = await fetch(tokenEndpoint, {
+        method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
+        body: requestBody,
       })
-      return response.data
-    } catch (error: any) {
-      if (axios.isAxiosError(error)) {
+
+      if (!response.ok) {
+        const errorBody = await response.text()
         throw new Error(
-          `Failed to obtain access token: ${error.response?.status} ${JSON.stringify(error.response?.data)}`,
+          `Failed to obtain access token: ${response.status} ${errorBody}`,
         )
       }
+
+      return (await response.json()) as RvoTokenResponse
+    } catch (error: any) {
       throw error
     }
   }
