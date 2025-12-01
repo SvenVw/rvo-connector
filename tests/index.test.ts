@@ -19,6 +19,7 @@ const ABA_USERNAME = process.env.ABA_USERNAME
 const ABA_PASSWORD = process.env.ABA_PASSWORD
 const TVS_CLIENT_ID = process.env.CLIENT_ID
 const TVS_REDIRECT_URI = process.env.REDIRECT_URI
+const PKIO_PRIVATE_KEY = process.env.PKIO_PRIVATE_KEY
 
 describe("RvoClient (Acceptance Environment)", () => {
   beforeAll(() => {
@@ -27,6 +28,7 @@ describe("RvoClient (Acceptance Environment)", () => {
     if (!ABA_PASSWORD) missingEnvVars.push("ABA_PASSWORD")
     if (!TVS_CLIENT_ID) missingEnvVars.push("CLIENT_ID")
     if (!TVS_REDIRECT_URI) missingEnvVars.push("REDIRECT_URI")
+    if (!PKIO_PRIVATE_KEY) missingEnvVars.push("PKIO_PRIVATE_KEY")
 
     if (missingEnvVars.length > 0) {
       throw new Error(
@@ -74,7 +76,7 @@ describe("RvoClient (Acceptance Environment)", () => {
     const tvsConfig = {
       clientId: TVS_CLIENT_ID!,
       redirectUri: TVS_REDIRECT_URI!,
-      privateKey: "test-private-key", // Keep as placeholder or load from file if needed
+      pkioPrivateKey: PKIO_PRIVATE_KEY!,
     }
 
     it("should send a SOAP request with Bearer token to acceptance endpoint", async () => {

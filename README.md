@@ -57,7 +57,7 @@ const client = new RvoClient({
   tvs: {
     clientId: 'YOUR_CLIENT_ID',
     redirectUri: 'https://your-app.com/callback',
-    privateKey: 'YOUR_PRIVATE_KEY_CONTENT_OR_PATH',
+    pkioPrivateKey: 'YOUR_PKIO_PRIVATE_KEY_CONTENT_OR_PATH',
   },
 
   // ABA Configuration (if using ABA)
@@ -151,6 +151,36 @@ await abaClient.opvragenBedrijfspercelen({ ... });
 | `clientId` | `string` | **Required**. Your organization's Client ID, used for both Issuer and Sender. |
 | `tvs` | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`. |
 | `aba` | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`. |
+
+## Development & Testing
+
+To run the tests locally, you need to configure your environment variables. 
+
+1.  Copy the example environment file:
+    ```bash
+    cp .env.example .env
+    ```
+2.  Fill in the `.env` file with your credentials:
+
+    ```dotenv
+    # Authentication Settings (Required for running tests)
+    ABA_USERNAME=your_aba_username
+    ABA_PASSWORD=your_aba_password
+    CLIENT_ID=your_client_id
+    REDIRECT_URI=https://your-app.com/callback
+    PKIO_PRIVATE_KEY=your_pkio_private_key_content_or_path
+    ```
+
+    *   `ABA_USERNAME`: Username for ABA authentication.
+    *   `ABA_PASSWORD`: Password for ABA authentication.
+    *   `CLIENT_ID`: Your Client ID / OIN.
+    *   `REDIRECT_URI`: The redirect URI registered for your eHerkenning service.
+    *   `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Can be the key string or a path to the key file.
+
+3.  Run the tests:
+    ```bash
+    pnpm test
+    ```
 
 ## License
 

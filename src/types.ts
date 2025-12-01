@@ -3,8 +3,8 @@ export interface RvoAuthTvsConfig {
   clientId: string;
   /** Redirect URI registered with RVO */
   redirectUri: string;
-  /** Private key content or path to the key file */
-  privateKey: string;
+  /** Private key from PKIoverheid certificate (content or path to .pem file) */
+  pkioPrivateKey: string;
   /** OAuth2 Authorize Endpoint */
   authorizeEndpoint?: string;
   /** OAuth2 Token Endpoint */

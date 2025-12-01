@@ -35,7 +35,7 @@ export class TvsAuth {
     }
     const now = Math.floor(Date.now() / 1000)
 
-    let privateKey = this.config.privateKey
+    let privateKey = this.config.pkioPrivateKey
     // Check if privateKey is a file path
     if (fs.existsSync(privateKey)) {
       try {
@@ -44,6 +44,8 @@ export class TvsAuth {
         // Ignore error, assume it's a key string if read fails or not a file
       }
     }
+
+    this.validatePrivateKey(privateKey)
 
     const jwtPayload = {
       iss: this.config.clientId,
@@ -87,6 +89,24 @@ export class TvsAuth {
       return (await response.json()) as RvoTokenResponse
     } catch (error: any) {
       throw error
+    }
+  }
+
+  private validatePrivateKey(key: string) {
+    if (!key.includes("PRIVATE KEY")) {
+      if (key.includes("PUBLIC KEY")) {
+        throw new Error(
+          "Invalid PKIO Private Key: It appears you provided a PUBLIC key. Please provide the PRIVATE key.",
+        )
+      }
+      if (key.includes("CERTIFICATE")) {
+        throw new Error(
+          "Invalid PKIO Private Key: It appears you provided a CERTIFICATE. Please provide the PRIVATE key.",
+        )
+      }
+      throw new Error(
+        "Invalid PKIO Private Key format. Expected a PEM-formatted private key (containing '-----BEGIN ... PRIVATE KEY-----').",
+      )
     }
   }
 }
