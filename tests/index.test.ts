@@ -18,6 +18,7 @@ vi.mock("fs", () => ({
 const ABA_USERNAME = process.env.ABA_USERNAME
 const ABA_PASSWORD = process.env.ABA_PASSWORD
 const TVS_CLIENT_ID = process.env.CLIENT_ID
+const TVS_CLIENT_NAME = process.env.CLIENT_NAME
 const TVS_REDIRECT_URI = process.env.REDIRECT_URI
 const PKIO_PRIVATE_KEY = process.env.PKIO_PRIVATE_KEY
 
@@ -27,6 +28,7 @@ describe("RvoClient (Acceptance Environment)", () => {
     if (!ABA_USERNAME) missingEnvVars.push("ABA_USERNAME")
     if (!ABA_PASSWORD) missingEnvVars.push("ABA_PASSWORD")
     if (!TVS_CLIENT_ID) missingEnvVars.push("CLIENT_ID")
+    if (!TVS_CLIENT_NAME) missingEnvVars.push("CLIENT_NAME")
     if (!TVS_REDIRECT_URI) missingEnvVars.push("REDIRECT_URI")
     if (!PKIO_PRIVATE_KEY) missingEnvVars.push("PKIO_PRIVATE_KEY")
 
@@ -49,6 +51,7 @@ describe("RvoClient (Acceptance Environment)", () => {
         authMode: "ABA",
         environment: "acceptance",
         clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
         aba: {
           username: ABA_USERNAME!,
           password: ABA_PASSWORD!,
@@ -68,7 +71,7 @@ describe("RvoClient (Acceptance Environment)", () => {
 
       expect(url).toBe("https://edicrop-acc.agro.nl/edicrop/EdiCropService")
       expect(config.body).toContain(`<Username>${ABA_USERNAME}</Username>`)
-      expect(config.body).toContain(`<exc:ID>${TVS_CLIENT_ID}</exc:ID>`)
+      expect(config.body).toContain(`<exc:ID>${TVS_CLIENT_NAME}</exc:ID>`)
     })
   })
 
@@ -84,6 +87,7 @@ describe("RvoClient (Acceptance Environment)", () => {
         authMode: "TVS",
         environment: "acceptance",
         clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
         tvs: tvsConfig,
       })
       client.setAccessToken("fake-access-token")
@@ -111,6 +115,7 @@ describe("RvoClient (Acceptance Environment)", () => {
         authMode: "TVS",
         environment: "acceptance",
         clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
         tvs: tvsConfig,
       })
       const authUrl = client.getAuthorizationUrl() // Defaults to 'opvragenBedrijfspercelen'

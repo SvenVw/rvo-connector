@@ -42,12 +42,12 @@ export function buildBedrijfspercelenRequest(
 
   if (!params.issuerId) {
     throw new Error(
-      'Client ID is required for the SOAP request. Please configure "clientId" in the client options.',
+      'Client Name is required for the SOAP request. Please configure "clientName" in the client options.',
     )
   }
   if (!params.senderId) {
     throw new Error(
-      'Client ID is required for the SOAP request. Please configure "clientId" in the client options.',
+      'Client Name is required for the SOAP request. Please configure "clientName" in the client options.',
     )
   }
 

@@ -47,8 +47,9 @@ const client = new RvoClient({
   // 'acceptance' or 'production'
   environment: 'acceptance', 
   
-  // Your organization's identifier, used for both Issuer and Sender
-  clientId: 'YOUR_CLIENT_ID',
+  // Your organization's identifiers
+  clientId: 'YOUR_CLIENT_ID', // e.g. OIN or KVK
+  clientName: 'YOUR_CLIENT_NAME', // Name of your organization
 
   // Configure Authentication Modes
   authMode: 'TVS', // 'TVS' (default) or 'ABA'
@@ -132,6 +133,7 @@ const abaClient = new RvoClient({
   authMode: 'ABA',
   environment: 'production',
   clientId: 'YOUR_CLIENT_ID',
+  clientName: 'YOUR_CLIENT_NAME',
   aba: {
     username: 'user',
     password: 'password'
@@ -167,7 +169,8 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | basic | --- | --- |
 | `environment` | `'acceptance' \| 'production'` | Selects RVO endpoints. Defaults to `'acceptance'`. |
 | `authMode` | `'TVS' \| 'ABA'` | Authentication method. Defaults to `'TVS'`. |
-| `clientId` | `string` | **Required**. Your organization's Client ID, used for both Issuer and Sender. |
+| `clientId` | `string` | **Required**. Your organization's Client ID (e.g., OIN). |
+| `clientName` | `string` | **Required**. Your organization's name, used for Issuer and Sender in SOAP. |
 | `tvs` | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`. |
 | `aba` | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`. |
 
@@ -186,6 +189,7 @@ To run the tests locally, you need to configure your environment variables.
     ABA_USERNAME=your_aba_username
     ABA_PASSWORD=your_aba_password
     CLIENT_ID=your_client_id
+    CLIENT_NAME=your_client_name
     REDIRECT_URI=https://your-app.com/callback
     PKIO_PRIVATE_KEY=your_pkio_private_key_content_or_path
     ```
@@ -193,6 +197,7 @@ To run the tests locally, you need to configure your environment variables.
     *   `ABA_USERNAME`: Username for ABA authentication.
     *   `ABA_PASSWORD`: Password for ABA authentication.
     *   `CLIENT_ID`: Your Client ID / OIN.
+    *   `CLIENT_NAME`: Your Client Name (for SOAP Issuer/Sender).
     *   `REDIRECT_URI`: The redirect URI registered for your eHerkenning service.
     *   `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Can be the key string or a path to the key file.
 

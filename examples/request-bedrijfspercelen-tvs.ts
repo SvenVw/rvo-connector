@@ -5,12 +5,13 @@ import 'dotenv/config';
 async function main() {
   // Configuration from environment variables
   const clientId = process.env.CLIENT_ID;
+  const clientName = process.env.CLIENT_NAME;
   const redirectUri = process.env.REDIRECT_URI;
   const pkioPrivateKey = process.env.PKIO_PRIVATE_KEY;
   const env = (process.env.NODE_ENV === 'production' ? 'production' : 'acceptance') as 'acceptance' | 'production';
 
-  if (!clientId || !redirectUri || !pkioPrivateKey) {
-    console.error('Error: Missing required environment variables (CLIENT_ID, REDIRECT_URI, PKIO_PRIVATE_KEY).');
+  if (!clientId || !clientName || !redirectUri || !pkioPrivateKey) {
+    console.error('Error: Missing required environment variables (CLIENT_ID, CLIENT_NAME, REDIRECT_URI, PKIO_PRIVATE_KEY).');
     console.error('Please check your .env file.');
     process.exit(1);
   }
@@ -22,6 +23,7 @@ async function main() {
     environment: env,
     authMode: 'TVS',
     clientId: clientId,
+    clientName: clientName,
     tvs: {
       clientId: clientId,
       redirectUri: redirectUri,

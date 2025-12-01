@@ -183,8 +183,8 @@ export class RvoClient {
       periodBeginDate: options.periodBeginDate,
       periodEndDate: options.periodEndDate,
       abaCredentials: isTvs ? undefined : this.config.aba,
-      issuerId: this.config.clientId,
-      senderId: this.config.clientId,
+      issuerId: this.config.clientName,
+      senderId: this.config.clientName,
     })
 
     const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!

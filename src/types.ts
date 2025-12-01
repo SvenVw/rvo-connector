@@ -50,9 +50,15 @@ export interface RvoClientConfig {
 
   /**
    * ID of the Client (e.g., your organization's OIN or KVK number).
-   * This ID is used to identify both the Issuer and Sender in the SOAP request envelope.
+   * This is typically the OIN used for eHerkenning.
    */
   clientId: string
+
+  /**
+   * Name of the Client (e.g., your organization's name).
+   * This name is used to identify both the Issuer and Sender in the SOAP request envelope.
+   */
+  clientName: string
 
   /** Configuration specific to TVS authentication. Required if `authMode` is 'TVS'. */
   tvs?: RvoAuthTvsConfig
