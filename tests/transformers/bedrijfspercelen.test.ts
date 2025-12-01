@@ -213,4 +213,86 @@ describe('transformBedrijfspercelenToGeoJSON', () => {
     const result = transformBedrijfspercelenToGeoJSON(input);
     expect(result.features).toHaveLength(0); // Should be skipped
   });
+
+  it('should transform geometry inside QualityIndicatorType', () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: 'ID_QI',
+            Border: {
+              exterior: {
+                LinearRing: { posList: '155000 463000 155100 463000 155000 463000' },
+              },
+            },
+            QualityIndicatorType: {
+              IndicatorCode: 'KI001',
+              Geometry: {
+                Polygon: {
+                  exterior: {
+                    LinearRing: { posList: '155050 463050 155060 463050 155050 463050' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const result = transformBedrijfspercelenToGeoJSON(input);
+    const feature = result.features[0];
+    const qi = feature.properties?.QualityIndicatorType;
+
+    expect(qi).toBeDefined();
+    expect(qi.IndicatorCode).toBe('KI001');
+    expect(qi.geometry).toBeDefined();
+    expect(qi.geometry.type).toBe('Polygon');
+    // Coordinate check (transformed)
+    expect(qi.geometry.coordinates[0][0][0]).not.toBe(155050);
+    // Original GML geometry should be removed
+    expect(qi.Geometry).toBeUndefined();
+  });
+
+  it('should transform geometry inside array of QualityIndicatorTypes', () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: 'ID_QI_ARRAY',
+            Border: {
+              exterior: {
+                LinearRing: { posList: '155000 463000 155100 463000 155000 463000' },
+              },
+            },
+            QualityIndicatorType: [
+              {
+                IndicatorCode: 'KI001',
+                Geometry: {
+                  Polygon: {
+                    exterior: {
+                      LinearRing: { posList: '155050 463050 155060 463050 155050 463050' },
+                    },
+                  },
+                },
+              },
+              {
+                IndicatorCode: 'KI002',
+                // No geometry
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    const result = transformBedrijfspercelenToGeoJSON(input);
+    const qiArray = result.features[0].properties?.QualityIndicatorType;
+
+    expect(qiArray).toHaveLength(2);
+    expect(qiArray[0].geometry).toBeDefined();
+    expect(qiArray[0].Geometry).toBeUndefined();
+    expect(qiArray[1].IndicatorCode).toBe('KI002');
+    expect(qiArray[1].geometry).toBeUndefined();
+  });
 });

@@ -46,7 +46,7 @@ export function transformBedrijfspercelenToGeoJSON(
     if (!cropField) continue;
     
     // Extract Geometry
-    const geometry = extractGeometry(cropField);
+    const geometry = convertGmlToGeoJson(cropField['Border']);
     
     // Extract Properties (everything except Border/Geometry)
     const properties = extractProperties(cropField);
@@ -66,13 +66,17 @@ export function transformBedrijfspercelenToGeoJSON(
   };
 }
 
-function extractGeometry(cropField: any): Polygon | MultiPolygon | null {
-  // Find 'Border'
-  const border = cropField['Border'];
-  if (!border) return null;
+/**
+ * Converts a GML Polygon structure (containing exterior/interior rings) to a GeoJSON Polygon.
+ * 
+ * Accepts an object that has 'exterior' and optional 'interior' properties.
+ * e.g. CropField.Border or QualityIndicatorType.Geometry.Polygon
+ */
+function convertGmlToGeoJson(gmlPolygon: any): Polygon | MultiPolygon | null {
+  if (!gmlPolygon) return null;
   
   // Handle exterior
-  const exterior = border['exterior'];
+  const exterior = gmlPolygon['exterior'];
   let exteriorRing: number[][] = [];
   
   if (exterior) {
@@ -82,7 +86,7 @@ function extractGeometry(cropField: any): Polygon | MultiPolygon | null {
   if (exteriorRing.length === 0) return null;
 
   // Handle interior (holes)
-  const interiorRaw = border['interior'];
+  const interiorRaw = gmlPolygon['interior'];
   const interiorRings: number[][][] = [];
 
   if (interiorRaw) {
@@ -126,13 +130,16 @@ function extractProperties(cropField: any): Record<string, any> {
   const properties: Record<string, any> = {};
 
   for (const key of Object.keys(cropField)) {
-    // Skip geometry related keys
+    // Skip geometry related keys at the root level
     if (key === 'Border' || key === 'Geometry') continue;
 
     const value = cropField[key];
 
-    // Simplify value if it's an object with "_" (text content) and attributes
-    if (value && typeof value === 'object' && '_' in value) {
+    if (key === 'QualityIndicatorType') {
+      // Handle recursive conversion for QualityIndicatorType
+      properties[key] = processQualityIndicators(value);
+    } else if (value && typeof value === 'object' && '_' in value) {
+        // Simplify value if it's an object with "_" (text content) and attributes
         properties[key] = value._;
     } else {
         properties[key] = value;
@@ -140,4 +147,35 @@ function extractProperties(cropField: any): Record<string, any> {
   }
 
   return properties;
+}
+
+function processQualityIndicators(indicators: any): any {
+  if (!indicators) return indicators;
+  
+  const processSingle = (indicator: any) => {
+    const newIndicator = { ...indicator }; // Shallow copy to modify
+    
+    // Simplify generic text nodes in the indicator itself
+    for (const key of Object.keys(newIndicator)) {
+        const val = newIndicator[key];
+        if (val && typeof val === 'object' && '_' in val && key !== 'Geometry') {
+            newIndicator[key] = val._;
+        }
+    }
+
+    // Handle Geometry transformation
+    if (newIndicator['Geometry'] && newIndicator['Geometry']['Polygon']) {
+        const geoJson = convertGmlToGeoJson(newIndicator['Geometry']['Polygon']);
+        if (geoJson) {
+            newIndicator['geometry'] = geoJson; // Add standard GeoJSON geometry property
+            delete newIndicator['Geometry']; // Remove the GML
+        }
+    }
+    return newIndicator;
+  };
+
+  if (Array.isArray(indicators)) {
+    return indicators.map(processSingle);
+  }
+  return processSingle(indicators);
 }
