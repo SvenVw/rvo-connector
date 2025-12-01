@@ -14,6 +14,7 @@ Before using this package, ensure you have completed the following steps with RV
 2.  **PKIoverheid Certificate**: You must possess a valid PKIoverheid (PKIO) certificate for authentication, especially when using the TVS (eHerkenning) flow or signing requests.
 3.  **Official Documentation**: For detailed specifications, business rules, and connection procedures, refer to the official RVO documentation:
     *   [RVO Webservices Documentation](https://www.rvo.nl/onderwerpen/webservices)
+4.  **IP Whitelisting**: Connections to RVO webservices are typically restricted to whitelisted IP addresses. Ensure your public IP address (or the IP address of your server/hosting environment) is registered and whitelisted with RVO. This means that testing and production environments must use whitelisted IPs to establish a connection.
 
 ## Features
 
