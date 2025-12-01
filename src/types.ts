@@ -1,4 +1,4 @@
-import type { FeatureCollection } from "geojson"
+import type { FeatureCollection, Geometry } from "geojson"
 
 /**
  * Configuration for TVS (OAuth 2.0 / eHerkenning) authentication.
@@ -102,6 +102,61 @@ export interface BedrijfspercelenOptions {
 }
 
 /**
+ * Properties of a Quality Indicator (KI).
+ * Derived from `QualityIndicatorType` in RVO documentation.
+ */
+export interface QualityIndicator {
+  /** Code of the indicator (e.g., KI004). Codelist: CL413. */
+  IndicatorCode: "KI001" | "KI002" | "KI003" | "KI004" | "KI005" | "KI2210" | "KI2030" | "KI2051" | "KI21020" | "KI111001"
+  /** Severity of the indicator (i.e., FATAAL, FOUT, WAARSCHUWING, FOUT). Codelist: CL415. */
+  SeverityCode: "FATAAL" | "FOUT" | "WAARSCHUWING" | "INFO"
+  /** Description of the indicator. */
+  Description: string
+  /** GeoJSON geometry associated with the indicator (if any). Transformed from GML. */
+  geometry?: Geometry
+  /** Cause of the update/mutation (e.g., 'A' for Active/New, 'D' for Delete). Only present in mutation contexts. */
+  QualityIndicatorCause?: string
+}
+
+/**
+ * Properties of a Crop Field (Bedrijfsperceel).
+ * These properties are extracted from the XML response and simplified.
+ * Derived from `CropField` in RVO documentation.
+ */
+export interface CropFieldProperties {
+  /** Unique identification of the parcel (e.g., RVO27378529CFD...). */
+  CropFieldID: string
+  /** Unique identification of the parcel known by a third party (optional). */
+  ThirdPartyCropFieldID?: string
+  /** Version number of the CropField (changes when properties change). */
+  CropFieldVersion: string
+  /** User-assigned name/designator for the field. */
+  CropFieldDesignator: string
+  /** Start date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  BeginDate: string
+  /** End date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  EndDate?: string
+  /** Country code (ISO 2 letter), usually 'NL'. */
+  Country: string
+  /** Crop Type Code (e.g., 247). Codelist: CL263 or CL411. */
+  CropTypeCode: string | number
+  /** Variety Code (optional). Codelist: CL232. */
+  VarietyCode?: string | number
+  /** Production Purpose Code (optional). Codelist: CL251. */
+  CropProductionPurposeCode?: string | number
+  /** Field Use Code (optional). Codelist: CL888. */
+  FieldUseCode?: string | number
+  /** Regulatory Soil Type Code (optional). Codelist: CL405. */
+  RegulatorySoiltypeCode?: string | number
+  /** Use Title Code (e.g., '01' for Eigen gebruik). Codelist: CL412. */
+  UseTitleCode: "01" | "02" | "03" | "04" | "07" | "09" | "10" | "11" | "12" | "13" | "14" | "61" | "62" | "63"
+  /** Cause of the update/mutation (e.g., 'A', 'D'). Only present in mutation contexts. */
+  CropFieldCause?: string
+  /** List of quality indicators/warnings associated with this field. */
+  QualityIndicatorType?: QualityIndicator[] | QualityIndicator
+}
+
+/**
  * Generic interface for the parsed XML response from Bedrijfspercelen service.
  * The structure depends on the SOAP response.
  */
@@ -111,8 +166,12 @@ export interface BedrijfspercelenXmlResponse {
 
 /**
  * GeoJSON output for Bedrijfspercelen.
+ * A FeatureCollection where each feature represents a CropField.
  */
-export type BedrijfspercelenGeoJSONResponse = FeatureCollection
+export type BedrijfspercelenGeoJSONResponse = FeatureCollection<
+  Geometry,
+  CropFieldProperties
+>
 
 /**
  * Union type for the response of `opvragenBedrijfspercelen`.
