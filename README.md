@@ -2,6 +2,19 @@
 
 A TypeScript client library for connecting to RVO (Rijksdienst voor Ondernemend Nederland) webservices to exchange agricultural data. This package simplifies the process of making API calls for services like `OpvragenBedrijfspercelen` using either ABA (username/password) or TVS (OAuth2/eHerkenning) authentication.
 
+## Disclaimer
+
+This package is **not officially supported by RVO**. It is developed and maintained by the [**Nutriënten Management Instituut (NMI)**](https://www.nmi-agro.nl) to facilitate easier integration with RVO webservices for the agricultural sector.
+
+## Prerequisites
+
+Before using this package, ensure you have completed the following steps with RVO:
+
+1.  **Account & Connection**: Contact RVO to register your organization and request access to the webservices (e.g., EDI-Crop).
+2.  **PKIoverheid Certificate**: You must possess a valid PKIoverheid (PKIO) certificate for authentication, especially when using the TVS (eHerkenning) flow or signing requests.
+3.  **Official Documentation**: For detailed specifications, business rules, and connection procedures, refer to the official RVO documentation:
+    *   [RVO Webservices Documentation](https://www.rvo.nl/onderwerpen/webservices)
+
 ## Features
 
 - **Authentication Support**:
