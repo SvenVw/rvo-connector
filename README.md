@@ -32,29 +32,17 @@ Before using this package, ensure you have completed the following steps with RV
 
 This library supports two authentication methods for connecting to RVO webservices: `ABA` and `TVS`. Each method serves a different primary use case, and understanding these differences is key to choosing the right one for your application.
 
-### ABA: For Automated Server-to-Server Exchange
+### ABA
 
 * **What it is**: A legacy authentication method using a simple **username and password**.
 * **Primary Use Case**: ABA is best suited for **automated, non-interactive (server-to-server)** data exchange. This is ideal for background processes where your application needs to retrieve data on behalf of a farmer who has pre-authorized your service.
 * **Authorization**: To use ABA, the farmer must first grant your organization a specific authorization (*machtiging*) for the required services directly within the **Mijn RVO portal**. Without this manual, one-time setup by the farmer, your application cannot access their data.
 
-### TVS: For Interactive User-Led Sessions
+### TVS
 
 * **What it is**: The modern, secure authentication standard based on **eHerkenning** and the **OAuth2.0** protocol, secured with PKIoverheid certificates.
-* **Primary Use Case**: TVS is designed for **interactive applications** where the farmer is present and logs in to initiate a data exchange.
-* **Authorization**: The key advantage of TVS is that it simplifies authorization. By logging in with their eHerkenning credentials, the farmer provides **on-the-spot consent** for your application to access their data for that session. This removes the need for them to pre-arrange a *machtiging* in a separate portal, making the user experience much smoother.
-
-### Which Method Should I Choose?
-
-Your choice depends entirely on your application's workflow:
-
-| Scenario | Recommended Method | Why? |
-| :--- | :--- | :--- |
-| **Automated Background Data Sync** | **ABA** | Designed for server-to-server communication after a one-time authorization (*machtiging*) is set up in Mijn RVO. |
-| **Interactive User Session** | **TVS** | Allows users to grant permission seamlessly and securely in real-time via the familiar eHerkenning login flow. |
-| **New Development** | **TVS** | Generally preferred for its modern security standards and superior user experience for interactive workflows. |
-
-Choose the method that best fits how your users and systems will interact with RVO's services.
+* **Primary Use Case**: TVS is more suitable for **interactive applications** where the farmer is present and logs in to initiate a data exchange.
+* **Authorization**: The key advantage of TVS is that it simplifies authorization. By logging in with their eHerkenning credentials, the farmer provides **on-the-spot consent** for your application to access their data for that session. This removes the need for them to pre-arrange a *machtiging* in a separate portal, making the user experience smoother.
 
 ## Installation
 
