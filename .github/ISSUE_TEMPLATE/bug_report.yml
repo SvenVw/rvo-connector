@@ -1,0 +1,96 @@
+name: 🐞 Bug Report
+description: Create a report to help us improve
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+        **⚠️ SECURITY WARNING ⚠️**
+        When sharing logs or XML traces, please ensure you have **REMOVED** all sensitive information, including:
+        - `Bearer` tokens / Access tokens
+        - Passwords
+        - `kvkNummer` (Chamber of Commerce numbers)
+        - `relatieNummer`
+        - `bsn` (Citizen Service Number)
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: I expected X to happen, but Y happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide the steps to reproduce the bug.
+      placeholder: |
+        1. Import `Client`
+        2. Configured with TVS auth
+        3. Call method `client.opvragenBedrijfspercelen(...)`
+        4. See SOAP Fault ...
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: RVO Environment
+      description: Which RVO environment are you connecting to?
+      options:
+        - Acceptance
+        - Production
+    validations:
+      required: true
+  - type: dropdown
+    id: auth-method
+    attributes:
+      label: Authentication Method
+      description: Which authentication flow are you using?
+      options:
+        - TVS (OAuth / eHerkenning)
+        - ABA (Legacy Username/Password)
+    validations:
+      required: true
+  - type: input
+    id: rvo-service
+    attributes:
+      label: Affected RVO Service
+      description: Which specific RVO service call is failing?
+      placeholder: e.g. OpvragenBedrijfspercelen, MuterenBedrijfspercelen
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / SOAP Faults
+      description: |
+        Please paste the relevant error stack trace, SOAP Fault XML, or validation error.
+        **Remember to sanitize sensitive data!**
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Library Version
+      description: What version of `@nmi-agro/rvo-connector` are you using?
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/SvenVw/rvo-connector/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

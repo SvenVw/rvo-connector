@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Questions & Discussions
+    url: https://github.com/SvenVw/rvo-connector/discussions
+    about: Please ask questions and discuss ideas here.
+  - name: 🔐 Security Vulnerabilities
+    url: https://github.com/SvenVw/rvo-connector/security/advisories/new
+    about: Please report security vulnerabilities here.

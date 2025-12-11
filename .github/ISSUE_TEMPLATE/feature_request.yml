@@ -1,0 +1,53 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or RVO web service implementation
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature!
+  - type: textarea
+    id: description
+    attributes:
+      label: Is your feature request related to a problem? Please describe.
+      description: A clear and concise description of what the problem is.
+      placeholder: I need to use the 'MuterenBedrijfspercelen' service but it's not implemented yet.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+  - type: input
+    id: rvo-service
+    attributes:
+      label: RVO Service Name (Optional)
+      description: If this is for a RVO service, what is its official name?
+      placeholder: e.g. MuterenBedrijfspercelen
+  - type: input
+    id: rvo-docs
+    attributes:
+      label: RVO Documentation Link (Optional)
+      description: Link to the official RVO documentation or "Berichtenboek" if available.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the feature request here.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/SvenVw/rvo-connector/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
