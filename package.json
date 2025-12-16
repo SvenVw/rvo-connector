@@ -1,6 +1,6 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "type": "module",
   "license": "MIT",
