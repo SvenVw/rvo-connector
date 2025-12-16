@@ -48,6 +48,10 @@ This policy applies to security vulnerabilities found within the `@nmi-agro/rvo-
 * Issues related to RVO account management, certificate issuance, or RVO's network policies.
 * Vulnerabilities in third-party libraries not directly related to `rvo-connector`'s implementation, unless they are critical and exploited through our code.
 
+## Supported Versions
+
+Only the latest major version of `@nmi-agro/rvo-connector` receives security updates. Currently, this means that only versions within the `1.x.x` series are supported. Users are encouraged to upgrade to the latest patch release within the supported major version to ensure they receive all security fixes.
+
 ## Our Commitment and Response
 
 Upon receiving a vulnerability report:
