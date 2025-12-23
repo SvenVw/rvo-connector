@@ -28,7 +28,9 @@ export class TvsAuth {
     return `${authEndpoint}?${qs.stringify(params)}`
   }
 
-  public async getAccessToken(authorizationCode: string): Promise<RvoTokenResponse> {
+  public async getAccessToken(
+    authorizationCode: string,
+  ): Promise<RvoTokenResponse> {
     const tokenEndpoint = this.config.tokenEndpoint
     if (!tokenEndpoint) {
       throw new Error("TVS Token Endpoint not configured.")
@@ -40,7 +42,7 @@ export class TvsAuth {
     if (fs.existsSync(privateKey)) {
       try {
         privateKey = fs.readFileSync(privateKey, "utf8")
-      } catch (e) {
+      } catch {
         // Ignore error, assume it's a key string if read fails or not a file
       }
     }
@@ -70,26 +72,22 @@ export class TvsAuth {
       client_assertion: clientAssertion,
     })
 
-    try {
-      const response = await fetch(tokenEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: requestBody,
-      })
+    const response = await fetch(tokenEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: requestBody,
+    })
 
-      if (!response.ok) {
-        const errorBody = await response.text()
-        throw new Error(
-          `Failed to obtain access token: ${response.status} ${errorBody}`,
-        )
-      }
-
-      return (await response.json()) as RvoTokenResponse
-    } catch (error: any) {
-      throw error
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(
+        `Failed to obtain access token: ${response.status} ${errorBody}`,
+      )
     }
+
+    return (await response.json()) as RvoTokenResponse
   }
 
   private validatePrivateKey(key: string) {

@@ -152,6 +152,107 @@ try {
 }
 ```
 
+### 4. Mutating Data (Crop Fields)
+
+The library provides comprehensive support for the `MuterenBedrijfspercelen` service, allowing you to register, update, or terminate crop fields. This is an asynchronous, multi-step process defined by RVO.
+
+**The Mutation Flow:**
+
+1. **Submit Mutation (`muterenBedrijfspercelen`)**: Send your proposed changes (Insert, Update, Delete) to RVO. RVO validates the format and queues the request, returning a `ticketId`.
+2. **Poll Progress (`opvragenProcesvoortgang`)**: Periodically check the status of the ticket until RVO has processed it (status `VALIDATIEVERZOEK` or `VALIDATIEFOUT`).
+3. **Check Validation (`opvragenValidatieresultaat`)**: Retrieve the technical and functional validation results. If there are no fatal errors (`FATAAL` or `FOUT`), the request is ready to be finalized.
+4. **Request TAN (`ophalenTanVolgnummer`)**: Request a Transaction Authorization Number (TAN) sequence. The user must provide the corresponding TAN code (e.g., via SMS or list) to authorize the transaction.
+5. **Formalize (`formaliserenOpgave`)**: Commit the changes using the valid ticket ID and the user-provided TAN code.
+
+**Example Implementation:**
+
+```typescript
+import { RvoClient, CropFieldMutation } from '@nmi-agro/rvo-connector';
+
+async function performMutation(client: RvoClient, farmId: string) {
+  try {
+    // 1. Define Mutations
+    const mutations: CropFieldMutation[] = [
+      {
+        action: 'I', // 'I' (Insert), 'U' (Update), 'D' (Delete)
+        // You can provide GeoJSON geometry (WGS84). 
+        // The client automatically transforms it to RD New (EPSG:28992) GML.
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [[5.3872, 52.1551], [5.3880, 52.1551], [5.3880, 52.1560], [5.3872, 52.1560], [5.3872, 52.1551]]
+          ]
+        },
+        properties: {
+          CropFieldDesignator: 'New Maize Field',
+          CropTypeCode: 247, // Snijmaïs
+          BeginDate: '2025-01-01',
+          // Optional: Add other properties like VarietyCode, FieldUseCode, etc.
+        }
+      }
+    ];
+
+    // 2. Submit the Request
+    console.log('Submitting mutation...');
+    const { ticketId } = await client.muterenBedrijfspercelen({
+      farmId,
+      mutations,
+      // Optional: precedingTicketId: 'PREV-TICKET-ID' if chaining requests
+    });
+    console.log(`Mutation submitted. Ticket ID: ${ticketId}`);
+
+    // 3. Poll for Status
+    let isProcessed = false;
+    while (!isProcessed) {
+      // Wait a few seconds before polling to respect RVO limits
+      await new Promise(r => setTimeout(r, 5000));
+
+      const progress = await client.opvragenProcesvoortgang(ticketId, farmId);
+      console.log(`Status: ${progress.status} (${progress.percentage}%) - ${progress.message}`);
+
+      // Statuses indicating processing is done (success or failure)
+      if (['VALIDATIEVERZOEK', 'VALIDATIEFOUT', 'GEVALIDEERD', 'TECHNISCHEFOUT'].includes(progress.status)) {
+        isProcessed = true;
+      }
+    }
+
+    // 4. Check Validation Results
+    const validation = await client.opvragenValidatieresultaat(ticketId, farmId);
+    
+    // Check for blocking errors
+    const hasErrors = validation.messages.some(msg => msg.severity === 'FATAAL' || msg.severity === 'FOUT');
+    
+    if (hasErrors) {
+      console.error('Validation failed with errors:', validation.messages);
+      // Optional: Cancel the ticket if it's invalid but stuck
+      // await client.annulerenOpgave(ticketId, farmId);
+      return;
+    } else {
+      console.log('Validation successful. Warnings:', validation.messages);
+    }
+
+    // 5. Formalize (Commit)
+    // Request the Sequence Number for the TAN code
+    const { sequenceNumber } = await client.ophalenTanVolgnummer();
+    console.log(`Please enter the TAN code for sequence number: ${sequenceNumber}`);
+    
+    // In a real app, you would prompt the user here.
+    const userProvidedTanCode = '123456'; 
+
+    const transaction = await client.formaliserenOpgave(ticketId, sequenceNumber, userProvidedTanCode);
+    console.log('Transaction result:', transaction.message);
+
+  } catch (error) {
+    console.error('Mutation failed:', error);
+  }
+}
+```
+
+**Key Features:**
+
+* **Geometry Conversion**: Provide standard GeoJSON (WGS84) in the `geometry` field. The client handles the projection to RD New (EPSG:28992) and GML formatting required by RVO. Alternatively, you can provide raw GML string in the `gml` field.
+* **Chaining**: Use `precedingTicketId` in `muterenBedrijfspercelen` if your mutation depends on the result of a previous ticket (e.g., splitting a field created in a previous step).
+
 ### ABA Authentication
 
 If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The client will automatically include the `UsernameToken` in the SOAP header. No manual token exchange is required.

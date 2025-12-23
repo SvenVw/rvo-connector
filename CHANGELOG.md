@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+
+### Added
+
+- Mutation Support (MuterenBedrijfspercelen): Added full support for the crop field mutation lifecycle.
+  - Submit insertions, updates, and deletions (`muterenBedrijfspercelen`).
+  - Track status (`opvragenProcesvoortgang`).
+  - Retrieve validation results (`opvragenValidatieresultaat`).
+  - Handle TAN requests (`ophalenTanVolgnummer`) and formalization (`formaliserenOpgave`).
+  - Cancel requests (`annulerenOpgave`).
+- GeoJSON Support: Automatic transformation of GeoJSON (WGS84) to RVO-compliant GML (RD New/EPSG:28992) for mutation requests.
+- Request Chaining: Added `precedingTicketId` support to link related mutation requests.
+- Robust Validation: Implemented strict validation for mutation actions (e.g., ensuring `EndDate` is provided for deletions).
+- New Example: Added `examples/mutate-bedrijfspercelen-tvs.ts` demonstrating the complete mutation flow.
+
+### Fixed
+
+- Authentication: Refactored `TvsAuth` to remove redundant error handling and improved variable naming for better code clarity.
+- Reliability: Ensured all example scripts correctly handle asynchronous execution by awaiting the main entry point.
+- Code Quality: Cleaned up various linting warnings and unused imports across the codebase.
+
 ## [1.0.0] - 2025-12-16
 
 ### Added

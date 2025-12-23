@@ -5,19 +5,19 @@ import type { FeatureCollection, Geometry } from "geojson"
  */
 export interface RvoAuthTvsConfig {
   /** Client ID (e.g., from RVO portal). Typically your OIN or similar identifier. */
-  clientId: string;
+  clientId: string
   /** Redirect URI registered with RVO for the OAuth 2.0 callback. */
-  redirectUri: string;
+  redirectUri: string
   /**
    * Private key from the PKIoverheid certificate.
    * This can be the raw key content (PEM string) or a file path to the .pem file.
    * Used to sign the client assertion JWT.
    */
-  pkioPrivateKey: string;
+  pkioPrivateKey: string
   /** Optional override for the OAuth2 Authorize Endpoint. */
-  authorizeEndpoint?: string;
+  authorizeEndpoint?: string
   /** Optional override for the OAuth2 Token Endpoint. */
-  tokenEndpoint?: string;
+  tokenEndpoint?: string
 }
 
 /**
@@ -107,7 +107,17 @@ export interface BedrijfspercelenOptions {
  */
 export interface QualityIndicator {
   /** Code of the indicator (e.g., KI004). Codelist: CL413. */
-  IndicatorCode: "KI001" | "KI002" | "KI003" | "KI004" | "KI005" | "KI2210" | "KI2030" | "KI2051" | "KI21020" | "KI111001"
+  IndicatorCode:
+    | "KI001"
+    | "KI002"
+    | "KI003"
+    | "KI004"
+    | "KI005"
+    | "KI2210"
+    | "KI2030"
+    | "KI2051"
+    | "KI21020"
+    | "KI111001"
   /** Severity of the indicator (i.e., FATAAL, FOUT, WAARSCHUWING, FOUT). Codelist: CL415. */
   SeverityCode: "FATAAL" | "FOUT" | "WAARSCHUWING" | "INFO"
   /** Description of the indicator. */
@@ -149,7 +159,21 @@ export interface CropFieldProperties {
   /** Regulatory Soil Type Code (optional). Codelist: CL405. */
   RegulatorySoiltypeCode?: string | number
   /** Use Title Code (e.g., '01' for Eigen gebruik). Codelist: CL412. */
-  UseTitleCode: "01" | "02" | "03" | "04" | "07" | "09" | "10" | "11" | "12" | "13" | "14" | "61" | "62" | "63"
+  UseTitleCode:
+    | "01"
+    | "02"
+    | "03"
+    | "04"
+    | "07"
+    | "09"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "61"
+    | "62"
+    | "63"
   /** Cause of the update/mutation (e.g., 'A', 'D'). Only present in mutation contexts. */
   CropFieldCause?: string
   /** List of quality indicators/warnings associated with this field. */
@@ -185,15 +209,172 @@ export type BedrijfspercelenResponse =
  */
 export interface RvoTokenResponse {
   /** The OAuth 2.0 access token. */
-  access_token: string;
+  access_token: string
   /** The token type (usually "Bearer"). */
-  token_type: string;
+  token_type: string
   /** Token expiration time in seconds. */
-  expires_in: number;
+  expires_in: number
   /** The refresh token (if provided). */
-  refresh_token?: string;
+  refresh_token?: string
   /** Scopes granted by the token. */
-  scope?: string;
+  scope?: string
   /** Additional properties from the token response. */
-  [key: string]: any;
+  [key: string]: any
+}
+
+// --- Mutation Types ---
+
+/**
+ * Action to perform on a Crop Field.
+ * - `'I'`: Insert (Create new).
+ * - `'U'`: Update (Modify existing).
+ * - `'D'`: Delete (Remove).
+ */
+export type MutationAction = "I" | "U" | "D"
+
+/**
+ * Structure for submitting a Crop Field mutation.
+ * Includes the action and the field details.
+ */
+export interface CropFieldMutation {
+  /** The action to perform (Insert, Update, Delete). */
+  action: MutationAction
+  /**
+   * The geometry of the field as GeoJSON (WGS84).
+   * The client will automatically transform this to RD New (EPSG:28992) and GML.
+   * Provide either `geometry` OR `gml`.
+   */
+  geometry?: Geometry
+  /**
+   * The geometry of the field as a raw GML string (RD New / EPSG:28992).
+   * Use this if you already have the GML or want to bypass the internal conversion.
+   * Provide either `geometry` OR `gml`.
+   */
+  gml?: string
+  /**
+   * Field properties.
+   * For 'I', requires at least CropTypeCode, BeginDate.
+   * For 'U', requires ID and Version.
+   */
+  properties: Partial<CropFieldProperties> & {
+    /**
+     * User-assigned name/designator.
+     * RVO usually requires this.
+     */
+    CropFieldDesignator?: string
+  }
+}
+
+/**
+ * Options for the `muterenBedrijfspercelen` request.
+ */
+export interface MuterenRequestOptions {
+  /**
+   * Farm ID (ThirdPartyFarmID).
+   * Required for identifying the farm being mutated.
+   */
+  farmId: string
+  /**
+   * Optional ID of a preceding ticket.
+   * Used when this request follows up on a previous one.
+   */
+  precedingTicketId?: string
+  /**
+   * The list of mutations to perform.
+   */
+  mutations: CropFieldMutation[]
+}
+
+/**
+ * Response for a mutation submission.
+ */
+export interface MuterenResponse {
+  /** The Ticket ID assigned by RVO to track this request. */
+  ticketId: string
+}
+
+// --- Process Status Types ---
+
+/**
+ * Status codes for process progress as defined in RVO Berichtenboek Bijlage D.
+ */
+export type RvoProcessStatusCode =
+  | "OPNIEUWAANBIEDEN"
+  | "INITBERICHT"
+  | "WACHTOPPERCELEN"
+  | "WIJZIGBERICHT"
+  | "PERCELENTOEGEVOEGD"
+  | "VALIDATIEVERZOEK"
+  | "VALIDEREN"
+  | "GEVALIDEERD"
+  | "VALIDATIEFOUT"
+  | "GETAND"
+  | "PERCELENNIETTOEGEVOEGD"
+  | "GEANNULEERD"
+  | "TECHNISCHEFOUT"
+  | "GEPUBLICEERD"
+  | "VALIDATIEVERZOEKGEORGISTER"
+  | "PERCELENINREGISTER"
+  | "VERLOPEN"
+  | "KI_OPGESCHOOND"
+  | "UNKNOWN"
+
+/**
+ * Response for `opvragenProcesvoortgang`.
+ */
+export interface ProcesVoortgangResponse {
+  /** The status code (e.g., 'GEVALIDEERD'). */
+  status: RvoProcessStatusCode
+  /** Description of the status. */
+  message: string
+  /** Percentage complete (0-100). */
+  percentage: number
+}
+
+// --- Validation Types ---
+
+export interface ValidationMessage {
+  code: string
+  message: string
+  severity: "FATAAL" | "FOUT" | "WAARSCHUWING" | "INFO"
+  fieldId?: string
+}
+
+/**
+ * Response for `opvragenValidatieresultaat`.
+ */
+export interface ValidatieResultaatResponse {
+  /** The Ticket ID. */
+  ticketId: string
+  /** List of validation messages/errors. */
+  messages: ValidationMessage[]
+  /**
+   * The validated/resulting fields as proposed by RVO.
+   * (Simplified representation for now, normally contains full CropField structures).
+   */
+  proposedFields?: any[]
+}
+
+// --- TAN Types ---
+
+/**
+ * Response for `ophalenTanVolgnummer`.
+ */
+export interface TanResponse {
+  /** The sequence number for which the user must provide the TAN code. */
+  sequenceNumber: number
+}
+
+// --- Formalization & Cancellation Types ---
+
+/**
+ * Result of formalizing or cancelling.
+ */
+export interface TransactionResponse {
+  /** The Ticket ID. */
+  ticketId: string
+  /** Result code (e.g., '0' for success). */
+  resultCode?: string
+  /** Result message. */
+  message?: string
 }
