@@ -88,7 +88,7 @@ describe("SOAP Builders", () => {
       ],
     })
 
-    expect(xml).toContain("<crop:EndDate>2024-12-31</crop:EndDate>")
+    expect(xml).toContain("<crop:EndDate>2024-12-31T00:00:00</crop:EndDate>")
   })
 
   it("buildMuterenRequest should include PrecedingTicketId", () => {
