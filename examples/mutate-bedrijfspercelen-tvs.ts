@@ -87,8 +87,7 @@ async function main() {
       console.warn("Could not list example fields from", fieldsDir)
     }
 
-    let selectedGeometry: any = null
-    let selectedProperties: any = {}
+    const mutations: CropFieldMutation[] = []
 
     if (geoFiles.length > 0) {
       console.log("\nAvailable example fields:")
@@ -105,26 +104,51 @@ async function main() {
         const geoJson = JSON.parse(fileContent)
 
         // If it's a FeatureCollection or Feature, extract geometry and properties
-        if (
-          geoJson.type === "FeatureCollection" &&
-          geoJson.features.length > 0
-        ) {
-          selectedGeometry = geoJson.features[0].geometry
-          selectedProperties = geoJson.features[0].properties || {}
+        if (geoJson.type === "FeatureCollection") {
+          for (const feature of geoJson.features) {
+            mutations.push({
+              action: "I",
+              geometry: feature.geometry,
+              properties: {
+                CropFieldDesignator:
+                  feature.properties?.CropFieldDesignator || "Demo Veld CLI",
+                CropTypeCode: feature.properties?.CropTypeCode || 247,
+                BeginDate:
+                  feature.properties?.BeginDate || new Date().toISOString(),
+              },
+            })
+          }
         } else if (geoJson.type === "Feature") {
-          selectedGeometry = geoJson.geometry
-          selectedProperties = geoJson.properties || {}
+          mutations.push({
+            action: "I",
+            geometry: geoJson.geometry,
+            properties: {
+              CropFieldDesignator:
+                geoJson.properties?.CropFieldDesignator || "Demo Veld CLI",
+              CropTypeCode: geoJson.properties?.CropTypeCode || 247,
+              BeginDate:
+                geoJson.properties?.BeginDate || new Date().toISOString(),
+            },
+          })
         } else {
           // Direct geometry
-          selectedGeometry = geoJson
+          mutations.push({
+            action: "I",
+            geometry: geoJson,
+            properties: {
+              CropFieldDesignator: "Demo Veld CLI",
+              CropTypeCode: 247,
+              BeginDate: new Date().toISOString(),
+            },
+          })
         }
       }
     }
 
     // Default hardcoded mutation if no file selected
-    if (!selectedGeometry) {
+    if (mutations.length === 0) {
       console.log("Using default hardcoded polygon.")
-      selectedGeometry = {
+      const defaultGeometry = {
         type: "Polygon",
         coordinates: [
           [
@@ -136,23 +160,20 @@ async function main() {
           ],
         ],
       }
+      mutations.push({
+        action: "I",
+        geometry: defaultGeometry,
+        properties: {
+          CropFieldDesignator: "Demo Veld CLI",
+          CropTypeCode: 247, // Mais fallback
+          BeginDate: new Date().toISOString(),
+        },
+      })
     }
 
-    const mutations: CropFieldMutation[] = [
-      {
-        action: "I",
-        geometry: selectedGeometry,
-        properties: {
-          CropFieldDesignator:
-            selectedProperties.CropFieldDesignator || "Demo Veld CLI",
-          CropTypeCode: selectedProperties.CropTypeCode || 247, // Mais fallback
-          BeginDate:
-            selectedProperties.BeginDate || new Date().toISOString(),
-        },
-      },
-    ]
-
-    console.log("\nSubmitting demo mutation (Insert 1 field)...")
+    console.log(
+      `\nSubmitting demo mutation (Insert ${mutations.length} field(s))...`,
+    )
     const { ticketId } = await client.muterenBedrijfspercelen({
       farmId: farmId.trim(),
       mutations,
