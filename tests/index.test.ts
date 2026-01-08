@@ -121,15 +121,16 @@ describe("RvoClient (Acceptance Environment)", () => {
       const authUrl = client.getAuthorizationUrl() // Defaults to 'opvragenBedrijfspercelen'
 
       expect(authUrl).toContain("https://pp2.toegang.overheid.nl/kvo/authorize")
-      
-      const urlParams = new URLSearchParams(authUrl.split('?')[1]);
-      const actualScope = urlParams.get('scope');
 
-      const expectedEherkenningScope = "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45";
-      const expectedServiceScope = "RVO-WS.GEO.bp.lezen";
-      const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`;
+      const urlParams = new URLSearchParams(authUrl.split("?")[1])
+      const actualScope = urlParams.get("scope")
 
-      expect(actualScope).toBe(expectedFullScope);
+      const expectedEherkenningScope =
+        "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45"
+      const expectedServiceScope = "RVO-WS.GEO.bp.lezen"
+      const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`
+
+      expect(actualScope).toBe(expectedFullScope)
     })
   })
 })
