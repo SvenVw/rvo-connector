@@ -147,8 +147,7 @@ async function main() {
             selectedProperties.CropFieldDesignator || "Demo Veld CLI",
           CropTypeCode: selectedProperties.CropTypeCode || 247, // Mais fallback
           BeginDate:
-            selectedProperties.BeginDate ||
-            new Date().toISOString().split("T")[0],
+            selectedProperties.BeginDate || new Date().toISOString(),
         },
       },
     ]

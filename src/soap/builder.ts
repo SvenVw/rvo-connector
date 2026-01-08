@@ -24,6 +24,19 @@ export interface SoapRequestParams {
 }
 
 /**
+ * Helper to ensure a date string is in valid xsd:dateTime format.
+ * If input is YYYY-MM-DD, appends T00:00:00.
+ */
+function ensureDateTime(dateStr: string | undefined): string | undefined {
+  if (!dateStr) return undefined
+  // Regex to check if it's YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return `${dateStr}T00:00:00`
+  }
+  return dateStr
+}
+
+/**
  * Common envelope builder to reduce duplication.
  */
 function buildSoapEnvelope(
@@ -197,8 +210,11 @@ export function buildMuterenRequest(
       )
     }
 
-    let endDateXml = props.EndDate
-      ? `<crop:EndDate>${props.EndDate}</crop:EndDate>`
+    const beginDate = ensureDateTime(props.BeginDate) || new Date().toISOString()
+    const endDate = ensureDateTime(props.EndDate)
+
+    let endDateXml = endDate
+      ? `<crop:EndDate>${endDate}</crop:EndDate>`
       : ""
 
     // Using far:, fiel: and crop: prefixes as per RVO example
@@ -210,7 +226,7 @@ export function buildMuterenRequest(
                   <crop:CropFieldVersion>${props.CropFieldVersion || "1"}</crop:CropFieldVersion>
                   <crop:CropFieldDesignator>${props.CropFieldDesignator || ""}</crop:CropFieldDesignator>
                   ${props.ThirdPartyCropFieldID ? `<crop:ThirdPartyCropFieldID>${props.ThirdPartyCropFieldID}</crop:ThirdPartyCropFieldID>` : ""}
-                  <crop:BeginDate>${props.BeginDate || new Date().toISOString()}</crop:BeginDate>
+                  <crop:BeginDate>${beginDate}</crop:BeginDate>
                   ${endDateXml}
                   <crop:Country>${props.Country || "NL"}</crop:Country>
                   ${props.RegulatorySoiltypeCode ? `<crop:RegulatorySoiltypeCode listID="CL405">${props.RegulatorySoiltypeCode}</crop:RegulatorySoiltypeCode>` : ""}
