@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reliability: Ensured all example scripts correctly handle asynchronous execution by awaiting the main entry point.
 - Code Quality: Cleaned up various linting warnings and unused imports across the codebase.
 
+## [1.0.1] - 2026-01-05
+
+### Security
+
+- Patch for CVE-2025-15284
+
 ## [1.0.0] - 2025-12-16
 
 ### Added
