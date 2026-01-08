@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Request Chaining: Added `precedingTicketId` support to link related mutation requests.
 - Robust Validation: Implemented strict validation for mutation actions (e.g., ensuring `EndDate` is provided for deletions).
 - New Example: Added `examples/mutate-bedrijfspercelen-tvs.ts` demonstrating the complete mutation flow.
+- CI Workflow: Added GitHub Actions for automated unit testing and type checking on every push and pull request.
 
 ### Fixed
 
