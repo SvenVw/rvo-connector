@@ -2,8 +2,12 @@ import { RvoClient } from "../src/client"
 import * as readline from "readline"
 import * as fs from "fs"
 import * as path from "path"
+import { fileURLToPath } from "url"
 import "dotenv/config"
 import type { CropFieldMutation } from "../src/types"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 async function main() {
   // Configuration from environment variables
