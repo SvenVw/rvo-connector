@@ -83,6 +83,12 @@ export interface RvoClientConfig {
    * If omitted, the default URL for the selected environment is used.
    */
   ediCropAbaUrl?: string
+
+  /**
+   * Timeout in milliseconds for API requests (e.g., SOAP calls).
+   * @default 30000 (30 seconds)
+   */
+  requestTimeoutMs?: number
 }
 
 /**

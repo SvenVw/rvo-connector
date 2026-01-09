@@ -131,4 +131,68 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(actualScope).toBe(expectedFullScope)
     })
   })
+
+  describe("Timeout Behavior", () => {
+    it("should timeout when requestTimeoutMs is exceeded", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+        requestTimeoutMs: 50, // Short timeout for testing
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockImplementation((url: string, options: any) => {
+        return new Promise((resolve, reject) => {
+          if (options.signal) {
+            if (options.signal.aborted) {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+              return
+            }
+            options.signal.addEventListener("abort", () => {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+            })
+          }
+        })
+      })
+
+      await expect(client.opvragenBedrijfspercelen({ farmId: "123" })).rejects.toThrow(
+        "Request to RVO service timed out after 50ms",
+      )
+    })
+  })
+
+  describe("Configuration Inheritance", () => {
+    const tvsConfig = {
+      clientId: TVS_CLIENT_ID!,
+      redirectUri: TVS_REDIRECT_URI!,
+      pkioPrivateKey: PKIO_PRIVATE_KEY!,
+    }
+
+    it("should pass global requestTimeoutMs to TvsAuth", () => {
+      const globalTimeout = 45000
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        requestTimeoutMs: globalTimeout,
+        tvs: tvsConfig,
+      })
+
+      const tvsAuthInstance = (client as any).tvsAuth
+      const tvsAuthTimeout = (tvsAuthInstance as any).timeoutMs
+
+      expect(tvsAuthTimeout).toBe(globalTimeout)
+    })
+  })
 })

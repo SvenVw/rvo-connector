@@ -44,6 +44,7 @@ async function main() {
     authMode: "TVS",
     clientId: clientId,
     clientName: clientName,
+    requestTimeoutMs: 30000,
     tvs: {
       clientId: clientId,
       redirectUri: redirectUri,

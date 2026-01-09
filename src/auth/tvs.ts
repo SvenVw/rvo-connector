@@ -9,9 +9,11 @@ import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
  */
 export class TvsAuth {
   private config: RvoAuthTvsConfig
+  private timeoutMs: number
 
-  constructor(config: RvoAuthTvsConfig) {
+  constructor(config: RvoAuthTvsConfig, timeoutMs: number = 30000) {
     this.config = config
+    this.timeoutMs = timeoutMs
   }
 
   /**
@@ -77,20 +79,40 @@ export class TvsAuth {
       client_assertion: clientAssertion,
     })
 
-    const response = await fetch(tokenEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: requestBody,
-    })
+    const controller = new AbortController()
+    const timeout = this.timeoutMs
+    let timeoutId: NodeJS.Timeout | undefined
 
-    if (!response.ok) {
-      const errorBody = await response.text()
-      throw new Error(`Failed to obtain access token: ${response.status} ${errorBody}`)
+    if (timeout > 0) {
+      timeoutId = setTimeout(() => controller.abort(), timeout)
     }
 
-    return (await response.json()) as RvoTokenResponse
+    try {
+      const response = await fetch(tokenEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: requestBody,
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.text()
+        throw new Error(`Failed to obtain access token: ${response.status} ${errorBody}`)
+      }
+
+      return (await response.json()) as RvoTokenResponse
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw new Error(`Request to token endpoint timed out after ${timeout}ms`)
+      }
+      throw error
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
   }
 
   private validatePrivateKey(key: string) {

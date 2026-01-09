@@ -103,7 +103,8 @@ export class RvoClient {
         tokenEndpoint: this.config.tvs.tokenEndpoint || envEndpoints.tvsToken,
         ...this.config.tvs, // Spread existing TVS config to allow overrides
       }
-      this.tvsAuth = new TvsAuth(tvsAuthConf)
+
+      this.tvsAuth = new TvsAuth(tvsAuthConf, this.config.requestTimeoutMs)
     }
 
     // Update config with resolved URLs for internal use
@@ -207,11 +208,32 @@ export class RvoClient {
       headers["Authorization"] = `Bearer ${this.accessToken}`
     }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: soapXml,
-    })
+    const controller = new AbortController()
+    const timeout = this.config.requestTimeoutMs ?? 30000
+    let timeoutId: NodeJS.Timeout | undefined
+
+    if (timeout > 0) {
+      timeoutId = setTimeout(() => controller.abort(), timeout)
+    }
+
+    let response: Response
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: soapXml,
+        signal: controller.signal,
+      })
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw new Error(`Request to RVO service timed out after ${timeout}ms`)
+      }
+      throw error
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
 
     const responseText = await response.text()
 

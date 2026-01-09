@@ -28,6 +28,7 @@ async function main() {
     authMode: "ABA",
     clientId: clientId,
     clientName: clientName,
+    requestTimeoutMs: 30000,
     aba: {
       username: username,
       password: password,

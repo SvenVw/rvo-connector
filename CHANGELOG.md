@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - CI Workflow: Added GitHub Actions for automated unit testing and type checking on every push and pull request
+- Timeout Support: Added `requestTimeoutMs` configuration to `RvoClientConfig` to prevent indefinite hanging on network requests (defaults to 30 seconds). This applies to both OAuth 2.0 token exchange and SOAP service calls.
 
 ### Security
 
