@@ -69,17 +69,18 @@ try {
   const ask = (query: string) => new Promise<string>((resolve) => rl.question(query, resolve))
 
   try {
-    const authorizationCode = await ask(
+    const authorizationCodeRaw = await ask(
       "Please paste the authorization code from the redirect URL here: ",
     )
+    const authorizationCode = authorizationCodeRaw.trim()
 
     if (!authorizationCode) {
       console.error("\nERROR: No authorization code provided.")
-      process.exit(1)
+      throw new Error("No authorization code provided.")
     }
 
     console.log("\n2. Exchanging authorization code for access token...")
-    const tokenData = await client.exchangeAuthCode(authorizationCode.trim())
+    const tokenData = await client.exchangeAuthCode(authorizationCode)
     console.log("Expires In (seconds):", tokenData.expires_in)
 
     const farmId = await ask(
@@ -101,5 +102,5 @@ try {
   }
 } catch (error) {
   console.error("\nAn error occurred:", error)
-  process.exit(1)
+  process.exitCode = 1
 }
