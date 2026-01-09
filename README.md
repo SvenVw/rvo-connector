@@ -158,13 +158,13 @@ If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The 
 
 ```typescript
 const abaClient = new RvoClient({
-  authMode: 'ABA',
-  environment: 'production',
-  clientId: 'YOUR_CLIENT_ID',
-  clientName: 'YOUR_CLIENT_NAME',
+  authMode: "ABA",
+  environment: "production",
+  clientId: "YOUR_CLIENT_ID",
+  clientName: "YOUR_CLIENT_NAME",
   aba: {
-    username: 'user',
-    password: 'password'
+    username: "user",
+    password: "password"
   }
 });
 
