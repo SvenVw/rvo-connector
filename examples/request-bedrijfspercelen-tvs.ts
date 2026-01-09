@@ -67,51 +67,41 @@ async function main() {
     output: process.stdout,
   })
 
-  rl.question(
-    "Please paste the authorization code from the redirect URL here: ",
-    async (authorizationCode) => {
-      if (!authorizationCode) {
-        console.error("\nERROR: No authorization code provided.")
-        rl.close()
-        return
-      }
+  const ask = (query: string) => new Promise<string>((resolve) => rl.question(query, resolve))
 
-      console.log("\n2. Exchanging authorization code for access token...")
-      try {
-        const tokenData = await client.exchangeAuthCode(authorizationCode.trim())
-        console.log("Expires In (seconds):", tokenData.expires_in)
+  try {
+    const authorizationCode = await ask(
+      "Please paste the authorization code from the redirect URL here: ",
+    )
 
-        rl.question(
-          "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
-          async (farmId) => {
-            rl.question(
-              "\nChoose output format (xml/geojson) [default: geojson]: ",
-              async (formatRaw) => {
-                const format = (formatRaw.trim().toLowerCase() || "geojson") as "xml" | "geojson"
+    if (!authorizationCode) {
+      console.error("\nERROR: No authorization code provided.")
+      return
+    }
 
-                console.log("\n3. Fetching Bedrijfspercelen...")
-                try {
-                  const result = await client.opvragenBedrijfspercelen({
-                    farmId: farmId.trim() || undefined,
-                    outputFormat: format,
-                  })
-                  console.log("\nSuccessfully fetched Bedrijfspercelen:")
-                  console.log(JSON.stringify(result, null, 2))
-                } catch (error) {
-                  console.error("\nFailed to fetch Bedrijfspercelen:", error)
-                } finally {
-                  rl.close()
-                }
-              },
-            )
-          },
-        )
-      } catch (error) {
-        console.error("\nFailed to obtain access token:", error)
-        rl.close()
-      }
-    },
-  )
+    console.log("\n2. Exchanging authorization code for access token...")
+    const tokenData = await client.exchangeAuthCode(authorizationCode.trim())
+    console.log("Expires In (seconds):", tokenData.expires_in)
+
+    const farmId = await ask(
+      "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
+    )
+    const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
+    const format = (formatRaw.trim().toLowerCase() || "geojson") as "xml" | "geojson"
+
+    console.log("\n3. Fetching Bedrijfspercelen...")
+    const result = await client.opvragenBedrijfspercelen({
+      farmId: farmId.trim() || undefined,
+      outputFormat: format,
+    })
+    console.log("\nSuccessfully fetched Bedrijfspercelen:")
+    console.log(JSON.stringify(result, null, 2))
+  } finally {
+    rl.close()
+  }
 }
 
-void main()
+main().catch((error) => {
+  console.error("\nAn error occurred:", error)
+  process.exit(1)
+})

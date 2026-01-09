@@ -39,31 +39,28 @@ async function main() {
     output: process.stdout,
   })
 
-  rl.question(
-    "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
-    async (farmId) => {
-      rl.question(
-        "\nChoose output format (xml/geojson) [default: geojson]: ",
-        async (formatRaw) => {
-          const format = (formatRaw.trim().toLowerCase() || "geojson") as "xml" | "geojson"
+  const ask = (query: string) => new Promise<string>((resolve) => rl.question(query, resolve))
 
-          console.log("\nFetching Bedrijfspercelen...")
-          try {
-            const result = await client.opvragenBedrijfspercelen({
-              farmId: farmId.trim() || undefined,
-              outputFormat: format,
-            })
-            console.log("\nSuccessfully fetched Bedrijfspercelen:")
-            console.log(JSON.stringify(result, null, 2))
-          } catch (error) {
-            console.error("\nFailed to fetch Bedrijfspercelen:", error)
-          } finally {
-            rl.close()
-          }
-        },
-      )
-    },
-  )
+  try {
+    const farmId = await ask(
+      "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
+    )
+    const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
+    const format = (formatRaw.trim().toLowerCase() || "geojson") as "xml" | "geojson"
+
+    console.log("\nFetching Bedrijfspercelen...")
+    const result = await client.opvragenBedrijfspercelen({
+      farmId: farmId.trim() || undefined,
+      outputFormat: format,
+    })
+    console.log("\nSuccessfully fetched Bedrijfspercelen:")
+    console.log(JSON.stringify(result, null, 2))
+  } finally {
+    rl.close()
+  }
 }
 
-void main()
+main().catch((error) => {
+  console.error("\nAn error occurred:", error)
+  process.exit(1)
+})
