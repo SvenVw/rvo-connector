@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-        
+
         **⚠️ SECURITY WARNING ⚠️**
         When sharing logs or XML traces, please ensure you have **REMOVED** all sensitive information, including:
         - `Bearer` tokens / Access tokens

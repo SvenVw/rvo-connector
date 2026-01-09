@@ -5,19 +5,19 @@ import type { FeatureCollection, Geometry } from "geojson"
  */
 export interface RvoAuthTvsConfig {
   /** Client ID (e.g., from RVO portal). Typically your OIN or similar identifier. */
-  clientId: string;
+  clientId: string
   /** Redirect URI registered with RVO for the OAuth 2.0 callback. */
-  redirectUri: string;
+  redirectUri: string
   /**
    * Private key from the PKIoverheid certificate.
    * This can be the raw key content (PEM string) or a file path to the .pem file.
    * Used to sign the client assertion JWT.
    */
-  pkioPrivateKey: string;
+  pkioPrivateKey: string
   /** Optional override for the OAuth2 Authorize Endpoint. */
-  authorizeEndpoint?: string;
+  authorizeEndpoint?: string
   /** Optional override for the OAuth2 Token Endpoint. */
-  tokenEndpoint?: string;
+  tokenEndpoint?: string
 }
 
 /**
@@ -107,7 +107,17 @@ export interface BedrijfspercelenOptions {
  */
 export interface QualityIndicator {
   /** Code of the indicator (e.g., KI004). Codelist: CL413. */
-  IndicatorCode: "KI001" | "KI002" | "KI003" | "KI004" | "KI005" | "KI2210" | "KI2030" | "KI2051" | "KI21020" | "KI111001"
+  IndicatorCode:
+    | "KI001"
+    | "KI002"
+    | "KI003"
+    | "KI004"
+    | "KI005"
+    | "KI2210"
+    | "KI2030"
+    | "KI2051"
+    | "KI21020"
+    | "KI111001"
   /** Severity of the indicator (i.e., FATAAL, FOUT, WAARSCHUWING, FOUT). Codelist: CL415. */
   SeverityCode: "FATAAL" | "FOUT" | "WAARSCHUWING" | "INFO"
   /** Description of the indicator. */
@@ -149,7 +159,21 @@ export interface CropFieldProperties {
   /** Regulatory Soil Type Code (optional). Codelist: CL405. */
   RegulatorySoiltypeCode?: string | number
   /** Use Title Code (e.g., '01' for Eigen gebruik). Codelist: CL412. */
-  UseTitleCode: "01" | "02" | "03" | "04" | "07" | "09" | "10" | "11" | "12" | "13" | "14" | "61" | "62" | "63"
+  UseTitleCode:
+    | "01"
+    | "02"
+    | "03"
+    | "04"
+    | "07"
+    | "09"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "61"
+    | "62"
+    | "63"
   /** Cause of the update/mutation (e.g., 'A', 'D'). Only present in mutation contexts. */
   CropFieldCause?: string
   /** List of quality indicators/warnings associated with this field. */
@@ -168,32 +192,27 @@ export interface BedrijfspercelenXmlResponse {
  * GeoJSON output for Bedrijfspercelen.
  * A FeatureCollection where each feature represents a CropField.
  */
-export type BedrijfspercelenGeoJSONResponse = FeatureCollection<
-  Geometry,
-  CropFieldProperties
->
+export type BedrijfspercelenGeoJSONResponse = FeatureCollection<Geometry, CropFieldProperties>
 
 /**
  * Union type for the response of `opvragenBedrijfspercelen`.
  */
-export type BedrijfspercelenResponse =
-  | BedrijfspercelenXmlResponse
-  | BedrijfspercelenGeoJSONResponse
+export type BedrijfspercelenResponse = BedrijfspercelenXmlResponse | BedrijfspercelenGeoJSONResponse
 
 /**
  * Response from the RVO OAuth 2.0 Token Endpoint.
  */
 export interface RvoTokenResponse {
   /** The OAuth 2.0 access token. */
-  access_token: string;
+  access_token: string
   /** The token type (usually "Bearer"). */
-  token_type: string;
+  token_type: string
   /** Token expiration time in seconds. */
-  expires_in: number;
+  expires_in: number
   /** The refresh token (if provided). */
-  refresh_token?: string;
+  refresh_token?: string
   /** Scopes granted by the token. */
-  scope?: string;
+  scope?: string
   /** Additional properties from the token response. */
-  [key: string]: any;
+  [key: string]: any
 }

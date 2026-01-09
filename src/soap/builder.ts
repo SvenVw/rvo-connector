@@ -28,9 +28,7 @@ export interface SoapRequestParams {
  * @returns The complete SOAP XML string.
  * @internal
  */
-export function buildBedrijfspercelenRequest(
-  params: SoapRequestParams,
-): string {
+export function buildBedrijfspercelenRequest(params: SoapRequestParams): string {
   const now = new Date()
   const currentYear = now.getFullYear()
 
