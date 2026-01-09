@@ -57,8 +57,8 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
   const messageId = uuidv4()
   const issueDate = now.toISOString().slice(0, 19) // YYYY-MM-DDTHH:MM:SS
 
-  const periodBeginDate = params.periodBeginDate || `${currentYear}-01-01`
-  const periodEndDate = params.periodEndDate || `${currentYear + 2}-01-01`
+  const periodBeginDate = escapeXml(params.periodBeginDate || `${currentYear}-01-01`)
+  const periodEndDate = escapeXml(params.periodEndDate || `${currentYear + 2}-01-01`)
 
   if (!params.issuerId) {
     throw new Error(
