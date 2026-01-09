@@ -9,10 +9,6 @@ vi.mock("jsonwebtoken", () => ({
     sign: vi.fn(() => "mocked-jwt"),
   },
 }))
-vi.mock("fs", () => ({
-  existsSync: vi.fn(() => false),
-  readFileSync: vi.fn(() => "mocked-private-key-content"),
-}))
 
 // Load credentials from env
 const ABA_USERNAME = process.env.ABA_USERNAME
