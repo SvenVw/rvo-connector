@@ -8,22 +8,12 @@ import { v4 as uuidv4 } from "uuid"
  * @returns An XML-safe encoded string.
  */
 function escapeXml(unsafe: string): string {
-  return unsafe.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case "<":
-        return "&lt;"
-      case ">":
-        return "&gt;"
-      case "&":
-        return "&amp;"
-      case "'":
-        return "&apos;"
-      case '"':
-        return "&quot;"
-      default:
-        return c
-    }
-  })
+  return unsafe
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("'", "&apos;")
+    .replaceAll('"', "&quot;")
 }
 
 /**
