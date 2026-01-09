@@ -68,9 +68,9 @@ export interface AuthUrlOptions {
  */
 export class RvoClient {
   /** Internal configuration object. */
-  private config: RvoClientConfig
+  private readonly config: RvoClientConfig
   /** TVS authentication handler (initialized if authMode is 'TVS'). */
-  private tvsAuth?: TvsAuth
+  private readonly tvsAuth?: TvsAuth
   /** Current OAuth 2.0 access token. */
   private accessToken?: string
 

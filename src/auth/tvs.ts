@@ -8,8 +8,8 @@ import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
  * Manages authorization URL generation and token exchange using JWT client assertions.
  */
 export class TvsAuth {
-  private config: RvoAuthTvsConfig
-  private timeoutMs: number
+  private readonly config: RvoAuthTvsConfig
+  private readonly timeoutMs: number
 
   constructor(config: RvoAuthTvsConfig, timeoutMs: number = 30000) {
     this.config = config
