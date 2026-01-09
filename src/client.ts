@@ -99,9 +99,9 @@ export class RvoClient {
         throw new Error("TVS authentication mode selected but TVS configuration is missing.")
       }
       const tvsAuthConf: RvoAuthTvsConfig = {
-        authorizeEndpoint: this.config.tvs.authorizeEndpoint || envEndpoints.tvsAuthorize,
-        tokenEndpoint: this.config.tvs.tokenEndpoint || envEndpoints.tvsToken,
-        ...this.config.tvs, // Spread existing TVS config to allow overrides
+        ...this.config.tvs, // user config first
+        authorizeEndpoint: this.config.tvs.authorizeEndpoint ?? envEndpoints.tvsAuthorize,
+        tokenEndpoint: this.config.tvs.tokenEndpoint ?? envEndpoints.tvsToken,
       }
 
       this.tvsAuth = new TvsAuth(tvsAuthConf, this.config.requestTimeoutMs)
