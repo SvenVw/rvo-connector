@@ -1,23 +1,59 @@
 import { v4 as uuidv4 } from "uuid"
 
 /**
+ * Escapes special characters in a string for use in XML.
+ * Prevents XML injection by encoding <, >, &, ', and ".
+ *
+ * @param unsafe The raw string to escape.
+ * @returns An XML-safe encoded string.
+ */
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("'", "&apos;")
+    .replaceAll('"', "&quot;")
+}
+
+/**
  * Parameters required to build the SOAP request for OpvragenBedrijfspercelen.
  */
 export interface SoapRequestParams {
-  /** Farm ID to query (optional). */
+  /**
+   * Farm ID to query (optional).
+   * Typically a KvK, BSN, or OIN.
+   */
   farmId?: string
-  /** Start date of the query period. */
+  /**
+   * Start date of the query period (YYYY-MM-DD).
+   * If omitted, defaults to the start of the current year.
+   */
   periodBeginDate?: string
-  /** End date of the query period. */
+  /**
+   * End date of the query period (YYYY-MM-DD).
+   * If omitted, defaults to two years from the current year.
+   */
   periodEndDate?: string
-  /** ABA credentials if using ABA authentication. */
+  /**
+   * ABA credentials if using ABA authentication.
+   * If provided, a WS-Security header will be included in the SOAP request.
+   */
   abaCredentials?: {
+    /** The ABA username. */
     username: string
+    /** The ABA password. */
     password?: string
   }
-  /** ID of the Issuer (client). */
+  /**
+   * ID of the Issuer (client).
+   * Usually your OIN or organization name.
+   */
   issuerId?: string
-  /** ID of the Sender (client). */
+  /**
+   * ID of the Sender (client).
+   * Usually matches the issuerId.
+   */
   senderId?: string
 }
 
@@ -28,17 +64,15 @@ export interface SoapRequestParams {
  * @returns The complete SOAP XML string.
  * @internal
  */
-export function buildBedrijfspercelenRequest(
-  params: SoapRequestParams,
-): string {
+export function buildBedrijfspercelenRequest(params: SoapRequestParams): string {
   const now = new Date()
   const currentYear = now.getFullYear()
 
   const messageId = uuidv4()
   const issueDate = now.toISOString().slice(0, 19) // YYYY-MM-DDTHH:MM:SS
 
-  const periodBeginDate = params.periodBeginDate || `${currentYear}-01-01`
-  const periodEndDate = params.periodEndDate || `${currentYear + 2}-01-01`
+  const periodBeginDate = escapeXml(params.periodBeginDate || `${currentYear}-01-01`)
+  const periodEndDate = escapeXml(params.periodEndDate || `${currentYear + 2}-01-01`)
 
   if (!params.issuerId) {
     throw new Error(
@@ -51,11 +85,11 @@ export function buildBedrijfspercelenRequest(
     )
   }
 
-  const issuerId = params.issuerId
-  const senderId = params.senderId
+  const issuerId = escapeXml(params.issuerId)
+  const senderId = escapeXml(params.senderId)
 
   const thirdPartyFarmIdXml = params.farmId
-    ? `<opv:ThirdPartyFarmID schemeAgencyName="KVK">${params.farmId}</opv:ThirdPartyFarmID>`
+    ? `<opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
     : ""
 
   let headerXml = ""
@@ -64,8 +98,8 @@ export function buildBedrijfspercelenRequest(
  <soapenv:Header>
    <Security xmlns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
     <UsernameToken>
-        <Username>${params.abaCredentials.username}</Username>
-        <Password>${params.abaCredentials.password || ""}</Password>
+        <Username>${escapeXml(params.abaCredentials.username)}</Username>
+        <Password>${escapeXml(params.abaCredentials.password || "")}</Password>
     </UsernameToken>
    </Security>
 </soapenv:Header>`

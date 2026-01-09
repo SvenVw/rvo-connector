@@ -15,16 +15,16 @@ To help you get started and understand our development process, here are some gu
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/SvenVw/rvo-connector.git
-    cd rvo-connector
-    ```
+   ```bash
+   git clone https://github.com/SvenVw/rvo-connector.git
+   cd rvo-connector
+   ```
 
 2. Install dependencies:
 
-    ```bash
-    pnpm install
-    ```
+   ```bash
+   pnpm install
+   ```
 
 ## 🛠️ Development Workflow
 
@@ -101,7 +101,7 @@ Testing interactions with RVO services is challenging for open-source contributo
 
 ### 1. Unit Tests (Preferred)
 
-Focus on testing logic that *does not* require a network connection.
+Focus on testing logic that _does not_ require a network connection.
 
 - **Transformers:** Test that XML responses are correctly parsed into TypeScript objects/GeoJSON. Use mock XML strings as input.
 - **Builders:** Test that your code generates the correct SOAP XML structure.
