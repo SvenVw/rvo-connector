@@ -86,6 +86,10 @@ export class RvoClient {
       ...config,
     }
 
+    if (this.config.requestTimeoutMs !== undefined && this.config.requestTimeoutMs < 0) {
+      throw new Error("requestTimeoutMs must be a non-negative number.")
+    }
+
     const env = this.config.environment!
     const envEndpoints = ENDPOINTS[env]
 

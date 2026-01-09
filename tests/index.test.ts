@@ -172,6 +172,17 @@ describe("RvoClient (Acceptance Environment)", () => {
   })
 
   describe("Error Handling", () => {
+    it("should throw if requestTimeoutMs is negative", () => {
+      expect(
+        () =>
+          new RvoClient({
+            clientId: "id",
+            clientName: "name",
+            requestTimeoutMs: -1,
+          }),
+      ).toThrow("requestTimeoutMs must be a non-negative number.")
+    })
+
     it("should throw if authMode is TVS but config is missing", () => {
       expect(
         () =>
