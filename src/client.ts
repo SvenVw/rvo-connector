@@ -185,7 +185,7 @@ export class RvoClient {
         "Access token is missing. Authenticate via TVS first or set the access token.",
       )
     }
-    if (!isTvs && (!this.config.aba || !this.config.aba.username)) {
+    if (!isTvs && !this.config.aba?.username) {
       throw new Error("ABA authentication mode selected but ABA username is missing.")
     }
 
