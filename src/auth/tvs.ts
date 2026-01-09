@@ -3,6 +3,10 @@ import qs from "qs"
 import jwt from "jsonwebtoken"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
 
+/**
+ * Handles TVS (Routeringsdienst TVS4) / OAuth 2.0 authentication with eHerkenning.
+ * Manages authorization URL generation and token exchange using JWT client assertions.
+ */
 export class TvsAuth {
   private config: RvoAuthTvsConfig
 
@@ -10,6 +14,13 @@ export class TvsAuth {
     this.config = config
   }
 
+  /**
+   * Generates the OAuth 2.0 Authorization URL for eHerkenning login.
+   *
+   * @param scope The requested OAuth scopes (service + eHerkenning URN).
+   * @param state Optional CSRF state string.
+   * @returns The fully qualified authorization URL.
+   */
   public getAuthorizationUrl(scope: string, state?: string): string {
     const finalState = state || uuidv4()
     const params = {
@@ -27,6 +38,12 @@ export class TvsAuth {
     return `${authEndpoint}?${qs.stringify(params)}`
   }
 
+  /**
+   * Exchanges an authorization code for an access token using a signed JWT client assertion.
+   *
+   * @param authorizationCode The code received after successful user login.
+   * @returns A promise resolving to the token response.
+   */
   public async getAccessToken(authorizationCode: string): Promise<RvoTokenResponse> {
     const tokenEndpoint = this.config.tokenEndpoint
     if (!tokenEndpoint) {

@@ -2,6 +2,10 @@ import { v4 as uuidv4 } from "uuid"
 
 /**
  * Escapes special characters in a string for use in XML.
+ * Prevents XML injection by encoding <, >, &, ', and ".
+ *
+ * @param unsafe The raw string to escape.
+ * @returns An XML-safe encoded string.
  */
 function escapeXml(unsafe: string): string {
   return unsafe.replace(/[<>&'"]/g, (c) => {
@@ -26,20 +30,40 @@ function escapeXml(unsafe: string): string {
  * Parameters required to build the SOAP request for OpvragenBedrijfspercelen.
  */
 export interface SoapRequestParams {
-  /** Farm ID to query (optional). */
+  /**
+   * Farm ID to query (optional).
+   * Typically a KvK, BSN, or OIN.
+   */
   farmId?: string
-  /** Start date of the query period. */
+  /**
+   * Start date of the query period (YYYY-MM-DD).
+   * If omitted, defaults to the start of the current year.
+   */
   periodBeginDate?: string
-  /** End date of the query period. */
+  /**
+   * End date of the query period (YYYY-MM-DD).
+   * If omitted, defaults to two years from the current year.
+   */
   periodEndDate?: string
-  /** ABA credentials if using ABA authentication. */
+  /**
+   * ABA credentials if using ABA authentication.
+   * If provided, a WS-Security header will be included in the SOAP request.
+   */
   abaCredentials?: {
+    /** The ABA username. */
     username: string
+    /** The ABA password. */
     password?: string
   }
-  /** ID of the Issuer (client). */
+  /**
+   * ID of the Issuer (client).
+   * Usually your OIN or organization name.
+   */
   issuerId?: string
-  /** ID of the Sender (client). */
+  /**
+   * ID of the Sender (client).
+   * Usually matches the issuerId.
+   */
   senderId?: string
 }
 

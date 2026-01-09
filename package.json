@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "keywords": [
+    "EDI-Crop",
     "NMI",
     "RVO",
     "The Netherlands",
@@ -11,8 +12,7 @@
     "oauth2",
     "soap",
     "webservices",
-    "xml",
-    "EDI-Crop"
+    "xml"
   ],
   "homepage": "https://github.com/SvenVw/rvo-connector#readme",
   "bugs": {
