@@ -1,6 +1,8 @@
 # @nmi-agro/rvo-connector
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SvenVw/rvo-connector)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector)
 
 A TypeScript client library for connecting to RVO (Rijksdienst voor Ondernemend Nederland) webservices to exchange agricultural data. This package simplifies the process of making API calls for services like `OpvragenBedrijfspercelen` using either ABA (username/password) or TVS (OAuth2/eHerkenning) authentication.
 
