@@ -24,9 +24,7 @@ try {
   // If the private key looks like a file path, read the file content
   if (
     !pkioPrivateKey.includes("PRIVATE KEY") &&
-    (pkioPrivateKey.endsWith(".pem") ||
-      pkioPrivateKey.endsWith(".key") ||
-      fs.existsSync(pkioPrivateKey))
+    (pkioPrivateKey.endsWith(".pem") || pkioPrivateKey.endsWith(".key"))
   ) {
     try {
       pkioPrivateKey = fs.readFileSync(pkioPrivateKey, "utf8")
