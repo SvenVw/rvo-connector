@@ -11,7 +11,8 @@
     "oauth2",
     "soap",
     "webservices",
-    "xml"
+    "xml",
+    "EDI-Crop"
   ],
   "homepage": "https://github.com/SvenVw/rvo-connector#readme",
   "bugs": {
