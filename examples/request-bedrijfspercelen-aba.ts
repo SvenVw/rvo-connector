@@ -1,8 +1,8 @@
 import { RvoClient } from "../src/client"
-import * as readline from "readline"
+import * as readline from "node:readline"
 import "dotenv/config"
 
-async function main() {
+try {
   // Configuration from environment variables
   const clientId = process.env.CLIENT_ID
   const clientName = process.env.CLIENT_NAME
@@ -60,9 +60,7 @@ async function main() {
   } finally {
     rl.close()
   }
-}
-
-main().catch((error) => {
+} catch (error) {
   console.error("\nAn error occurred:", error)
   process.exit(1)
-})
+}
