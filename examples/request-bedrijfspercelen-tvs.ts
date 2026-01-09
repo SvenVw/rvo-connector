@@ -63,7 +63,7 @@ async function main() {
       console.log("\n2. Exchanging authorization code for access token...")
       try {
         const tokenData = await client.exchangeAuthCode(authorizationCode.trim())
-        console.log("Access Token:", tokenData.access_token)
+        console.log("Access Token:", `${tokenData.access_token.substring(0, 10)}...`)
         console.log("Expires In (seconds):", tokenData.expires_in)
 
         rl.question(
