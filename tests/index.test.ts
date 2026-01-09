@@ -241,7 +241,7 @@ describe("RvoClient (Acceptance Environment)", () => {
         aba: {} as any, // Missing username
       })
       await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
-        "ABA authentication mode selected but ABA username is missing.",
+        "ABA authentication mode selected but ABA username or password is missing.",
       )
     })
 

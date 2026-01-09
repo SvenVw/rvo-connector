@@ -28,7 +28,7 @@ export interface RvoAuthAbaConfig {
   /** The username for ABA authentication (often your OIN or organization ID). */
   username: string
   /** The password for ABA authentication. */
-  password?: string
+  password: string
 }
 
 /**

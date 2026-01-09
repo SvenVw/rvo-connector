@@ -189,8 +189,8 @@ export class RvoClient {
         "Access token is missing. Authenticate via TVS first or set the access token.",
       )
     }
-    if (!isTvs && !this.config.aba?.username) {
-      throw new Error("ABA authentication mode selected but ABA username is missing.")
+    if (!isTvs && (!this.config.aba?.username || !this.config.aba?.password)) {
+      throw new Error("ABA authentication mode selected but ABA username or password is missing.")
     }
 
     const soapXml = buildBedrijfspercelenRequest({
