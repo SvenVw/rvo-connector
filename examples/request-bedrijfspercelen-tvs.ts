@@ -87,7 +87,8 @@ async function main() {
       "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
     )
     const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
-    const format = (formatRaw.trim().toLowerCase() || "geojson") as "xml" | "geojson"
+    const formatInput = formatRaw.trim().toLowerCase() || "geojson"
+    const format: "xml" | "geojson" = formatInput === "xml" ? "xml" : "geojson"
 
     console.log("\n3. Fetching Bedrijfspercelen...")
     const result = await client.opvragenBedrijfspercelen({
