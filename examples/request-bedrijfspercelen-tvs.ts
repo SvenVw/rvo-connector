@@ -1,5 +1,6 @@
 import { RvoClient } from "../src/client"
 import * as readline from "readline"
+import * as fs from "node:fs"
 import "dotenv/config"
 
 async function main() {
@@ -7,7 +8,7 @@ async function main() {
   const clientId = process.env.CLIENT_ID
   const clientName = process.env.CLIENT_NAME
   const redirectUri = process.env.REDIRECT_URI
-  const pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
+  let pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
   const env = (process.env.NODE_ENV === "production" ? "production" : "acceptance") as
     | "acceptance"
     | "production"
@@ -18,6 +19,21 @@ async function main() {
     )
     console.error("Please check your .env file.")
     process.exit(1)
+  }
+
+  // If the private key looks like a file path, read the file content
+  if (
+    !pkioPrivateKey.includes("PRIVATE KEY") &&
+    (pkioPrivateKey.endsWith(".pem") ||
+      pkioPrivateKey.endsWith(".key") ||
+      fs.existsSync(pkioPrivateKey))
+  ) {
+    try {
+      pkioPrivateKey = fs.readFileSync(pkioPrivateKey, "utf8")
+    } catch (error) {
+      console.error(`Error reading private key file at ${pkioPrivateKey}:`, error)
+      process.exit(1)
+    }
   }
 
   console.log("--- RVO TVS Connection Example (Bedrijfspercelen) ---")
