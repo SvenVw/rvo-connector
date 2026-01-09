@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI Workflow: Added GitHub Actions for automated unit testing and type checking on every push and pull request
 
+### Security
+
+- Fixed XML Injection vulnerability in SOAP request builder by escaping user inputs.
+
 ## [1.0.1] - 2026-01-05
 
 ### Security

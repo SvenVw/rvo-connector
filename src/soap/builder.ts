@@ -1,6 +1,28 @@
 import { v4 as uuidv4 } from "uuid"
 
 /**
+ * Escapes special characters in a string for use in XML.
+ */
+function escapeXml(unsafe: string): string {
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case "<":
+        return "&lt;"
+      case ">":
+        return "&gt;"
+      case "&":
+        return "&amp;"
+      case "'":
+        return "&apos;"
+      case '"':
+        return "&quot;"
+      default:
+        return c
+    }
+  })
+}
+
+/**
  * Parameters required to build the SOAP request for OpvragenBedrijfspercelen.
  */
 export interface SoapRequestParams {
@@ -49,11 +71,11 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
     )
   }
 
-  const issuerId = params.issuerId
-  const senderId = params.senderId
+  const issuerId = escapeXml(params.issuerId)
+  const senderId = escapeXml(params.senderId)
 
   const thirdPartyFarmIdXml = params.farmId
-    ? `<opv:ThirdPartyFarmID schemeAgencyName="KVK">${params.farmId}</opv:ThirdPartyFarmID>`
+    ? `<opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
     : ""
 
   let headerXml = ""
@@ -62,8 +84,8 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
  <soapenv:Header>
    <Security xmlns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
     <UsernameToken>
-        <Username>${params.abaCredentials.username}</Username>
-        <Password>${params.abaCredentials.password || ""}</Password>
+        <Username>${escapeXml(params.abaCredentials.username)}</Username>
+        <Password>${escapeXml(params.abaCredentials.password || "")}</Password>
     </UsernameToken>
    </Security>
 </soapenv:Header>`
