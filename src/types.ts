@@ -205,7 +205,7 @@ export interface CropFieldProperties {
  */
 export interface BedrijfspercelenXmlResponse {
   /** Dynamic keys representing the XML structure. */
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
@@ -248,5 +248,5 @@ export interface RvoTokenResponse {
   /**
    * Additional properties from the token response.
    */
-  [key: string]: any
+  [key: string]: unknown
 }

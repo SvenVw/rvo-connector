@@ -3,6 +3,7 @@ import type {
   RvoClientConfig,
   BedrijfspercelenOptions,
   BedrijfspercelenResponse,
+  BedrijfspercelenGeoJSONResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
 } from "./types"
@@ -252,7 +253,7 @@ export class RvoClient {
     const result = await parser.parseStringPromise(responseText)
 
     if (options.outputFormat === "geojson") {
-      return transformBedrijfspercelenToGeoJSON(result)
+      return transformBedrijfspercelenToGeoJSON(result) as BedrijfspercelenGeoJSONResponse
     }
 
     return result
