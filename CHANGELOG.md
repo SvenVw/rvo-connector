@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **[BREAKING CHANGE]** Removed implicit file reading for `pkioPrivateKey` to prevent potential LFI and file existence oracle vulnerabilities. The key must now be provided as a string. Users previously passing a file path must now read the file content themselves before passing it to the config.
 - Fixed XML Injection vulnerability in SOAP request builder by escaping user inputs.
 - Masked access token logging in `examples/request-bedrijfspercelen-tvs.ts` to prevent sensitive information leakage.
 

@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid"
 import qs from "qs"
 import jwt from "jsonwebtoken"
-import fs from "fs"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
 
 export class TvsAuth {
@@ -36,14 +35,6 @@ export class TvsAuth {
     const now = Math.floor(Date.now() / 1000)
 
     let privateKey = this.config.pkioPrivateKey
-    // Check if privateKey is a file path
-    if (fs.existsSync(privateKey)) {
-      try {
-        privateKey = fs.readFileSync(privateKey, "utf8")
-      } catch {
-        // Ignore error, assume it's a key string if read fails or not a file
-      }
-    }
 
     this.validatePrivateKey(privateKey)
 

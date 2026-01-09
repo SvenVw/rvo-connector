@@ -10,7 +10,7 @@ export interface RvoAuthTvsConfig {
   redirectUri: string
   /**
    * Private key from the PKIoverheid certificate.
-   * This can be the raw key content (PEM string) or a file path to the .pem file.
+   * This must be the raw key content (PEM string). File paths are no longer supported for security reasons.
    * Used to sign the client assertion JWT.
    */
   pkioPrivateKey: string

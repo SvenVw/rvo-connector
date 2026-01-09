@@ -78,7 +78,7 @@ const client = new RvoClient({
   tvs: {
     clientId: "YOUR_CLIENT_ID",
     redirectUri: "https://your-app.com/callback",
-    pkioPrivateKey: "YOUR_PKIO_PRIVATE_KEY_CONTENT_OR_PATH",
+    pkioPrivateKey: "YOUR_PKIO_PRIVATE_KEY_CONTENT",
   },
 
   // ABA Configuration (if using ABA)
@@ -230,7 +230,7 @@ To run the tests locally, you need to configure your environment variables.
    CLIENT_ID=your_client_id
    CLIENT_NAME=your_client_name
    REDIRECT_URI=https://your-app.com/callback
-   PKIO_PRIVATE_KEY=your_pkio_private_key_content_or_path
+   PKIO_PRIVATE_KEY=your_pkio_private_key_content
    ```
 
    - `ABA_USERNAME`: Username for ABA authentication.
@@ -238,7 +238,7 @@ To run the tests locally, you need to configure your environment variables.
    - `CLIENT_ID`: Your Client ID / OIN.
    - `CLIENT_NAME`: Your Client Name (for SOAP Issuer/Sender).
    - `REDIRECT_URI`: The redirect URI registered for your eHerkenning service.
-   - `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Can be the key string or a path to the key file.
+   - `PKIO_PRIVATE_KEY`: The private key from your **PKIoverheid certificate** (PKIo-certificaat). Must be the raw key string (PEM format).
 
 3. Run the tests:
 
