@@ -182,7 +182,7 @@ function processQualityIndicators(indicators: any): any {
     }
 
     // Handle Geometry transformation
-    if (newIndicator["Geometry"] && newIndicator["Geometry"]["Polygon"]) {
+    if (newIndicator["Geometry"]?.["Polygon"]) {
       const geoJson = convertGmlToGeoJson(newIndicator["Geometry"]["Polygon"])
       if (geoJson) {
         newIndicator["geometry"] = geoJson // Add standard GeoJSON geometry property
