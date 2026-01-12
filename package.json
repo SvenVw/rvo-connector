@@ -1,25 +1,43 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "A client to connect to RVO webservices for agricultural information.",
-  "type": "module",
-  "license": "MIT",
+  "keywords": [
+    "ABA",
+    "EDI-Crop",
+    "GIS",
+    "GeoJSON",
+    "NMI",
+    "PKIoverheid",
+    "RVO",
+    "TVS",
+    "The Netherlands",
+    "agriculture",
+    "bedrijfspercelen",
+    "eHerkenning",
+    "oauth2",
+    "soap",
+    "webservices",
+    "xml"
+  ],
   "homepage": "https://github.com/SvenVw/rvo-connector#readme",
   "bugs": {
     "url": "https://github.com/SvenVw/rvo-connector/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SvenVw/rvo-connector.git"
-  },
+  "license": "MIT",
   "author": {
     "name": "Sven Verweij",
     "email": "37927107+SvenVw@users.noreply.github.com",
     "url": "https://github.com/SvenVw"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SvenVw/rvo-connector.git"
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
@@ -33,7 +51,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "test": "vitest --run",
+    "test": "vitest",
+    "test:ci": "vitest --run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
@@ -43,48 +62,37 @@
     "docs": "typedoc",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": [
-    "NMI",
-    "RVO",
-    "The Netherlands",
-    "agriculture",
-    "webservices",
-    "bedrijfspercelen",
-    "xml",
-    "soap",
-    "oauth2"
-  ],
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3",
+    "proj4": "^2.20.2",
+    "qs": "^6.14.1",
+    "uuid": "^13.0.0",
+    "xml2js": "^0.6.2"
+  },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.10.4",
-    "@types/proj4": "^2.19.0",
+    "@types/node": "^25.0.3",
     "@types/qs": "^6.14.0",
     "@types/xml2js": "^0.4.14",
+    "@vitest/coverage-v8": "^4.0.16",
     "bumpp": "^10.3.2",
     "dotenv": "^17.2.3",
-    "oxfmt": "^0.20.0",
-    "oxlint": "^1.35.0",
-    "oxlint-tsgolint": "^0.10.0",
-    "tsdown": "^0.18.2",
+    "oxfmt": "^0.23.0",
+    "oxlint": "^1.38.0",
+    "oxlint-tsgolint": "^0.10.1",
+    "tsdown": "^0.18.4",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
     ]
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "jsonwebtoken": "^9.0.3",
-    "proj4": "^2.20.2",
-    "qs": "^6.14.0",
-    "uuid": "^13.0.0",
-    "xml2js": "^0.6.2"
   }
 }

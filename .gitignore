@@ -4,5 +4,6 @@ dist
 .DS_Store
 .env
 docs/
-rvo-webservice-docs
-.gemini
+rvo-webservice-docs/
+.gemini/
+coverage/

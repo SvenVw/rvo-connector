@@ -79,9 +79,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
               CropFieldID: "ID1",
               Border: {
                 exterior: {
-                  LinearRing: {
-                    posList: "155000 463000 155100 463000 155000 463000",
-                  },
+                  LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
                 },
               },
             },
@@ -91,9 +89,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
               CropFieldID: "ID2",
               Border: {
                 exterior: {
-                  LinearRing: {
-                    posList: "160000 470000 160100 470000 160000 470000",
-                  },
+                  LinearRing: { posList: "160000 470000 160100 470000 160000 470000" },
                 },
               },
             },
@@ -151,9 +147,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
               CropFieldID: "ID_WITH_GEO",
               Border: {
                 exterior: {
-                  LinearRing: {
-                    posList: "155000 463000 155100 463000 155000 463000",
-                  },
+                  LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
                 },
               },
             },
@@ -228,9 +222,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
             CropFieldID: "ID_QI",
             Border: {
               exterior: {
-                LinearRing: {
-                  posList: "155000 463000 155100 463000 155000 463000",
-                },
+                LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
               },
             },
             QualityIndicatorType: {
@@ -238,9 +230,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
               Geometry: {
                 Polygon: {
                   exterior: {
-                    LinearRing: {
-                      posList: "155050 463050 155060 463050 155050 463050",
-                    },
+                    LinearRing: { posList: "155050 463050 155060 463050 155050 463050" },
                   },
                 },
               },
@@ -272,9 +262,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
             CropFieldID: "ID_QI_ARRAY",
             Border: {
               exterior: {
-                LinearRing: {
-                  posList: "155000 463000 155100 463000 155000 463000",
-                },
+                LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
               },
             },
             QualityIndicatorType: [
@@ -283,9 +271,7 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
                 Geometry: {
                   Polygon: {
                     exterior: {
-                      LinearRing: {
-                        posList: "155050 463050 155060 463050 155050 463050",
-                      },
+                      LinearRing: { posList: "155050 463050 155060 463050 155050 463050" },
                     },
                   },
                 },

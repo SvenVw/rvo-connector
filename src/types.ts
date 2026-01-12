@@ -10,7 +10,7 @@ export interface RvoAuthTvsConfig {
   redirectUri: string
   /**
    * Private key from the PKIoverheid certificate.
-   * This can be the raw key content (PEM string) or a file path to the .pem file.
+   * This must be the raw key content (PEM string). File paths are no longer supported for security reasons.
    * Used to sign the client assertion JWT.
    */
   pkioPrivateKey: string
@@ -25,10 +25,10 @@ export interface RvoAuthTvsConfig {
  * Used primarily for legacy or specific service connections.
  */
 export interface RvoAuthAbaConfig {
-  /** The username for ABA authentication. */
+  /** The username for ABA authentication (often your OIN or organization ID). */
   username: string
   /** The password for ABA authentication. */
-  password?: string
+  password: string
 }
 
 /**
@@ -62,15 +62,34 @@ export interface RvoClientConfig {
    */
   clientName: string
 
-  /** Configuration specific to TVS authentication. Required if `authMode` is 'TVS'. */
+  /**
+   * Configuration specific to TVS authentication.
+   * Required if `authMode` is 'TVS'.
+   */
   tvs?: RvoAuthTvsConfig
-  /** Configuration specific to ABA authentication. Required if `authMode` is 'ABA'. */
+  /**
+   * Configuration specific to ABA authentication.
+   * Required if `authMode` is 'ABA'.
+   */
   aba?: RvoAuthAbaConfig
 
-  /** Optional override for the EdiCrop webservice URL (TVS mode). */
+  /**
+   * Optional override for the EdiCrop webservice URL (TVS mode).
+   * If omitted, the default URL for the selected environment is used.
+   */
   ediCropUrl?: string
-  /** Optional override for the EdiCrop webservice URL (ABA mode). */
+  /**
+   * Optional override for the EdiCrop webservice URL (ABA mode).
+   * If omitted, the default URL for the selected environment is used.
+   */
   ediCropAbaUrl?: string
+
+  /**
+   * Timeout in milliseconds for API requests (e.g., SOAP calls).
+   * Set to 0 to disable timeout.
+   * @default 30000 (30 seconds)
+   */
+  requestTimeoutMs?: number
 }
 
 /**
@@ -182,44 +201,54 @@ export interface CropFieldProperties {
 
 /**
  * Generic interface for the parsed XML response from Bedrijfspercelen service.
- * The structure depends on the SOAP response.
+ * The structure depends on the SOAP response and how it was parsed by xml2js.
  */
 export interface BedrijfspercelenXmlResponse {
-  [key: string]: any
+  /** Dynamic keys representing the XML structure. */
+  [key: string]: unknown
 }
 
 /**
  * GeoJSON output for Bedrijfspercelen.
  * A FeatureCollection where each feature represents a CropField.
  */
-export type BedrijfspercelenGeoJSONResponse = FeatureCollection<
-  Geometry,
-  CropFieldProperties
->
+export type BedrijfspercelenGeoJSONResponse = FeatureCollection<Geometry, CropFieldProperties>
 
 /**
  * Union type for the response of `opvragenBedrijfspercelen`.
  */
-export type BedrijfspercelenResponse =
-  | BedrijfspercelenXmlResponse
-  | BedrijfspercelenGeoJSONResponse
+export type BedrijfspercelenResponse = BedrijfspercelenXmlResponse | BedrijfspercelenGeoJSONResponse
 
 /**
  * Response from the RVO OAuth 2.0 Token Endpoint.
  */
 export interface RvoTokenResponse {
-  /** The OAuth 2.0 access token. */
+  /**
+   * The OAuth 2.0 access token.
+   * This token must be included in the Authorization header of SOAP requests.
+   */
   access_token: string
-  /** The token type (usually "Bearer"). */
+  /**
+   * The token type (usually "Bearer").
+   */
   token_type: string
-  /** Token expiration time in seconds. */
+  /**
+   * Token expiration time in seconds.
+   */
   expires_in: number
-  /** The refresh token (if provided). */
+  /**
+   * The refresh token (if provided by RVO).
+   * Note: Not all flows or environments provide a refresh token.
+   */
   refresh_token?: string
-  /** Scopes granted by the token. */
+  /**
+   * Scopes actually granted by the token.
+   */
   scope?: string
-  /** Additional properties from the token response. */
-  [key: string]: any
+  /**
+   * Additional properties from the token response.
+   */
+  [key: string]: unknown
 }
 
 // --- Mutation Types ---

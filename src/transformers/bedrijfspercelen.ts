@@ -1,15 +1,14 @@
-import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson"
+import type { Feature, Polygon, MultiPolygon } from "geojson"
 import { parsePosList, transformCoordinates } from "../utils/geometry"
+import type { BedrijfspercelenGeoJSONResponse, CropFieldProperties } from "../types"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
  *
  * @param response The parsed XML response object from the SOAP body.
  */
-export function transformBedrijfspercelenToGeoJSON(
-  response: any,
-): FeatureCollection {
-  const features: Feature[] = []
+export function transformBedrijfspercelenToGeoJSON(response: any): BedrijfspercelenGeoJSONResponse {
+  const features: Feature<Polygon | MultiPolygon, CropFieldProperties>[] = []
 
   // Navigate the deep object structure to find CropFields
   // Note: xml2js might return arrays or single objects depending on parsing options.
@@ -20,8 +19,7 @@ export function transformBedrijfspercelenToGeoJSON(
   // Traverse down: Envelope -> Body -> OpvragenBedrijfspercelenResponse
   if (root["Envelope"]) root = root["Envelope"]
   if (root["Body"]) root = root["Body"]
-  if (root["OpvragenBedrijfspercelenResponse"])
-    root = root["OpvragenBedrijfspercelenResponse"]
+  if (root["OpvragenBedrijfspercelenResponse"]) root = root["OpvragenBedrijfspercelenResponse"]
 
   // Handle ExchangedDocument if wrapper exists (sometimes it's directly Farm)
   // But usually it's Farm sibling to ExchangedDocument
@@ -50,7 +48,7 @@ export function transformBedrijfspercelenToGeoJSON(
     const geometry = convertGmlToGeoJson(cropField["Border"])
 
     // Extract Properties (everything except Border/Geometry)
-    const properties = extractProperties(cropField)
+    const properties = extractProperties(cropField) as unknown as CropFieldProperties
 
     if (geometry) {
       features.push({
@@ -108,6 +106,13 @@ function convertGmlToGeoJson(gmlPolygon: any): Polygon | MultiPolygon | null {
   }
 }
 
+/**
+ * Extracts coordinates from a GML LinearRing container.
+ * Handles both direct string values and xml2js object structures with text content in "_".
+ *
+ * @param container The XML object containing the LinearRing.
+ * @returns An array of number pairs representing RD New coordinates.
+ */
 function getLinearRingCoordinates(container: any): number[][] {
   // container is usually exterior or interior
   // Should contain LinearRing -> posList
@@ -127,6 +132,13 @@ function getLinearRingCoordinates(container: any): number[][] {
   return transformCoordinates(coords)
 }
 
+/**
+ * Extracts and simplifies properties from a CropField object.
+ * Removes geometry keys and flattens xml2js text nodes.
+ *
+ * @param cropField The parsed XML object for a single CropField.
+ * @returns A flattened record of property keys and values.
+ */
 function extractProperties(cropField: any): Record<string, any> {
   const properties: Record<string, any> = {}
 
@@ -150,6 +162,12 @@ function extractProperties(cropField: any): Record<string, any> {
   return properties
 }
 
+/**
+ * Processes QualityIndicator types by transforming their internal GML geometries to GeoJSON.
+ *
+ * @param indicators A single indicator object or an array of indicators.
+ * @returns The processed indicator(s) with standard 'geometry' property.
+ */
 function processQualityIndicators(indicators: any): any {
   if (!indicators) return indicators
 

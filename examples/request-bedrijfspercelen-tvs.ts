@@ -1,16 +1,17 @@
 import { RvoClient } from "../src/client"
-import * as readline from "readline"
+import * as readline from "node:readline"
+import * as fs from "node:fs"
 import "dotenv/config"
 
-async function main() {
+try {
   // Configuration from environment variables
   const clientId = process.env.CLIENT_ID
   const clientName = process.env.CLIENT_NAME
   const redirectUri = process.env.REDIRECT_URI
-  const pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
-  const env = (
-    process.env.NODE_ENV === "production" ? "production" : "acceptance"
-  ) as "acceptance" | "production"
+  let pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
+  const env = (process.env.NODE_ENV === "production" ? "production" : "acceptance") as
+    | "acceptance"
+    | "production"
 
   if (!clientId || !clientName || !redirectUri || !pkioPrivateKey) {
     console.error(
@@ -18,6 +19,19 @@ async function main() {
     )
     console.error("Please check your .env file.")
     process.exit(1)
+  }
+
+  // If the private key looks like a file path, read the file content
+  if (
+    !pkioPrivateKey.includes("PRIVATE KEY") &&
+    (pkioPrivateKey.endsWith(".pem") || pkioPrivateKey.endsWith(".key"))
+  ) {
+    try {
+      pkioPrivateKey = fs.readFileSync(pkioPrivateKey, "utf8")
+    } catch (error) {
+      console.error(`Error reading private key file at ${pkioPrivateKey}:`, error)
+      process.exit(1)
+    }
   }
 
   console.log("--- RVO TVS Connection Example (Bedrijfspercelen) ---")
@@ -28,6 +42,7 @@ async function main() {
     authMode: "TVS",
     clientId: clientId,
     clientName: clientName,
+    requestTimeoutMs: 30000,
     tvs: {
       clientId: clientId,
       redirectUri: redirectUri,
@@ -40,9 +55,7 @@ async function main() {
     service: "opvragenBedrijfspercelen",
   })
 
-  console.log(
-    "\n1. Please open the following URL in your browser to authorize:",
-  )
+  console.log("\n1. Please open the following URL in your browser to authorize:")
   console.log(authUrl)
   console.log(
     '\nAfter authorization, RVO will redirect to your REDIRECT_URI with a "code" parameter.',
@@ -53,56 +66,41 @@ async function main() {
     output: process.stdout,
   })
 
-  rl.question(
-    "Please paste the authorization code from the redirect URL here: ",
-    async (authorizationCode) => {
-      if (!authorizationCode) {
-        console.error("\nERROR: No authorization code provided.")
-        rl.close()
-        return
-      }
+  const ask = (query: string) => new Promise<string>((resolve) => rl.question(query, resolve))
 
-      console.log("\n2. Exchanging authorization code for access token...")
-      try {
-        const tokenData = await client.exchangeAuthCode(
-          authorizationCode.trim(),
-        )
-        console.log("Access Token:", tokenData.access_token)
-        console.log("Expires In (seconds):", tokenData.expires_in)
+  try {
+    const authorizationCodeRaw = await ask(
+      "Please paste the authorization code from the redirect URL here: ",
+    )
+    const authorizationCode = authorizationCodeRaw.trim()
 
-        rl.question(
-          "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
-          async (farmId) => {
-            rl.question(
-              "\nChoose output format (xml/geojson) [default: geojson]: ",
-              async (formatRaw) => {
-                const format = (formatRaw.trim().toLowerCase() || "geojson") as
-                  | "xml"
-                  | "geojson"
+    if (!authorizationCode) {
+      console.error("\nERROR: No authorization code provided.")
+      throw new Error("No authorization code provided.")
+    }
 
-                console.log("\n3. Fetching Bedrijfspercelen...")
-                try {
-                  const result = await client.opvragenBedrijfspercelen({
-                    farmId: farmId.trim() || undefined,
-                    outputFormat: format,
-                  })
-                  console.log("\nSuccessfully fetched Bedrijfspercelen:")
-                  console.log(JSON.stringify(result, null, 2))
-                } catch (error) {
-                  console.error("\nFailed to fetch Bedrijfspercelen:", error)
-                } finally {
-                  rl.close()
-                }
-              },
-            )
-          },
-        )
-      } catch (error) {
-        console.error("\nFailed to obtain access token:", error)
-        rl.close()
-      }
-    },
-  )
+    console.log("\n2. Exchanging authorization code for access token...")
+    const tokenData = await client.exchangeAuthCode(authorizationCode)
+    console.log("Expires In (seconds):", tokenData.expires_in)
+
+    const farmId = await ask(
+      "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
+    )
+    const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
+    const formatInput = formatRaw.trim().toLowerCase() || "geojson"
+    const format: "xml" | "geojson" = formatInput === "xml" ? "xml" : "geojson"
+
+    console.log("\n3. Fetching Bedrijfspercelen...")
+    const result = await client.opvragenBedrijfspercelen({
+      farmId: farmId.trim() || undefined,
+      outputFormat: format,
+    })
+    console.log("\nSuccessfully fetched Bedrijfspercelen:")
+    console.log(JSON.stringify(result, null, 2))
+  } finally {
+    rl.close()
+  }
+} catch (error) {
+  console.error("\nAn error occurred:", error)
+  process.exitCode = 1
 }
-
-main().catch(console.error)
