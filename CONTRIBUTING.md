@@ -15,16 +15,16 @@ To help you get started and understand our development process, here are some gu
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/SvenVw/rvo-connector.git
-    cd rvo-connector
-    ```
+   ```bash
+   git clone https://github.com/SvenVw/rvo-connector.git
+   cd rvo-connector
+   ```
 
 2. Install dependencies:
 
-    ```bash
-    pnpm install
-    ```
+   ```bash
+   pnpm install
+   ```
 
 ## 🛠️ Development Workflow
 
@@ -42,7 +42,7 @@ This project uses a modern toolchain to ensure code quality and performance.
 
 ### Linting & Formatting
 
-This project uses [Oxlint](https://oxc-project.github.io/docs/guide/usage/linter.html) and [Oxfmt](https://github.com/oxc-project/oxc) for fast and efficient linting and formatting. We appreciate it if your code adheres to these checks before submitting a PR. We recommend running the following before submitting a PR:
+This project uses [Oxlint](https://oxc-project.github.io/docs/guide/usage/linter.html) and [Oxfmt](https://github.com/oxc-project/oxc) for fast and efficient linting and formatting. Additionally, **SonarCloud** is used for deep static analysis and test coverage reporting. We appreciate it if your code adheres to these checks before submitting a PR. We recommend running the following before submitting a PR:
 
 ```bash
 pnpm lint:fix
@@ -101,7 +101,7 @@ Testing interactions with RVO services is challenging for open-source contributo
 
 ### 1. Unit Tests (Preferred)
 
-Focus on testing logic that *does not* require a network connection.
+Focus on testing logic that _does not_ require a network connection.
 
 - **Transformers:** Test that XML responses are correctly parsed into TypeScript objects/GeoJSON. Use mock XML strings as input.
 - **Builders:** Test that your code generates the correct SOAP XML structure.
@@ -122,7 +122,8 @@ Use `vitest` to mock the `fetch` function.
 2. Implement your changes.
 3. Add unit tests to cover your code.
 4. Please run `pnpm lint` and `pnpm typecheck` to help ensure there are no errors.
-5. Submit a Pull Request with a clear description of the changes.
+5. Ensure your changes pass the **SonarCloud Quality Gate**. This check runs automatically on your PR and verifies code coverage, bugs, and security vulnerabilities.
+6. Submit a Pull Request with a clear description of the changes.
 
 ### Developer Certificate of Origin (DCO)
 

@@ -9,10 +9,6 @@ vi.mock("jsonwebtoken", () => ({
     sign: vi.fn(() => "mocked-jwt"),
   },
 }))
-vi.mock("fs", () => ({
-  existsSync: vi.fn(() => false),
-  readFileSync: vi.fn(() => "mocked-private-key-content"),
-}))
 
 // Load credentials from env
 const ABA_USERNAME = process.env.ABA_USERNAME
@@ -103,9 +99,7 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1)
       const [url, config] = mockFetch.mock.calls[0]
 
-      expect(url).toBe(
-        "https://edicrop-acc.agro.nl/edicrop/EdiCrop-WebService/v2",
-      )
+      expect(url).toBe("https://edicrop-acc.agro.nl/edicrop/EdiCrop-WebService/v2")
       expect(config.headers["Authorization"]).toBe("Bearer fake-access-token")
       expect(config.body).not.toContain("<UsernameToken>")
     })
@@ -121,15 +115,150 @@ describe("RvoClient (Acceptance Environment)", () => {
       const authUrl = client.getAuthorizationUrl() // Defaults to 'opvragenBedrijfspercelen'
 
       expect(authUrl).toContain("https://pp2.toegang.overheid.nl/kvo/authorize")
-      
-      const urlParams = new URLSearchParams(authUrl.split('?')[1]);
-      const actualScope = urlParams.get('scope');
 
-      const expectedEherkenningScope = "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45";
-      const expectedServiceScope = "RVO-WS.GEO.bp.lezen";
-      const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`;
+      const urlParams = new URLSearchParams(authUrl.split("?")[1])
+      const actualScope = urlParams.get("scope")
 
-      expect(actualScope).toBe(expectedFullScope);
+      const expectedEherkenningScope =
+        "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45"
+      const expectedServiceScope = "RVO-WS.GEO.bp.lezen"
+      const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`
+
+      expect(actualScope).toBe(expectedFullScope)
+    })
+  })
+
+  describe("Timeout Behavior", () => {
+    it("should timeout when requestTimeoutMs is exceeded", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+        requestTimeoutMs: 50, // Short timeout for testing
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockImplementation((url: string, options: any) => {
+        return new Promise((resolve, reject) => {
+          if (options.signal) {
+            if (options.signal.aborted) {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+              return
+            }
+            options.signal.addEventListener("abort", () => {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+            })
+          }
+        })
+      })
+
+      await expect(client.opvragenBedrijfspercelen({ farmId: "123" })).rejects.toThrow(
+        "Request to RVO service timed out after 50ms",
+      )
+    })
+  })
+
+  describe("Error Handling", () => {
+    it("should throw if requestTimeoutMs is negative", () => {
+      expect(
+        () =>
+          new RvoClient({
+            clientId: "id",
+            clientName: "name",
+            requestTimeoutMs: -1,
+          }),
+      ).toThrow("requestTimeoutMs must be a non-negative number.")
+    })
+
+    it("should throw if authMode is TVS but config is missing", () => {
+      expect(
+        () =>
+          new RvoClient({
+            authMode: "TVS",
+            clientId: "id",
+            clientName: "name",
+            tvs: undefined,
+          }),
+      ).toThrow("TVS authentication mode selected but TVS configuration is missing.")
+    })
+
+    it("should throw if authMode is not TVS when calling getAuthorizationUrl", () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "u", password: "p" },
+      })
+      expect(() => client.getAuthorizationUrl()).toThrow("Authentication mode is not TVS")
+    })
+
+    it("should throw if authMode is not TVS when calling exchangeAuthCode", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "u", password: "p" },
+      })
+      await expect(client.exchangeAuthCode("code")).rejects.toThrow(
+        "Authentication mode is not TVS",
+      )
+    })
+
+    it("should throw if calling opvragenBedrijfspercelen with TVS but no token", async () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        tvs: {
+          clientId: TVS_CLIENT_ID!,
+          redirectUri: TVS_REDIRECT_URI!,
+          pkioPrivateKey: PKIO_PRIVATE_KEY!,
+        },
+      })
+      await expect(client.opvragenBedrijfspercelen()).rejects.toThrow("Access token is missing.")
+    })
+
+    it("should throw if calling opvragenBedrijfspercelen with ABA but no username", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {} as any, // Missing username
+      })
+      await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
+        "ABA authentication mode selected but ABA username or password is missing.",
+      )
+    })
+
+    it("should throw if SOAP request fails (non-200)", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "u", password: "p" },
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: async () => "SOAP Fault",
+      })
+
+      await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
+        "Request failed: 500 - SOAP Fault",
+      )
     })
   })
 })
