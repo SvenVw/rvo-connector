@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-01-09
+## [2.0.0] - 2026-01-12
 
 ### Added
 
 - CI Workflow: Added GitHub Actions for automated unit testing and type checking on every push and pull request
 - Timeout Support: Added `requestTimeoutMs` configuration to `RvoClientConfig` to prevent indefinite hanging on network requests (defaults to 30 seconds). This applies to both OAuth 2.0 token exchange and SOAP service calls.
 - Code Quality: Integrated SonarCloud for automated code analysis, security scanning, and test coverage reporting.
+- Documentation: Added SonarQube quality badges to the README.
+
+### Changed
+
+- Code Quality: Improved code to pass SonarQube quality tests.
 
 ### Security
 
