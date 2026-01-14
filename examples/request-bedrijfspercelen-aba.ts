@@ -64,3 +64,4 @@ try {
   console.error("\nAn error occurred:", error)
   process.exit(1)
 }
+main().catch(console.error)

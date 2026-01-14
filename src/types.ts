@@ -250,3 +250,160 @@ export interface RvoTokenResponse {
    */
   [key: string]: unknown
 }
+
+// --- Mutation Types ---
+
+/**
+ * Action to perform on a Crop Field.
+ * - `'I'`: Insert (Create new).
+ * - `'U'`: Update (Modify existing).
+ * - `'D'`: Delete (Remove).
+ */
+export type MutationAction = "I" | "U" | "D"
+
+/**
+ * Structure for submitting a Crop Field mutation.
+ * Includes the action and the field details.
+ */
+export interface CropFieldMutation {
+  /** The action to perform (Insert, Update, Delete). */
+  action: MutationAction
+  /**
+   * The geometry of the field as GeoJSON (WGS84).
+   * The client will automatically transform this to RD New (EPSG:28992) and GML.
+   * Provide either `geometry` OR `gml`.
+   */
+  geometry?: Geometry
+  /**
+   * The geometry of the field as a raw GML string (RD New / EPSG:28992).
+   * Use this if you already have the GML or want to bypass the internal conversion.
+   * Provide either `geometry` OR `gml`.
+   */
+  gml?: string
+  /**
+   * Field properties.
+   * For 'I', requires at least CropTypeCode, BeginDate.
+   * For 'U', requires ID and Version.
+   */
+  properties: Partial<CropFieldProperties> & {
+    /**
+     * User-assigned name/designator.
+     * RVO usually requires this.
+     */
+    CropFieldDesignator?: string
+  }
+}
+
+/**
+ * Options for the `muterenBedrijfspercelen` request.
+ */
+export interface MuterenRequestOptions {
+  /**
+   * Farm ID (ThirdPartyFarmID).
+   * Required for identifying the farm being mutated.
+   */
+  farmId: string
+  /**
+   * Optional ID of a preceding ticket.
+   * Used when this request follows up on a previous one.
+   */
+  precedingTicketId?: string
+  /**
+   * The list of mutations to perform.
+   */
+  mutations: CropFieldMutation[]
+}
+
+/**
+ * Response for a mutation submission.
+ */
+export interface MuterenResponse {
+  /** The Ticket ID assigned by RVO to track this request. */
+  ticketId: string
+}
+
+// --- Process Status Types ---
+
+/**
+ * Status codes for process progress as defined in RVO Berichtenboek Bijlage D.
+ */
+export type RvoProcessStatusCode =
+  | "OPNIEUWAANBIEDEN"
+  | "INITBERICHT"
+  | "WACHTOPPERCELEN"
+  | "WIJZIGBERICHT"
+  | "PERCELENTOEGEVOEGD"
+  | "VALIDATIEVERZOEK"
+  | "VALIDEREN"
+  | "GEVALIDEERD"
+  | "VALIDATIEFOUT"
+  | "GETAND"
+  | "PERCELENNIETTOEGEVOEGD"
+  | "GEANNULEERD"
+  | "TECHNISCHEFOUT"
+  | "GEPUBLICEERD"
+  | "VALIDATIEVERZOEKGEORGISTER"
+  | "PERCELENINREGISTER"
+  | "VERLOPEN"
+  | "KI_OPGESCHOOND"
+  | "UNKNOWN"
+
+/**
+ * Response for `opvragenProcesvoortgang`.
+ */
+export interface ProcesVoortgangResponse {
+  /** The status code (e.g., 'GEVALIDEERD'). */
+  status: RvoProcessStatusCode
+  /** Description of the status. */
+  message: string
+  /** Percentage complete (0-100). */
+  percentage: number
+}
+
+// --- Validation Types ---
+
+export interface ValidationMessage {
+  code: string
+  message: string
+  severity: "FATAAL" | "FOUT" | "WAARSCHUWING" | "INFO"
+  fieldId?: string
+}
+
+/**
+ * Response for `opvragenValidatieresultaat`.
+ */
+export interface ValidatieResultaatResponse {
+  /** The Ticket ID. */
+  ticketId: string
+  /** List of validation messages/errors. */
+  messages: ValidationMessage[]
+  /**
+   * The validated/resulting fields as proposed by RVO.
+   * (Simplified representation for now, normally contains full CropField structures).
+   */
+  proposedFields?: any[]
+}
+
+// --- TAN Types ---
+
+/**
+ * Response for `ophalenTanVolgnummer`.
+ */
+export interface TanResponse {
+  /** The sequence number for which the user must provide the TAN code. */
+  sequenceNumber: number
+}
+
+// --- Formalization & Cancellation Types ---
+
+/**
+ * Result of formalizing or cancelling.
+ */
+export interface TransactionResponse {
+  /** The Ticket ID. */
+  ticketId: string
+  /** Result code (e.g., '0' for success). */
+  resultCode?: string
+  /** Result message. */
+  message?: string
+}

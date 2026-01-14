@@ -3,13 +3,33 @@ import type {
   RvoClientConfig,
   BedrijfspercelenOptions,
   BedrijfspercelenResponse,
-  BedrijfspercelenGeoJSONResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
+  MuterenRequestOptions,
+  MuterenResponse,
+  ProcesVoortgangResponse,
+  ValidatieResultaatResponse,
+  TanResponse,
+  TransactionResponse,
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
-import { buildBedrijfspercelenRequest } from "./soap/builder"
+import {
+  buildBedrijfspercelenRequest,
+  buildMuterenRequest,
+  buildProcesVoortgangRequest,
+  buildValidatieResultaatRequest,
+  buildTanRequest,
+  buildFormaliserenRequest,
+  buildAnnulerenRequest,
+} from "./soap/builder"
 import { transformBedrijfspercelenToGeoJSON } from "./transformers/bedrijfspercelen"
+import {
+  transformMuterenResponse,
+  transformProcesVoortgangResponse,
+  transformValidatieResultaatResponse,
+  transformTanResponse,
+  transformTransactionResponse,
+} from "./transformers/mutation"
 
 // Default Endpoints for different environments
 const ENDPOINTS = {
@@ -105,10 +125,9 @@ export class RvoClient {
       }
       const tvsAuthConf: RvoAuthTvsConfig = {
         ...this.config.tvs, // user config first
-        authorizeEndpoint: this.config.tvs.authorizeEndpoint ?? envEndpoints.tvsAuthorize,
-        tokenEndpoint: this.config.tvs.tokenEndpoint ?? envEndpoints.tvsToken,
+        authorizeEndpoint: this.config.tvs.authorizeEndpoint || envEndpoints.tvsAuthorize,
+        tokenEndpoint: this.config.tvs.tokenEndpoint || envEndpoints.tvsToken,
       }
-
       this.tvsAuth = new TvsAuth(tvsAuthConf, this.config.requestTimeoutMs)
     }
 
@@ -170,19 +189,9 @@ export class RvoClient {
     this.accessToken = token
   }
 
-  // --- Service Methods ---
+  // --- Helper: Execute Request ---
 
-  /**
-   * Calls the `OpvragenBedrijfspercelen` (GetCropFields) SOAP service.
-   * Retrieves registered crop fields for a farm.
-   *
-   * @param options Optional parameters for the request (farm ID, date range).
-   * @returns A promise resolving to the parsed XML response from RVO.
-   * @throws Error if authentication fails or the SOAP request returns an error.
-   */
-  public async opvragenBedrijfspercelen(
-    options: BedrijfspercelenOptions = {},
-  ): Promise<BedrijfspercelenResponse> {
+  private async executeSoapRequest(soapXml: string): Promise<any> {
     const isTvs = this.config.authMode === "TVS"
 
     if (isTvs && !this.accessToken) {
@@ -194,17 +203,7 @@ export class RvoClient {
       throw new Error("ABA authentication mode selected but ABA username or password is missing.")
     }
 
-    const soapXml = buildBedrijfspercelenRequest({
-      farmId: options.farmId,
-      periodBeginDate: options.periodBeginDate,
-      periodEndDate: options.periodEndDate,
-      abaCredentials: isTvs ? undefined : this.config.aba,
-      issuerId: this.config.clientName,
-      senderId: this.config.clientName,
-    })
-
     const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!
-
     const headers: Record<string, string> = {
       "Content-Type": "text/xml; charset=utf-8",
     }
@@ -250,12 +249,181 @@ export class RvoClient {
       explicitArray: false,
       tagNameProcessors: [xml2js.processors.stripPrefix],
     })
-    const result = await parser.parseStringPromise(responseText)
+    return await parser.parseStringPromise(responseText)
+  }
+
+  // --- Service Methods ---
+
+  /**
+   * Calls the `OpvragenBedrijfspercelen` (GetCropFields) SOAP service.
+   * Retrieves registered crop fields for a farm.
+   *
+   * @param options Optional parameters for the request (farm ID, date range).
+   * @returns A promise resolving to the parsed XML response from RVO.
+   * @throws Error if authentication fails or the SOAP request returns an error.
+   */
+  public async opvragenBedrijfspercelen(
+    options: BedrijfspercelenOptions = {},
+  ): Promise<BedrijfspercelenResponse> {
+    const isTvs = this.config.authMode === "TVS"
+
+    const soapXml = buildBedrijfspercelenRequest({
+      farmId: options.farmId,
+      periodBeginDate: options.periodBeginDate,
+      periodEndDate: options.periodEndDate,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+      issuerId: this.config.clientName,
+      senderId: this.config.clientName,
+    })
+
+    const result = await this.executeSoapRequest(soapXml)
 
     if (options.outputFormat === "geojson") {
-      return transformBedrijfspercelenToGeoJSON(result) as BedrijfspercelenGeoJSONResponse
+      return transformBedrijfspercelenToGeoJSON(result)
     }
 
     return result
+  }
+
+  /**
+   * Submits a mutation request for crop fields.
+   *
+   * This is the first step in the mutation flow. It sends the proposed changes to RVO.
+   * RVO returns a `TicketId` which is used to track the progress of the validation.
+   *
+   * @param options The mutation options, including farm ID and the list of mutations (Insert/Update/Delete).
+   * @returns A promise resolving to the `TicketId`.
+   */
+  public async muterenBedrijfspercelen(options: MuterenRequestOptions): Promise<MuterenResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildMuterenRequest({
+      ...options,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+      issuerId: this.config.clientName,
+      senderId: this.config.clientName,
+    })
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformMuterenResponse(result)
+  }
+
+  /**
+   * Checks the status of a submitted mutation ticket.
+   *
+   * Poll this endpoint periodically after submitting a mutation until the status indicates completion
+   * (e.g., status code 'GEVALIDEERD').
+   *
+   * @param ticketId The Ticket Id received from `muterenBedrijfspercelen`.
+   * @param farmId The Farm ID (optional, but recommended if known).
+   * @returns The current status and progress percentage.
+   */
+  public async opvragenProcesvoortgang(
+    ticketId: string,
+    farmId?: string,
+  ): Promise<ProcesVoortgangResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildProcesVoortgangRequest(
+      ticketId,
+      this.config.clientName,
+      isTvs ? undefined : this.config.aba,
+      farmId,
+    )
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformProcesVoortgangResponse(result)
+  }
+
+  /**
+   * Retrieves the validation results for a processed ticket.
+   *
+   * Once `opvragenProcesvoortgang` is complete, call this to see if there are any errors or warnings.
+   * If validation is successful, you can proceed to formalize (commit) the changes.
+   *
+   * @param ticketId The Ticket Id.
+   * @param farmId The Farm ID (optional).
+   * @returns The validation messages (errors/warnings) and the RVO-proposed resulting fields.
+   */
+  public async opvragenValidatieresultaat(
+    ticketId: string,
+    farmId?: string,
+  ): Promise<ValidatieResultaatResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildValidatieResultaatRequest(
+      ticketId,
+      this.config.clientName,
+      isTvs ? undefined : this.config.aba,
+      farmId,
+    )
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformValidatieResultaatResponse(result)
+  }
+
+  /**
+   * Retrieves a TAN sequence number required for formalizing a request.
+   *
+   * This corresponds to requesting a TAN code via SMS (if configured) or just getting the sequence number
+   * for which the user must provide the code.
+   *
+   * @returns The sequence number.
+   */
+  public async ophalenTanVolgnummer(): Promise<TanResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildTanRequest(this.config.clientName, isTvs ? undefined : this.config.aba)
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformTanResponse(result)
+  }
+
+  /**
+   * Finalizes (commits) a valid mutation request.
+   *
+   * This step makes the changes permanent in the RVO registry. It requires a valid TAN code
+   * corresponding to the sequence number retrieved earlier.
+   *
+   * @param ticketId The Ticket Id of the valid request.
+   * @param sequenceNumber The sequence number from `ophalenTanVolgnummer`.
+   * @param tanCode The TAN code provided by the user.
+   * @returns The result of the transaction (success/failure).
+   */
+  public async formaliserenOpgave(
+    ticketId: string,
+    sequenceNumber: number,
+    tanCode: string,
+  ): Promise<TransactionResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildFormaliserenRequest(
+      ticketId,
+      sequenceNumber,
+      tanCode,
+      this.config.clientName,
+      isTvs ? undefined : this.config.aba,
+    )
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformTransactionResponse(result)
+  }
+
+  /**
+   * Cancels a pending mutation request.
+   *
+   * Use this if the user decides not to proceed after seeing validation results,
+   * or if the request is stuck/erroneous.
+   *
+   * @param ticketId The Ticket Id to cancel.
+   * @param farmId The Farm ID (optional).
+   * @returns The result of the cancellation.
+   */
+  public async annulerenOpgave(ticketId: string, farmId?: string): Promise<TransactionResponse> {
+    const isTvs = this.config.authMode === "TVS"
+    const soapXml = buildAnnulerenRequest(
+      ticketId,
+      this.config.clientName,
+      isTvs ? undefined : this.config.aba,
+      farmId,
+    )
+
+    const result = await this.executeSoapRequest(soapXml)
+    return transformTransactionResponse(result)
   }
 }

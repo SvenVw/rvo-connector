@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { parsePosList, transformCoordinates } from "../../src/utils/geometry"
+import {
+  parsePosList,
+  transformCoordinates,
+  convertGeoJSONToGML,
+} from "../../src/utils/geometry"
 
 describe("Geometry Utils", () => {
   describe("parsePosList", () => {
@@ -74,6 +78,113 @@ describe("Geometry Utils", () => {
       const result = transformCoordinates(rdCoords)
       expect(result).toHaveLength(2)
       expect(result[0][0]).not.toBe(155000) // Should be transformed
+    })
+  })
+
+  describe("convertGeoJSONToGML", () => {
+    it("should convert a simple Polygon to GML", () => {
+      const polygon: any = {
+        type: "Polygon",
+        coordinates: [
+          [
+            [5.0, 52.0],
+            [5.1, 52.0],
+            [5.1, 52.1],
+            [5.0, 52.1],
+            [5.0, 52.0],
+          ],
+        ],
+      }
+
+      const gml = convertGeoJSONToGML(polygon)
+
+      expect(gml).toContain("<gml:Polygon>")
+      expect(gml).toContain(
+        '<gml:exterior><gml:LinearRing><gml:posList srsName="EPSG:28992">',
+      )
+      expect(gml).toContain("</gml:posList></gml:LinearRing></gml:exterior>")
+      expect(gml).toContain("</gml:Polygon>")
+
+      // Check if coordinates are transformed (checking format primarily)
+      // RD coordinates should be large numbers (e.g. > 100000)
+      // We expect output like "12345.6789 45678.9012 ..."
+      // Since 5.0, 52.0 is roughly ...
+      // Just check regex for space separated pairs
+      expect(gml).toMatch(/\d+\.\d{4} \d+\.\d{4}/)
+    })
+
+    it("should convert a MultiPolygon to GML", () => {
+      const multiPolygon: any = {
+        type: "MultiPolygon",
+        coordinates: [
+          [
+            [
+              [5.0, 52.0],
+              [5.1, 52.0],
+              [5.1, 52.1],
+              [5.0, 52.1],
+              [5.0, 52.0],
+            ],
+          ],
+        ],
+      }
+
+      const gml = convertGeoJSONToGML(multiPolygon)
+
+      expect(gml).toContain("<gml:MultiSurface>")
+      expect(gml).toContain("<gml:surfaceMember>")
+      expect(gml).toContain("<gml:Polygon>")
+      expect(gml).toContain('srsName="EPSG:28992"')
+    })
+
+    it("should convert a Polygon with interior rings (holes) to GML", () => {
+      const polygon: any = {
+        type: "Polygon",
+        coordinates: [
+          [
+            [5.0, 52.0],
+            [5.1, 52.0],
+            [5.1, 52.1],
+            [5.0, 52.1],
+            [5.0, 52.0],
+          ],
+          [
+            [5.02, 52.02],
+            [5.08, 52.02],
+            [5.08, 52.08],
+            [5.02, 52.08],
+            [5.02, 52.02],
+          ],
+        ],
+      }
+
+      const gml = convertGeoJSONToGML(polygon)
+
+      expect(gml).toContain("<gml:Polygon>")
+      expect(gml).toContain("<gml:exterior>")
+      expect(gml).toContain("<gml:interior>")
+      expect(gml.split("<gml:posList").length - 1).toBe(2) // 2 posLists
+    })
+
+    it("should handle Polygon with no rings gracefully", () => {
+      const polygon: any = {
+        type: "Polygon",
+        coordinates: [],
+      }
+      const gml = convertGeoJSONToGML(polygon)
+      expect(gml).toBe("<gml:Polygon></gml:Polygon>")
+    })
+
+    it("should return empty string for null/undefined", () => {
+      expect(convertGeoJSONToGML(null)).toBe("")
+      expect(convertGeoJSONToGML(undefined)).toBe("")
+    })
+
+    it("should throw error for unsupported type", () => {
+      const point = { type: "Point", coordinates: [5.0, 52.0] }
+      expect(() => convertGeoJSONToGML(point)).toThrow(
+        /Unsupported geometry type/,
+      )
     })
   })
 })

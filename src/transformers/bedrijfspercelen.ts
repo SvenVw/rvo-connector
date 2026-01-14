@@ -1,13 +1,14 @@
-import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson"
+import type { Feature, Polygon, MultiPolygon } from "geojson"
 import { parsePosList, transformCoordinates } from "../utils/geometry"
+import type { BedrijfspercelenGeoJSONResponse, CropFieldProperties } from "../types"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
  *
  * @param response The parsed XML response object from the SOAP body.
  */
-export function transformBedrijfspercelenToGeoJSON(response: any): FeatureCollection {
-  const features: Feature[] = []
+export function transformBedrijfspercelenToGeoJSON(response: any): BedrijfspercelenGeoJSONResponse {
+  const features: Feature<Polygon | MultiPolygon, CropFieldProperties>[] = []
 
   // Navigate the deep object structure to find CropFields
   // Note: xml2js might return arrays or single objects depending on parsing options.
@@ -47,7 +48,7 @@ export function transformBedrijfspercelenToGeoJSON(response: any): FeatureCollec
     const geometry = convertGmlToGeoJson(cropField["Border"])
 
     // Extract Properties (everything except Border/Geometry)
-    const properties = extractProperties(cropField)
+    const properties = extractProperties(cropField) as unknown as CropFieldProperties
 
     if (geometry) {
       features.push({
@@ -182,7 +183,7 @@ function processQualityIndicators(indicators: any): any {
     }
 
     // Handle Geometry transformation
-    if (newIndicator["Geometry"]?.["Polygon"]) {
+    if (newIndicator["Geometry"] && newIndicator["Geometry"]["Polygon"]) {
       const geoJson = convertGmlToGeoJson(newIndicator["Geometry"]["Polygon"])
       if (geoJson) {
         newIndicator["geometry"] = geoJson // Add standard GeoJSON geometry property
