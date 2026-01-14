@@ -137,6 +137,44 @@ describe("Geometry Utils", () => {
       expect(gml).toContain('srsName="EPSG:28992"')
     })
 
+    it("should convert a Polygon with interior rings (holes) to GML", () => {
+      const polygon: any = {
+        type: "Polygon",
+        coordinates: [
+          [
+            [5.0, 52.0],
+            [5.1, 52.0],
+            [5.1, 52.1],
+            [5.0, 52.1],
+            [5.0, 52.0],
+          ],
+          [
+            [5.02, 52.02],
+            [5.08, 52.02],
+            [5.08, 52.08],
+            [5.02, 52.08],
+            [5.02, 52.02],
+          ],
+        ],
+      }
+
+      const gml = convertGeoJSONToGML(polygon)
+
+      expect(gml).toContain("<gml:Polygon>")
+      expect(gml).toContain("<gml:exterior>")
+      expect(gml).toContain("<gml:interior>")
+      expect(gml.split("<gml:posList").length - 1).toBe(2) // 2 posLists
+    })
+
+    it("should handle Polygon with no rings gracefully", () => {
+      const polygon: any = {
+        type: "Polygon",
+        coordinates: [],
+      }
+      const gml = convertGeoJSONToGML(polygon)
+      expect(gml).toBe("<gml:Polygon></gml:Polygon>")
+    })
+
     it("should return empty string for null/undefined", () => {
       expect(convertGeoJSONToGML(null)).toBe("")
       expect(convertGeoJSONToGML(undefined)).toBe("")

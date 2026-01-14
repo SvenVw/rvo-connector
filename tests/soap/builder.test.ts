@@ -154,6 +154,36 @@ describe("SOAP Builders", () => {
     expect(xml).toContain("<mut:PrecedingTicketId>PREV-TICKET-999</mut:PrecedingTicketId>")
   })
 
+  it("buildMuterenRequest should throw if issuerId or senderId is missing", () => {
+    expect(() => buildMuterenRequest({ farmId, mutations: [] } as any)).toThrow("Client Name required")
+  })
+
+  it("buildBedrijfspercelenRequest with undefined farmId should not include ThirdPartyFarmID tag", () => {
+    const xml = buildBedrijfspercelenRequest({
+      issuerId: clientName,
+      senderId: clientName,
+      farmId: undefined,
+    })
+    expect(xml).not.toContain("ThirdPartyFarmID")
+  })
+
+  it("buildMuterenRequest with null value in properties should hit escapeXml(null)", () => {
+    const xml = buildMuterenRequest({
+      farmId,
+      issuerId: clientName,
+      senderId: clientName,
+      mutations: [
+        {
+          action: "I",
+          properties: {
+            CropFieldDesignator: null as any, // Hits escapeXml(null)
+          },
+        },
+      ],
+    })
+    expect(xml).toContain("<crop:CropFieldDesignator></crop:CropFieldDesignator>")
+  })
+
   it("buildMuterenRequest should use provided raw GML inside crop:Border", () => {
     const rawGml = "<gml:Polygon>...</gml:Polygon>"
     const xml = buildMuterenRequest({

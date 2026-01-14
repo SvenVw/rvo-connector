@@ -53,6 +53,13 @@ describe("Mutation Transformers", () => {
         percentage: 100,
       })
     })
+
+    it("should throw if OpvragenProcesvoortgangResponse is missing", () => {
+      const input = { Envelope: { Body: {} } }
+      expect(() => transformProcesVoortgangResponse(input)).toThrow(
+        "OpvragenProcesvoortgangResponse not found",
+      )
+    })
   })
 
   describe("transformValidatieResultaatResponse", () => {
@@ -71,6 +78,13 @@ describe("Mutation Transformers", () => {
       expect(result.ticketId).toBe("TICKET-ABC")
       expect(result.proposedFields).toHaveLength(1)
     })
+
+    it("should throw if OpvragenValidatieresultaatResponse is missing", () => {
+      const input = { Envelope: { Body: {} } }
+      expect(() => transformValidatieResultaatResponse(input)).toThrow(
+        "OpvragenValidatieresultaatResponse not found",
+      )
+    })
   })
 
   describe("transformTanResponse", () => {
@@ -86,6 +100,19 @@ describe("Mutation Transformers", () => {
       }
       const result = transformTanResponse(input)
       expect(result.sequenceNumber).toBe(5)
+    })
+
+    it("should throw if SequenceNumber is missing", () => {
+      const input = {
+        Envelope: {
+          Body: {
+            OphalenTanVolgnummerResponse: {},
+          },
+        },
+      }
+      expect(() => transformTanResponse(input)).toThrow(
+        "SequenceNumber not found",
+      )
     })
   })
 
@@ -121,6 +148,13 @@ describe("Mutation Transformers", () => {
       }
       const result = transformTransactionResponse(input)
       expect(result.ticketId).toBe("T-2")
+    })
+
+    it("should throw if transaction response is missing", () => {
+      const input = { Envelope: { Body: {} } }
+      expect(() => transformTransactionResponse(input)).toThrow(
+        "Transaction response not found",
+      )
     })
   })
 })

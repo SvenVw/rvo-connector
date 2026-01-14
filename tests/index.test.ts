@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
-import { RvoClient } from "../src/client"
+import { RvoClient } from "../src/index"
 import "dotenv/config"
 
 global.fetch = vi.fn()
@@ -259,6 +259,203 @@ describe("RvoClient (Acceptance Environment)", () => {
       await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
         "Request failed: 500 - SOAP Fault",
       )
+    })
+  })
+
+  describe("Mutation Service Methods", () => {
+    let client: RvoClient
+    const mockFetch = global.fetch as any
+
+    beforeEach(() => {
+      client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+      })
+      mockFetch.mockClear()
+    })
+
+    it("muterenBedrijfspercelen should return TicketId", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <MuterenBedrijfspercelenResponse>
+                <TicketId>TICKET-123</TicketId>
+              </MuterenBedrijfspercelenResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.muterenBedrijfspercelen({
+        farmId: "12345678",
+        mutations: [
+          {
+            action: "I",
+            properties: {
+              CropFieldID: "FIELD-1",
+              CropFieldVersion: "1",
+              BeginDate: "2023-01-01",
+            },
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [0, 0],
+                  [1, 1],
+                  [1, 0],
+                  [0, 0],
+                ],
+              ],
+            },
+          },
+        ],
+      })
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result).toEqual({ ticketId: "TICKET-123" })
+    })
+
+    it("opvragenProcesvoortgang should return status and percentage", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <OpvragenProcesvoortgangResponse>
+                <ProcesStatus>
+                  <Code>GEVALIDEERD</Code>
+                  <Description>Validation Complete</Description>
+                  <PercentageProgress>100</PercentageProgress>
+                </ProcesStatus>
+              </OpvragenProcesvoortgangResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.opvragenProcesvoortgang("TICKET-123")
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result).toEqual({
+        status: "GEVALIDEERD",
+        message: "Validation Complete",
+        percentage: 100,
+      })
+    })
+
+    it("opvragenValidatieresultaat should return messages and ticketId", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <OpvragenValidatieresultaatResponse>
+                <TicketId>TICKET-123</TicketId>
+                <FieldValidation>
+                  <FieldId>FIELD-1</FieldId>
+                  <Result>
+                    <MessageCode>ERR-001</MessageCode>
+                    <MessageDescription>Invalid geometry</MessageDescription>
+                    <SeverityCode>E</SeverityCode>
+                  </Result>
+                </FieldValidation>
+              </OpvragenValidatieresultaatResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.opvragenValidatieresultaat("TICKET-123")
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result.ticketId).toBe("TICKET-123")
+      expect(result.messages).toHaveLength(1)
+      expect(result.messages[0]).toEqual({
+        code: "ERR-001",
+        message: "Invalid geometry",
+        severity: "E",
+        fieldId: "FIELD-1",
+      })
+    })
+
+    it("ophalenTanVolgnummer should return sequence number", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <OphalenTanVolgnummerResponse>
+                <SequenceNumber>42</SequenceNumber>
+              </OphalenTanVolgnummerResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.ophalenTanVolgnummer()
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result).toEqual({ sequenceNumber: 42 })
+    })
+
+    it("formaliserenOpgave should return result code", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <FormaliserenOpgaveResponse>
+                <TicketId>TICKET-123</TicketId>
+                <ResultCode>OK</ResultCode>
+                <ResultMessage>Success</ResultMessage>
+              </FormaliserenOpgaveResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.formaliserenOpgave("TICKET-123", 42, "TAN-CODE")
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result).toEqual({
+        ticketId: "TICKET-123",
+        resultCode: "OK",
+        message: "Success",
+      })
+    })
+
+    it("annulerenOpgave should return result code", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => `
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <AnnulerenOpgaveResponse>
+                <TicketId>TICKET-123</TicketId>
+                <ResultCode>OK</ResultCode>
+                <ResultMessage>Cancelled</ResultMessage>
+              </AnnulerenOpgaveResponse>
+            </soap:Body>
+          </soap:Envelope>
+        `,
+      })
+
+      const result = await client.annulerenOpgave("TICKET-123")
+
+      expect(mockFetch).toHaveBeenCalled()
+      expect(result).toEqual({
+        ticketId: "TICKET-123",
+        resultCode: "OK",
+        message: "Cancelled",
+      })
     })
   })
 })
