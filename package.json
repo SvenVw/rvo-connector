@@ -1,6 +1,6 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "keywords": [
     "ABA",
@@ -65,7 +65,7 @@
   "dependencies": {
     "jsonwebtoken": "^9.0.3",
     "proj4": "^2.20.2",
-    "qs": "^6.14.1",
+    "qs": "^6.15.0",
     "uuid": "^13.0.0",
     "xml2js": "^0.6.2"
   },
