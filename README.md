@@ -152,6 +152,8 @@ try {
   const geoJsonResult = await client.opvragenBedrijfspercelen({
     farmId: "KVK_NUMBER",
     outputFormat: "geojson",
+    // Optional: add a descriptiveValues object with labels and booleans (Only for GeoJSON)
+    enrichResponse: true 
   })
   console.log("GeoJSON Data:", geoJsonResult)
 } catch (error) {
@@ -168,6 +170,8 @@ try {
   const mestResult = await client.opvragenRegelingspercelenMest({
     farmId: "KVK_NUMBER",
     outputFormat: "geojson",
+    // Optional: add a descriptiveValues object with labels and booleans (Only for GeoJSON)
+    enrichResponse: true,
     // Optional: Only fetch fields mutated after a certain date
     mutationStartDate: "2024-01-01 00:00:00",
     // Optional: If calling on behalf of another party via PKIO
@@ -244,6 +248,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `periodBeginDate` | `string`             | Start date (YYYY-MM-DD).                                                                         |
 | `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                           |
 | `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326). |
+| `enrichResponse`  | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
 
 ### Method Options: `opvragenRegelingspercelenMest`
 
@@ -255,6 +260,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:MM:SS).                       |
 | `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                            |
 | `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326). |
+| `enrichResponse`         | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
 
 ## Development & Testing
 

@@ -204,7 +204,7 @@ export class RvoClient {
     return this.executeSoapRequest(
       soapXml,
       options.outputFormat,
-      transformBedrijfspercelenToGeoJSON,
+      (result) => transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 
@@ -236,7 +236,7 @@ export class RvoClient {
     return this.executeSoapRequest(
       soapXml,
       options.outputFormat,
-      transformRegelingspercelenMestToGeoJSON,
+      (result) => transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 

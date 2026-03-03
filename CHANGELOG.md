@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Service Support: Implemented the `OpvragenRegelingspercelenMest` service, including a dedicated GeoJSON transformer with support for quality indicators and nested crop data (Voorteelt/Nateelt).
+- Enrichment: Added `enrichResponse` option to both Bedrijfspercelen and Regelingspercelen MEST services. This adds a `descriptiveValues` object to the GeoJSON output with human-readable labels for RVO codes and boolean mappings for indicators.
 - Example: Added `examples/request-regelingspercelen-mest-tvs.ts` to demonstrate usage of the new service using TVS authentication.
 
 ### Changed

@@ -105,6 +105,7 @@ try {
       periodBeginDate: beginDate.trim() || undefined,
       periodEndDate: endDate.trim() || undefined,
       outputFormat: format,
+      enrichResponse: format === "geojson",
     })
     
     console.log("\nSuccessfully fetched Regelingspercelen Mest:")

@@ -94,6 +94,7 @@ try {
     const result = await client.opvragenBedrijfspercelen({
       farmId: farmId.trim() || undefined,
       outputFormat: format,
+      enrichResponse: format === "geojson",
     })
     console.log("\nSuccessfully fetched Bedrijfspercelen:")
     console.log(JSON.stringify(result, null, 2))

@@ -118,6 +118,13 @@ export interface BedrijfspercelenOptions {
    * @default 'xml'
    */
   outputFormat?: "xml" | "geojson"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object 
+   * containing boolean mappings for "J"/"N" indicators and human-readable 
+   * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
+   * @default false
+   */
+  enrichResponse?: boolean
 }
 
 /**
@@ -252,6 +259,13 @@ export interface RegelingspercelenMestOptions {
    * @default 'xml'
    */
   outputFormat?: "xml" | "geojson"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object 
+   * containing boolean mappings for "J"/"N" indicators and human-readable 
+   * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
+   * @default false
+   */
+  enrichResponse?: boolean
 }
 
 /**
