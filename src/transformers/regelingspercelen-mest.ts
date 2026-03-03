@@ -142,6 +142,9 @@ function extractProperties(
       } else if (key === "MESTFieldCause") {
         const label = getLabel("Cause", properties[key])
         if (label) descriptiveValues[key] = label
+      } else if (key === "Grondbedekking") {
+        const label = getLabel("CropTypeCode", properties[key], "onbekend gewas")
+        if (label) descriptiveValues[key] = label
       }
     }
   }
@@ -178,6 +181,9 @@ function simplifyObject(obj: any, options: { enrichResponse?: boolean } = {}): a
           newObj[key] === "5")
       ) {
         const label = getLabel("InzaaidatumCode", newObj[key])
+        if (label) descriptiveValues[key] = label
+      } else if (key === "Grondbedekking") {
+        const label = getLabel("CropTypeCode", newObj[key], "onbekend gewas")
         if (label) descriptiveValues[key] = label
       }
     }

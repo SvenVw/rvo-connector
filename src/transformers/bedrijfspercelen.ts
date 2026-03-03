@@ -128,6 +128,9 @@ function extractProperties(
       } else if (key === "CropFieldCause") {
         const label = getLabel("Cause", properties[key])
         if (label) descriptiveValues[key] = label
+      } else if (key === "CropTypeCode") {
+        const label = getLabel("CropTypeCode", properties[key], "onbekend gewas")
+        if (label) descriptiveValues[key] = label
       }
     }
   }
