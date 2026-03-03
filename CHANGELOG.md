@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - UNRELEASED
+
+### Added
+
+- Service Support: Implemented the `OpvragenRegelingspercelenMest` service, including a dedicated GeoJSON transformer with support for quality indicators and nested crop data (Voorteelt/Nateelt).
+- Example: Added `examples/request-regelingspercelen-mest-tvs.ts` to demonstrate usage of the new service using TVS authentication.
+
+### Changed
+
+- Refactoring: Consolidated SOAP request execution logic and geometry conversion functions (GML to GeoJSON) into shared internal utilities to reduce code duplication and improve maintainability.
+- Documentation: Updated the README with comprehensive documentation and usage examples for the `OpvragenRegelingspercelenMest` method.
+
 ## [2.0.2] - 2026-03-03
 
 ### Security

@@ -220,6 +220,59 @@ export type BedrijfspercelenGeoJSONResponse = FeatureCollection<Geometry, CropFi
 export type BedrijfspercelenResponse = BedrijfspercelenXmlResponse | BedrijfspercelenGeoJSONResponse
 
 /**
+ * Options for the `opvragenRegelingspercelenMest` service.
+ */
+export interface RegelingspercelenMestOptions {
+  /**
+   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
+   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   */
+  farmId?: string
+  /**
+   * Start date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodBeginDate?: string
+  /**
+   * End date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodEndDate?: string
+  /**
+   * Mutation start date (YYYY-MM-DD HH24 MI SS).
+   * If provided, only fields mutated after this date are retrieved.
+   */
+  mutationStartDate?: string
+  /**
+   * KVK number (8 digits) of the mandated representative.
+   */
+  mandatedRepresentative?: string
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'geojson'`: Converts the response to a GeoJSON FeatureCollection.
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "geojson"
+}
+
+/**
+ * Generic interface for the parsed XML response from RegelingspercelenMest service.
+ */
+export interface RegelingspercelenMestXmlResponse {
+  [key: string]: unknown
+}
+
+/**
+ * GeoJSON output for RegelingspercelenMest.
+ * A FeatureCollection where each feature represents a MestField.
+ */
+export type RegelingspercelenMestGeoJSONResponse = FeatureCollection<Geometry, Record<string, any>>
+
+/**
+ * Union type for the response of `opvragenRegelingspercelenMest`.
+ */
+export type RegelingspercelenMestResponse = RegelingspercelenMestXmlResponse | RegelingspercelenMestGeoJSONResponse
+
+/**
  * Response from the RVO OAuth 2.0 Token Endpoint.
  */
 export interface RvoTokenResponse {

@@ -7,4 +7,9 @@
 
 export * from "./types"
 export * from "./client"
-export { buildBedrijfspercelenRequest, type SoapRequestParams } from "./soap/builder"
+export {
+  buildBedrijfspercelenRequest,
+  buildRegelingspercelenMestRequest,
+  type SoapRequestParams,
+  type RegelingspercelenMestRequestParams,
+} from "./soap/builder"
