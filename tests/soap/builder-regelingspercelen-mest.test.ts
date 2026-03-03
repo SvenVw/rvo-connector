@@ -51,6 +51,26 @@ describe("buildRegelingspercelenMestRequest", () => {
     expect(xml).toContain("123&apos;456")
   })
 
+  it("should normalize date-only mutationStartDate by appending T00:00:00", () => {
+    const xml = buildRegelingspercelenMestRequest({
+      issuerId: "TestClient",
+      senderId: "TestClient",
+      mutationStartDate: "2024-06-15",
+    })
+
+    expect(xml).toContain("<opv:MutationStartDate>2024-06-15T00:00:00</opv:MutationStartDate>")
+  })
+
+  it("should pass through mutationStartDate formats that don't match known patterns", () => {
+    const xml = buildRegelingspercelenMestRequest({
+      issuerId: "TestClient",
+      senderId: "TestClient",
+      mutationStartDate: "2024/06/15",
+    })
+
+    expect(xml).toContain("<opv:MutationStartDate>2024/06/15</opv:MutationStartDate>")
+  })
+
   it("should throw error if issuerId or senderId is missing", () => {
     expect(() => buildRegelingspercelenMestRequest({ senderId: "S" }) as any).toThrow("Client Name is required")
     expect(() => buildRegelingspercelenMestRequest({ issuerId: "I" }) as any).toThrow("Client Name is required")

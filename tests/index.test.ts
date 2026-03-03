@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
-import { RvoClient } from "../src/client"
+import { RvoClient } from "../src/index"
 import "dotenv/config"
 
 global.fetch = vi.fn()
@@ -259,6 +259,144 @@ describe("RvoClient (Acceptance Environment)", () => {
       await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
         "Request failed: 500 - SOAP Fault",
       )
+    })
+
+    it("should re-throw non-AbortError fetch errors", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "u", password: "p" },
+      })
+
+      const mockFetch = global.fetch as any
+      const networkError = new Error("Network failure")
+      mockFetch.mockRejectedValue(networkError)
+
+      await expect(client.opvragenBedrijfspercelen()).rejects.toThrow("Network failure")
+    })
+  })
+
+  describe("opvragenRegelingspercelenMest", () => {
+    it("should call the regelingspercelen SOAP endpoint with ABA credentials", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => "<xml>response</xml>",
+      })
+
+      await client.opvragenRegelingspercelenMest({ farmId: "12345678" })
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, config] = mockFetch.mock.calls[0]
+
+      expect(url).toBe("https://edicrop-acc.agro.nl/edicrop/EdiCropService")
+      expect(config.body).toContain("OpvragenRegelingspercelenMESTRequest")
+    })
+
+    it("should return GeoJSON when outputFormat is geojson", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+      })
+
+      const mockFetch = global.fetch as any
+      // Return a minimal valid SOAP XML response (no farms → empty FeatureCollection)
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () =>
+          `<?xml version="1.0"?><Envelope><Body><OpvragenRegelingspercelenMESTResponse></OpvragenRegelingspercelenMESTResponse></Body></Envelope>`,
+      })
+
+      const result = await client.opvragenRegelingspercelenMest({
+        farmId: "12345678",
+        outputFormat: "geojson",
+      })
+
+      expect(result.type).toBe("FeatureCollection")
+      expect(result.features).toHaveLength(0)
+    })
+  })
+
+  describe("exchangeAuthCode", () => {
+    it("should exchange auth code and store access token", async () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        tvs: {
+          clientId: TVS_CLIENT_ID!,
+          redirectUri: TVS_REDIRECT_URI!,
+          // Use a fake PEM key that passes format validation (jwt.sign is mocked)
+          pkioPrivateKey: "-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----",
+        },
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+        }),
+      })
+
+      const tokenData = await client.exchangeAuthCode("auth-code-123")
+
+      expect(tokenData.access_token).toBe("new-access-token")
+      // Token should now be stored; we can call an API method without explicit setAccessToken
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => "<xml>response</xml>",
+      })
+      await expect(client.opvragenBedrijfspercelen()).resolves.toBeDefined()
+    })
+  })
+
+  describe("opvragenBedrijfspercelen GeoJSON output", () => {
+    it("should return GeoJSON FeatureCollection when outputFormat is geojson", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+      })
+
+      const mockFetch = global.fetch as any
+      // Return minimal valid SOAP XML (no fields → empty FeatureCollection)
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () =>
+          `<?xml version="1.0"?><Envelope><Body><OpvragenBedrijfspercelenResponse></OpvragenBedrijfspercelenResponse></Body></Envelope>`,
+      })
+
+      const result = await client.opvragenBedrijfspercelen({ outputFormat: "geojson" })
+
+      expect(result.type).toBe("FeatureCollection")
+      expect(result.features).toHaveLength(0)
     })
   })
 })
