@@ -2,7 +2,7 @@
 
 ## Description
 
-This issue tracks the implementation of the **OpvragenRegelingspercelenMest** service as defined in the RVO documentation (*Berichtenboek EDI-Crop RVO Regelingspercelen Mest v1.0.pdf*). This service allows users to retrieve "Regelingspercelen Mest" (Regulation fields for manure) for a specific relation and period.
+This issue tracks the implementation of the **OpvragenRegelingspercelenMest** service as defined in the RVO documentation (_Berichtenboek EDI-Crop RVO Regelingspercelen Mest v1.0.pdf_). This service allows users to retrieve "Regelingspercelen Mest" (Regulation fields for manure) for a specific relation and period.
 
 The implementation should follow the existing patterns used for `opvragenBedrijfspercelen`.
 
@@ -42,5 +42,5 @@ The implementation should follow the existing patterns used for `opvragenBedrijf
 - **Request Message:** `(EDI)CRPopRequestRegelingspercelenMest`
 - **Response Message:** `(EDI)CRPopResponseRegelingspercelenMest`
 - **TVS Scope:** `RVO-WS.GEO.rp.lezen`
-  - *Note:* This scope is shared across all "Regelingspercelen" services (Mest, nGLB).
-- **PDF Reference:** *Berichtenboek EDI-Crop RVO Regelingspercelen Mest v1.0.pdf*
+  - _Note:_ This scope is shared across all "Regelingspercelen" services (Mest, nGLB).
+- **PDF Reference:** _Berichtenboek EDI-Crop RVO Regelingspercelen Mest v1.0.pdf_

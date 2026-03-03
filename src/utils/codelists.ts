@@ -65,9 +65,12 @@ export const CODELISTS: Record<string, Record<string, string>> = {
   IndicatorCode: {
     KI001: "De gebruikstitel is gedurende (een deel van) de looptijd van dit perceel ongeldig.",
     KI002: "De gewascode is gedurende (een deel van) de looptijd van dit perceel ongeldig.",
-    KI003: "Dit perceel valt gedurende (een deel van) de looptijd geheel of gedeeltelijk buiten de topografische perceelsgrenzen.",
-    KI004: "Dit perceel heeft gedurende (een deel van) de looptijd geheel of gedeeltelijk overlap met een perceel van een andere gebruiker.",
-    KI005: "Dit perceel heeft gedurende (een deel van) de looptijd geheel of gedeeltelijk overlap met een van uw andere percelen.",
+    KI003:
+      "Dit perceel valt gedurende (een deel van) de looptijd geheel of gedeeltelijk buiten de topografische perceelsgrenzen.",
+    KI004:
+      "Dit perceel heeft gedurende (een deel van) de looptijd geheel of gedeeltelijk overlap met een perceel van een andere gebruiker.",
+    KI005:
+      "Dit perceel heeft gedurende (een deel van) de looptijd geheel of gedeeltelijk overlap met een van uw andere percelen.",
     KI2210: "Validatie op bedrijfsperceel voor Regelingspercelen.",
     KI12030: "Valideer gewascodes op bedrijfspercelen die buiten RRP moeten liggen",
     KI12051: "Overlap/overschrijding BPL met RRP fysiek voorkomen",

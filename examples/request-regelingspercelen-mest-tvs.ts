@@ -83,10 +83,8 @@ try {
     const tokenData = await client.exchangeAuthCode(authorizationCode)
     console.log("Expires In (seconds):", tokenData.expires_in)
 
-    const farmId = await ask(
-      "\nPlease enter the Farm ID (KvK-nummer) to query (optional): ",
-    )
-    
+    const farmId = await ask("\nPlease enter the Farm ID (KvK-nummer) to query (optional): ")
+
     const beginDate = await ask(
       "\nPlease enter Period Begin Date (YYYY-MM-DD) [default: current year-01-01]: ",
     )
@@ -107,7 +105,7 @@ try {
       outputFormat: format,
       enrichResponse: format === "geojson",
     })
-    
+
     console.log("\nSuccessfully fetched Regelingspercelen Mest:")
     console.log(JSON.stringify(result, null, 2))
   } finally {

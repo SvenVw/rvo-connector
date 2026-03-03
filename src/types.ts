@@ -119,8 +119,8 @@ export interface BedrijfspercelenOptions {
    */
   outputFormat?: "xml" | "geojson"
   /**
-   * If true, enriches the response by adding a `descriptiveValues` object 
-   * containing boolean mappings for "J"/"N" indicators and human-readable 
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing boolean mappings for "J"/"N" indicators and human-readable
    * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
    * @default false
    */
@@ -260,8 +260,8 @@ export interface RegelingspercelenMestOptions {
    */
   outputFormat?: "xml" | "geojson"
   /**
-   * If true, enriches the response by adding a `descriptiveValues` object 
-   * containing boolean mappings for "J"/"N" indicators and human-readable 
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing boolean mappings for "J"/"N" indicators and human-readable
    * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
    * @default false
    */
@@ -284,7 +284,9 @@ export type RegelingspercelenMestGeoJSONResponse = FeatureCollection<Geometry, R
 /**
  * Union type for the response of `opvragenRegelingspercelenMest`.
  */
-export type RegelingspercelenMestResponse = RegelingspercelenMestXmlResponse | RegelingspercelenMestGeoJSONResponse
+export type RegelingspercelenMestResponse =
+  | RegelingspercelenMestXmlResponse
+  | RegelingspercelenMestGeoJSONResponse
 
 /**
  * Response from the RVO OAuth 2.0 Token Endpoint.

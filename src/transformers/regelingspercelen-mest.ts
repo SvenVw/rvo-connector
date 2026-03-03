@@ -1,5 +1,9 @@
 import type { Feature, FeatureCollection } from "geojson"
-import { convertGmlToGeoJson, processQualityIndicators, findSoapBodyContent } from "../utils/geometry"
+import {
+  convertGmlToGeoJson,
+  processQualityIndicators,
+  findSoapBodyContent,
+} from "../utils/geometry"
 import { getLabel, mapIndicator } from "../utils/codelists"
 
 /**
@@ -9,8 +13,8 @@ import { getLabel, mapIndicator } from "../utils/codelists"
  * @param options Transformation options.
  */
 export function transformRegelingspercelenMestToGeoJSON(
-  response: any, 
-  options: { enrichResponse?: boolean } = {}
+  response: any,
+  options: { enrichResponse?: boolean } = {},
 ): FeatureCollection {
   const features: Feature[] = []
 
@@ -62,7 +66,10 @@ export function transformRegelingspercelenMestToGeoJSON(
 /**
  * Extracts and simplifies properties from a MESTField object.
  */
-function extractProperties(mestField: any, options: { enrichResponse?: boolean }): Record<string, any> {
+function extractProperties(
+  mestField: any,
+  options: { enrichResponse?: boolean },
+): Record<string, any> {
   const properties: Record<string, any> = {}
   const descriptiveValues: Record<string, any> = {}
 
@@ -74,33 +81,33 @@ function extractProperties(mestField: any, options: { enrichResponse?: boolean }
 
     if (key === "QualityIndicatorType") {
       properties[key] = processQualityIndicators(value)
-      
+
       if (options.enrichResponse && Array.isArray(properties[key])) {
         properties[key] = properties[key].map((qi: any) => {
-           const values: Record<string, any> = {}
-           
-           if (qi.IndicatorCode) {
-             const label = getLabel("IndicatorCode", qi.IndicatorCode)
-             if (label) values.IndicatorCode = label
-           }
-           
-           if (qi.SeverityCode) {
-             const label = getLabel("SeverityCode", qi.SeverityCode)
-             if (label) values.SeverityCode = label
-           }
+          const values: Record<string, any> = {}
 
-           if (qi.MESTFieldQICause) {
-             const label = getLabel("Cause", qi.MESTFieldQICause)
-             if (label) values.MESTFieldQICause = label
-           }
+          if (qi.IndicatorCode) {
+            const label = getLabel("IndicatorCode", qi.IndicatorCode)
+            if (label) values.IndicatorCode = label
+          }
 
-           return { ...qi, descriptiveValues: values }
+          if (qi.SeverityCode) {
+            const label = getLabel("SeverityCode", qi.SeverityCode)
+            if (label) values.SeverityCode = label
+          }
+
+          if (qi.MESTFieldQICause) {
+            const label = getLabel("Cause", qi.MESTFieldQICause)
+            if (label) values.MESTFieldQICause = label
+          }
+
+          return { ...qi, descriptiveValues: values }
         })
       }
     } else if (key === "Voorteelt" || key === "Nateelt") {
       // Handle array of nested objects
-      properties[key] = Array.isArray(value) 
-        ? value.map((v) => simplifyObject(v, options)) 
+      properties[key] = Array.isArray(value)
+        ? value.map((v) => simplifyObject(v, options))
         : simplifyObject(value, options)
     } else if (value && typeof value === "object" && "_" in value) {
       properties[key] = value._
@@ -162,9 +169,16 @@ function simplifyObject(obj: any, options: { enrichResponse?: boolean } = {}): a
     }
 
     if (options.enrichResponse) {
-      if (key === "Inzaaidatum" && (newObj[key] === "1" || newObj[key] === "2" || newObj[key] === "3" || newObj[key] === "4" || newObj[key] === "5")) {
-         const label = getLabel("InzaaidatumCode", newObj[key])
-         if (label) descriptiveValues[key] = label
+      if (
+        key === "Inzaaidatum" &&
+        (newObj[key] === "1" ||
+          newObj[key] === "2" ||
+          newObj[key] === "3" ||
+          newObj[key] === "4" ||
+          newObj[key] === "5")
+      ) {
+        const label = getLabel("InzaaidatumCode", newObj[key])
+        if (label) descriptiveValues[key] = label
       }
     }
   }

@@ -41,7 +41,10 @@ const EHERKENNING_SCOPES = {
  * - `'muterenBedrijfspercelen'`: Mutate/Update crop fields.
  * - `'opvragenRegelingspercelenMest'`: Retrieve regulation fields for manure.
  */
-export type RvoService = "opvragenBedrijfspercelen" | "muterenBedrijfspercelen" | "opvragenRegelingspercelenMest"
+export type RvoService =
+  | "opvragenBedrijfspercelen"
+  | "muterenBedrijfspercelen"
+  | "opvragenRegelingspercelenMest"
 
 const SERVICE_SCOPES: Record<RvoService, string> = {
   opvragenBedrijfspercelen: "RVO-WS.GEO.bp.lezen",
@@ -199,10 +202,8 @@ export class RvoClient {
       senderId: this.config.clientName,
     })
 
-    return this.executeSoapRequest(
-      soapXml,
-      options.outputFormat,
-      (result) => transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    return this.executeSoapRequest(soapXml, options.outputFormat, (result) =>
+      transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 
@@ -231,10 +232,8 @@ export class RvoClient {
       senderId: this.config.clientName,
     })
 
-    return this.executeSoapRequest(
-      soapXml,
-      options.outputFormat,
-      (result) => transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    return this.executeSoapRequest(soapXml, options.outputFormat, (result) =>
+      transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 

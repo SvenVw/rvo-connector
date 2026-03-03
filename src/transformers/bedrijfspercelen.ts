@@ -1,5 +1,9 @@
 import type { Feature, FeatureCollection } from "geojson"
-import { convertGmlToGeoJson, processQualityIndicators, findSoapBodyContent } from "../utils/geometry"
+import {
+  convertGmlToGeoJson,
+  processQualityIndicators,
+  findSoapBodyContent,
+} from "../utils/geometry"
 import { getLabel, mapIndicator } from "../utils/codelists"
 
 /**
@@ -8,7 +12,10 @@ import { getLabel, mapIndicator } from "../utils/codelists"
  * @param response The parsed XML response object from the SOAP body.
  * @param options Transformation options (e.g. enrichResponse).
  */
-export function transformBedrijfspercelenToGeoJSON(response: any, options: { enrichResponse?: boolean } = {}): FeatureCollection {
+export function transformBedrijfspercelenToGeoJSON(
+  response: any,
+  options: { enrichResponse?: boolean } = {},
+): FeatureCollection {
   const features: Feature[] = []
 
   // Navigate the deep object structure to find CropFields
@@ -59,7 +66,10 @@ export function transformBedrijfspercelenToGeoJSON(response: any, options: { enr
  * @param options Transformation options.
  * @returns A flattened record of property keys and values.
  */
-function extractProperties(cropField: any, options: { enrichResponse?: boolean }): Record<string, any> {
+function extractProperties(
+  cropField: any,
+  options: { enrichResponse?: boolean },
+): Record<string, any> {
   const properties: Record<string, any> = {}
   const descriptiveValues: Record<string, any> = {}
 
@@ -72,28 +82,28 @@ function extractProperties(cropField: any, options: { enrichResponse?: boolean }
     if (key === "QualityIndicatorType") {
       // Handle recursive conversion for QualityIndicatorType
       properties[key] = processQualityIndicators(value)
-      
+
       // If enrich is enabled, map indicators in the array
       if (options.enrichResponse && Array.isArray(properties[key])) {
         properties[key] = properties[key].map((qi: any) => {
-           const values: Record<string, any> = {}
-           
-           if (qi.IndicatorCode) {
-             const label = getLabel("IndicatorCode", qi.IndicatorCode)
-             if (label) values.IndicatorCode = label
-           }
-           
-           if (qi.SeverityCode) {
-             const label = getLabel("SeverityCode", qi.SeverityCode)
-             if (label) values.SeverityCode = label
-           }
+          const values: Record<string, any> = {}
 
-           if (qi.QualityIndicatorCause) {
-             const label = getLabel("Cause", qi.QualityIndicatorCause)
-             if (label) values.QualityIndicatorCause = label
-           }
+          if (qi.IndicatorCode) {
+            const label = getLabel("IndicatorCode", qi.IndicatorCode)
+            if (label) values.IndicatorCode = label
+          }
 
-           return { ...qi, descriptiveValues: values }
+          if (qi.SeverityCode) {
+            const label = getLabel("SeverityCode", qi.SeverityCode)
+            if (label) values.SeverityCode = label
+          }
+
+          if (qi.QualityIndicatorCause) {
+            const label = getLabel("Cause", qi.QualityIndicatorCause)
+            if (label) values.QualityIndicatorCause = label
+          }
+
+          return { ...qi, descriptiveValues: values }
         })
       }
     } else if (value && typeof value === "object" && "_" in value) {

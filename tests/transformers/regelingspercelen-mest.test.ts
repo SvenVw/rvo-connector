@@ -17,7 +17,9 @@ describe("transformRegelingspercelenMestToGeoJSON", () => {
                     Border: {
                       exterior: {
                         LinearRing: {
-                          posList: { _: "155000 463000 155000 463100 155100 463100 155100 463000 155000 463000" },
+                          posList: {
+                            _: "155000 463000 155000 463100 155100 463100 155100 463000 155000 463000",
+                          },
                         },
                       },
                     },
@@ -72,7 +74,9 @@ describe("transformRegelingspercelenMestToGeoJSON", () => {
           Border: {
             exterior: {
               LinearRing: {
-                posList: { _: "155000 463000 155000 463100 155100 463100 155100 463000 155000 463000" },
+                posList: {
+                  _: "155000 463000 155000 463100 155100 463100 155100 463000 155000 463000",
+                },
               },
             },
           },

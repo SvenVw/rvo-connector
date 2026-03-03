@@ -18,16 +18,16 @@ function escapeXml(unsafe: string): string {
 
 /**
  * Normalizes a date-time string to standard ISO format (YYYY-MM-DDTHH:MM:SS).
- * 
+ *
  * - If only a date (YYYY-MM-DD) is provided, appends T00:00:00.
  * - If a space or colon is used as a date/time separator, replaces it with T.
- * 
+ *
  * @param dateTime The raw date or date-time string.
  * @returns The normalized ISO 8601 date-time string, or undefined if input is empty.
  */
 function normalizeDateTime(dateTime?: string): string | undefined {
   if (!dateTime) return undefined
-  
+
   // Handle space or colon separator (e.g. YYYY-MM-DD HH:MM:SS or YYYY-MM-DD:HH:MM:SS)
   // Use regex to find the separator between date and time
   const match = dateTime.match(/^(\d{4}-\d{2}-\d{2})[ :T](\d{2}:\d{2}:\d{2})$/)
@@ -39,7 +39,7 @@ function normalizeDateTime(dateTime?: string): string | undefined {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateTime)) {
     return `${dateTime}T00:00:00`
   }
-  
+
   return dateTime
 }
 
@@ -102,13 +102,16 @@ export interface RegelingspercelenMestRequestParams extends SoapRequestParams {
 /**
  * Shared helper to build the SOAP envelope and standard ExchangedDocument.
  */
-function buildSoapEnvelope(params: SoapRequestParams, options: {
-  serviceNamespace: string,
-  requestName: string,
-  messageType: string,
-  /** Extra XML to append AFTER ExchangedDocument at the top level of the Request element */
-  extraRequestXml?: string
-}): string {
+function buildSoapEnvelope(
+  params: SoapRequestParams,
+  options: {
+    serviceNamespace: string
+    requestName: string
+    messageType: string
+    /** Extra XML to append AFTER ExchangedDocument at the top level of the Request element */
+    extraRequestXml?: string
+  },
+): string {
   const now = new Date()
   const currentYear = now.getFullYear()
 
@@ -188,7 +191,7 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
     serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenBedrijfspercelen",
     requestName: "OpvragenBedrijfspercelenRequest",
     messageType: "CRPRQBP",
-    extraRequestXml: extraXml
+    extraRequestXml: extraXml,
   })
 }
 
@@ -199,13 +202,15 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
  * @returns The complete SOAP XML string.
  * @internal
  */
-export function buildRegelingspercelenMestRequest(params: RegelingspercelenMestRequestParams): string {
+export function buildRegelingspercelenMestRequest(
+  params: RegelingspercelenMestRequestParams,
+): string {
   let extraXml = ""
-  
+
   if (params.mandatedRepresentative) {
     extraXml += `\n         <opv:MandatedRepresentative schemeAgencyName="KVK">${escapeXml(params.mandatedRepresentative)}</opv:MandatedRepresentative>`
   }
-  
+
   if (params.farmId) {
     extraXml += `\n         <opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
   }
@@ -219,6 +224,6 @@ export function buildRegelingspercelenMestRequest(params: RegelingspercelenMestR
     serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenMEST",
     requestName: "OpvragenRegelingspercelenMESTRequest",
     messageType: "CRPRQRM",
-    extraRequestXml: extraXml
+    extraRequestXml: extraXml,
   })
 }

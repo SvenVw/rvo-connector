@@ -1,6 +1,6 @@
 # @nmi-agro/rvo-connector
 
-![GitHub License](https://img.shields.io/github/license/SvenVw/rvo-connector) [![npm version](https://badge.fury.io/js/@nmi-agro%2Frvo-connector.svg)](https://badge.fury.io/js/@nmi-agro%2Frvo-connector) [![CI](https://github.com/SvenVw/rvo-connector/actions/workflows/ci.yml/badge.svg)](https://github.com/SvenVw/rvo-connector/actions/workflows/ci.yml) ![GitHub top language](https://img.shields.io/github/languages/top/SvenVw/rvo-connector) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SvenVw/rvo-connector) 
+![GitHub License](https://img.shields.io/github/license/SvenVw/rvo-connector) [![npm version](https://badge.fury.io/js/@nmi-agro%2Frvo-connector.svg)](https://badge.fury.io/js/@nmi-agro%2Frvo-connector) [![CI](https://github.com/SvenVw/rvo-connector/actions/workflows/ci.yml/badge.svg)](https://github.com/SvenVw/rvo-connector/actions/workflows/ci.yml) ![GitHub top language](https://img.shields.io/github/languages/top/SvenVw/rvo-connector) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SvenVw/rvo-connector)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenVw_rvo-connector&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SvenVw_rvo-connector)
 
 A TypeScript client library for connecting to RVO (Rijksdienst voor Ondernemend Nederland) webservices to exchange agricultural data. This package simplifies the process of making API calls for services like `OpvragenBedrijfspercelen` using either ABA (username/password) or TVS (OAuth2/eHerkenning) authentication.
@@ -153,7 +153,7 @@ try {
     farmId: "KVK_NUMBER",
     outputFormat: "geojson",
     // Optional: add a descriptiveValues object with labels and booleans (Only for GeoJSON)
-    enrichResponse: true 
+    enrichResponse: true,
   })
   console.log("GeoJSON Data:", geoJsonResult)
 } catch (error) {
@@ -175,7 +175,7 @@ try {
     // Optional: Only fetch fields mutated after a certain date
     mutationStartDate: "2024-01-01 00:00:00",
     // Optional: If calling on behalf of another party via PKIO
-    mandatedRepresentative: "AUTHORIZED_KVK"
+    mandatedRepresentative: "AUTHORIZED_KVK",
   })
   console.log("Regelingspercelen Mest GeoJSON Data:", mestResult)
 } catch (error) {
@@ -223,7 +223,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
    ```bash
    npx tsx examples/request-bedrijfspercelen-tvs.ts
    ```
-   
+
    **TVS Authentication (Regelingspercelen Mest):**
 
    ```bash
@@ -242,24 +242,24 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ### Method Options: `opvragenBedrijfspercelen`
 
-| Option            | Type                 | Description                                                                                      |
-| ----------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
-| `farmId`          | `string`             | Optional. KvK/BSN to query.                                                                      |
-| `periodBeginDate` | `string`             | Start date (YYYY-MM-DD).                                                                         |
-| `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                           |
-| `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326). |
+| Option            | Type                 | Description                                                                                                                         |
+| ----------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `farmId`          | `string`             | Optional. KvK/BSN to query.                                                                                                         |
+| `periodBeginDate` | `string`             | Start date (YYYY-MM-DD).                                                                                                            |
+| `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                                                              |
+| `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
 | `enrichResponse`  | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
 
 ### Method Options: `opvragenRegelingspercelenMest`
 
-| Option                   | Type                 | Description                                                                                      |
-| ------------------------ | -------------------- | ------------------------------------------------------------------------------------------------ |
-| `farmId`                 | `string`             | Optional. KvK/BSN to query.                                                                      |
-| `periodBeginDate`        | `string`             | Start date (YYYY-MM-DD).                                                                         |
-| `periodEndDate`          | `string`             | End date (YYYY-MM-DD).                                                                           |
-| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:MM:SS).                       |
-| `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                            |
-| `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326). |
+| Option                   | Type                 | Description                                                                                                                         |
+| ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `farmId`                 | `string`             | Optional. KvK/BSN to query.                                                                                                         |
+| `periodBeginDate`        | `string`             | Start date (YYYY-MM-DD).                                                                                                            |
+| `periodEndDate`          | `string`             | End date (YYYY-MM-DD).                                                                                                              |
+| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:MM:SS).                                                          |
+| `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                                                               |
+| `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
 | `enrichResponse`         | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
 
 ## Development & Testing

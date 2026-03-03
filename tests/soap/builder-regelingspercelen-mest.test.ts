@@ -36,7 +36,9 @@ describe("buildRegelingspercelenMestRequest", () => {
       mandatedRepresentative: "12345678",
     })
 
-    expect(xml).toContain('<opv:MandatedRepresentative schemeAgencyName="KVK">12345678</opv:MandatedRepresentative>')
+    expect(xml).toContain(
+      '<opv:MandatedRepresentative schemeAgencyName="KVK">12345678</opv:MandatedRepresentative>',
+    )
   })
 
   it("should escape special characters in XML fields", () => {
@@ -72,7 +74,11 @@ describe("buildRegelingspercelenMestRequest", () => {
   })
 
   it("should throw error if issuerId or senderId is missing", () => {
-    expect(() => buildRegelingspercelenMestRequest({ senderId: "S" }) as any).toThrow("Client Name is required")
-    expect(() => buildRegelingspercelenMestRequest({ issuerId: "I" }) as any).toThrow("Client Name is required")
+    expect(() => buildRegelingspercelenMestRequest({ senderId: "S" }) as any).toThrow(
+      "Client Name is required",
+    )
+    expect(() => buildRegelingspercelenMestRequest({ issuerId: "I" }) as any).toThrow(
+      "Client Name is required",
+    )
   })
 })
