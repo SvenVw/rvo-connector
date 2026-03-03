@@ -38,7 +38,7 @@ jobs:
         run: pnpm typecheck
 
       - name: Run Tests
-        run: pnpm test:ci
+        run: pnpm test
         env:
           ABA_USERNAME: dummy
           ABA_PASSWORD: dummy

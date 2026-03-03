@@ -51,8 +51,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "test": "vitest  --run --coverage",
-    "test:ci": "vitest --run --coverage",
+    "test": "vitest --run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
