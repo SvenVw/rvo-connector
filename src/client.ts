@@ -3,10 +3,8 @@ import type {
   RvoClientConfig,
   BedrijfspercelenOptions,
   BedrijfspercelenResponse,
-  BedrijfspercelenGeoJSONResponse,
   RegelingspercelenMestOptions,
   RegelingspercelenMestResponse,
-  RegelingspercelenMestGeoJSONResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
 } from "./types"

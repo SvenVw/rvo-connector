@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { getLabel, mapIndicator, CODELISTS } from "../../src/utils/codelists"
+import { getLabel, mapIndicator } from "../../src/utils/codelists"
 
 describe("getLabel", () => {
   it("should return the label for a valid list name and string code", () => {
