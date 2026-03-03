@@ -30,7 +30,7 @@ function normalizeDateTime(dateTime?: string): string | undefined {
 
   // Handle space or colon separator (e.g. YYYY-MM-DD HH:MM:SS or YYYY-MM-DD:HH:MM:SS)
   // Use regex to find the separator between date and time
-  const match = dateTime.match(/^(\d{4}-\d{2}-\d{2})[ :T](\d{2}:\d{2}:\d{2})$/)
+  const match = /^(\d{4}-\d{2}-\d{2})[ :T](\d{2}:\d{2}:\d{2})$/.exec(dateTime)
   if (match) {
     return `${match[1]}T${match[2]}`
   }

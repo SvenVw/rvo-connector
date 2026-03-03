@@ -1,10 +1,14 @@
 import type { Feature, FeatureCollection } from "geojson"
+import { convertGmlToGeoJson, findSoapBodyContent } from "../utils/geometry"
+import { getLabel } from "../utils/codelists"
 import {
-  convertGmlToGeoJson,
-  processQualityIndicators,
-  findSoapBodyContent,
-} from "../utils/geometry"
-import { getLabel, mapIndicator } from "../utils/codelists"
+  buildFieldProperties,
+  flattenXml2jsValue,
+  getDescriptiveValue,
+  processQualityIndicatorType,
+  type CodeLookupTable,
+  type EnrichOptions,
+} from "./shared"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
@@ -14,11 +18,8 @@ import { getLabel, mapIndicator } from "../utils/codelists"
  */
 export function transformRegelingspercelenMestToGeoJSON(
   response: any,
-  options: { enrichResponse?: boolean } = {},
+  options: EnrichOptions = {},
 ): FeatureCollection {
-  const features: Feature[] = []
-
-  // Navigate the deep object structure: Envelope -> Body -> OpvragenRegelingspercelenMESTResponse
   const root = findSoapBodyContent(response, "OpvragenRegelingspercelenMESTResponse")
 
   const farmsRaw = root["Farm"]
@@ -26,166 +27,91 @@ export function transformRegelingspercelenMestToGeoJSON(
     return { type: "FeatureCollection", features: [] }
   }
 
-  // Ensure farms is an array
   const farms = Array.isArray(farmsRaw) ? farmsRaw : [farmsRaw]
+  const features: Feature[] = []
 
   for (const farm of farms) {
     if (!farm) continue
-
-    // In FarmMEST, fields are in the 'Field' element
     const fieldsRaw = farm["Field"]
     if (!fieldsRaw) continue
+    features.push(...processFarmFields(fieldsRaw, options))
+  }
 
-    const fields = Array.isArray(fieldsRaw) ? fieldsRaw : [fieldsRaw]
+  return { type: "FeatureCollection", features }
+}
 
-    for (const mestField of fields) {
-      if (!mestField) continue
+function processFarmFields(fieldsRaw: any, options: EnrichOptions): Feature[] {
+  const fields = Array.isArray(fieldsRaw) ? fieldsRaw : [fieldsRaw]
+  const features: Feature[] = []
 
-      // Extract Geometry
-      const geometry = convertGmlToGeoJson(mestField["Border"])
-
-      // Extract Properties (everything except Border/Geometry)
-      const properties = extractProperties(mestField, options)
-
-      if (geometry) {
-        features.push({
-          type: "Feature",
-          geometry,
-          properties,
-        })
-      }
+  for (const mestField of fields) {
+    if (!mestField) continue
+    const geometry = convertGmlToGeoJson(mestField["Border"])
+    const properties = extractProperties(mestField, options)
+    if (geometry) {
+      features.push({ type: "Feature", geometry, properties })
     }
   }
 
-  return {
-    type: "FeatureCollection",
-    features,
-  }
+  return features
+}
+
+const MEST_CODE_LOOKUPS: CodeLookupTable = {
+  Grondsoort: ["Grondsoort"],
+  TypeGrond: ["TypeGrond"],
+  BemonsteringProtocol: ["BemonsteringProtocol"],
+  IndNateeltMest: ["IndNateeltMest"],
+  GebruiksTitel: ["UseTitleCode"],
+  MESTFieldCause: ["Cause"],
+  Grondbedekking: ["CropTypeCode", "onbekend gewas"],
 }
 
 /**
  * Extracts and simplifies properties from a MESTField object.
  */
-function extractProperties(
-  mestField: any,
-  options: { enrichResponse?: boolean },
-): Record<string, any> {
-  const properties: Record<string, any> = {}
-  const descriptiveValues: Record<string, any> = {}
-
-  for (const key of Object.keys(mestField)) {
-    // Skip geometry related keys at the root level
-    if (key === "Border" || key === "Geometry") continue
-
-    const value = mestField[key]
-
-    if (key === "QualityIndicatorType") {
-      properties[key] = processQualityIndicators(value)
-
-      if (options.enrichResponse && Array.isArray(properties[key])) {
-        properties[key] = properties[key].map((qi: any) => {
-          const values: Record<string, any> = {}
-
-          if (qi.IndicatorCode) {
-            const label = getLabel("IndicatorCode", qi.IndicatorCode)
-            if (label) values.IndicatorCode = label
-          }
-
-          if (qi.SeverityCode) {
-            const label = getLabel("SeverityCode", qi.SeverityCode)
-            if (label) values.SeverityCode = label
-          }
-
-          if (qi.MESTFieldQICause) {
-            const label = getLabel("Cause", qi.MESTFieldQICause)
-            if (label) values.MESTFieldQICause = label
-          }
-
-          return { ...qi, descriptiveValues: values }
-        })
+function extractProperties(mestField: any, options: EnrichOptions): Record<string, any> {
+  return buildFieldProperties(
+    mestField,
+    options,
+    (key, value) => {
+      if (key === "QualityIndicatorType") {
+        return processQualityIndicatorType(value, options, "MESTFieldQICause")
       }
-    } else if (key === "Voorteelt" || key === "Nateelt") {
-      // Handle array of nested objects
-      properties[key] = Array.isArray(value)
-        ? value.map((v) => simplifyObject(v, options))
-        : simplifyObject(value, options)
-    } else if (value && typeof value === "object" && "_" in value) {
-      properties[key] = value._
-    } else {
-      properties[key] = value
-    }
-
-    // Apply enrichment if requested
-    if (options.enrichResponse) {
-      // Boolean mapping for J/N indicators
-      const boolValue = mapIndicator(properties[key])
-      if (boolValue !== null) {
-        descriptiveValues[key] = boolValue
+      if (key === "Voorteelt" || key === "Nateelt") {
+        return Array.isArray(value)
+          ? value.map((v) => simplifyObject(v, options))
+          : simplifyObject(value, options)
       }
-
-      // Code lookups
-      if (key === "Grondsoort") {
-        const label = getLabel("Grondsoort", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "TypeGrond") {
-        const label = getLabel("TypeGrond", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "BemonsteringProtocol") {
-        const label = getLabel("BemonsteringProtocol", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "IndNateeltMest") {
-        const label = getLabel("IndNateeltMest", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "GebruiksTitel") {
-        const label = getLabel("UseTitleCode", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "MESTFieldCause") {
-        const label = getLabel("Cause", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "Grondbedekking") {
-        const label = getLabel("CropTypeCode", properties[key], "onbekend gewas")
-        if (label) descriptiveValues[key] = label
-      }
-    }
-  }
-
-  if (options.enrichResponse && Object.keys(descriptiveValues).length > 0) {
-    properties.descriptiveValues = descriptiveValues
-  }
-
-  return properties
+      return flattenXml2jsValue(value)
+    },
+    (key, value) => getDescriptiveValue(key, value, MEST_CODE_LOOKUPS),
+  )
 }
 
-function simplifyObject(obj: any, options: { enrichResponse?: boolean } = {}): any {
-  if (!obj) return obj
-  if (typeof obj !== "object") return obj
+const VALID_INZAAIDATUM_CODES = new Set(["1", "2", "3", "4", "5"])
+
+function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | null {
+  if (key === "Inzaaidatum" && VALID_INZAAIDATUM_CODES.has(value)) {
+    return getLabel("InzaaidatumCode", value) ?? null
+  }
+  if (key === "Grondbedekking") {
+    return getLabel("CropTypeCode", value, "onbekend gewas") ?? null
+  }
+  return null
+}
+
+function simplifyObject(obj: any, options: EnrichOptions = {}): any {
+  if (!obj || typeof obj !== "object") return obj
 
   const newObj: Record<string, any> = {}
   const descriptiveValues: Record<string, any> = {}
 
   for (const key of Object.keys(obj)) {
-    const val = obj[key]
-    if (val && typeof val === "object" && "_" in val) {
-      newObj[key] = val._
-    } else {
-      newObj[key] = val
-    }
+    newObj[key] = flattenXml2jsValue(obj[key])
 
     if (options.enrichResponse) {
-      if (
-        key === "Inzaaidatum" &&
-        (newObj[key] === "1" ||
-          newObj[key] === "2" ||
-          newObj[key] === "3" ||
-          newObj[key] === "4" ||
-          newObj[key] === "5")
-      ) {
-        const label = getLabel("InzaaidatumCode", newObj[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "Grondbedekking") {
-        const label = getLabel("CropTypeCode", newObj[key], "onbekend gewas")
-        if (label) descriptiveValues[key] = label
-      }
+      const dv = getSimplifiedObjectDescriptiveValue(key, newObj[key])
+      if (dv !== null) descriptiveValues[key] = dv
     }
   }
 

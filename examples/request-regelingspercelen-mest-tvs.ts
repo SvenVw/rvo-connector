@@ -9,9 +9,7 @@ try {
   const clientName = process.env.CLIENT_NAME
   const redirectUri = process.env.REDIRECT_URI
   let pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
-  const env = (process.env.NODE_ENV === "production" ? "production" : "acceptance") as
-    | "acceptance"
-    | "production"
+  const env = process.env.NODE_ENV === "production" ? "production" : "acceptance"
 
   if (!clientId || !clientName || !redirectUri || !pkioPrivateKey) {
     console.error(

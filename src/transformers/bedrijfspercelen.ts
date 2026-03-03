@@ -1,10 +1,13 @@
 import type { Feature, FeatureCollection } from "geojson"
+import { convertGmlToGeoJson, findSoapBodyContent } from "../utils/geometry"
 import {
-  convertGmlToGeoJson,
-  processQualityIndicators,
-  findSoapBodyContent,
-} from "../utils/geometry"
-import { getLabel, mapIndicator } from "../utils/codelists"
+  buildFieldProperties,
+  flattenXml2jsValue,
+  getDescriptiveValue,
+  processQualityIndicatorType,
+  type CodeLookupTable,
+  type EnrichOptions,
+} from "./shared"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
@@ -14,7 +17,7 @@ import { getLabel, mapIndicator } from "../utils/codelists"
  */
 export function transformBedrijfspercelenToGeoJSON(
   response: any,
-  options: { enrichResponse?: boolean } = {},
+  options: EnrichOptions = {},
 ): FeatureCollection {
   const features: Feature[] = []
 
@@ -58,6 +61,12 @@ export function transformBedrijfspercelenToGeoJSON(
   }
 }
 
+const BEDRIJFS_CODE_LOOKUPS: CodeLookupTable = {
+  UseTitleCode: ["UseTitleCode"],
+  CropFieldCause: ["Cause"],
+  CropTypeCode: ["CropTypeCode", "onbekend gewas"],
+}
+
 /**
  * Extracts and simplifies properties from a CropField object.
  * Removes geometry keys and flattens xml2js text nodes.
@@ -66,78 +75,16 @@ export function transformBedrijfspercelenToGeoJSON(
  * @param options Transformation options.
  * @returns A flattened record of property keys and values.
  */
-function extractProperties(
-  cropField: any,
-  options: { enrichResponse?: boolean },
-): Record<string, any> {
-  const properties: Record<string, any> = {}
-  const descriptiveValues: Record<string, any> = {}
-
-  for (const key of Object.keys(cropField)) {
-    // Skip geometry related keys at the root level
-    if (key === "Border" || key === "Geometry") continue
-
-    const value = cropField[key]
-
-    if (key === "QualityIndicatorType") {
-      // Handle recursive conversion for QualityIndicatorType
-      properties[key] = processQualityIndicators(value)
-
-      // If enrich is enabled, map indicators in the array
-      if (options.enrichResponse && Array.isArray(properties[key])) {
-        properties[key] = properties[key].map((qi: any) => {
-          const values: Record<string, any> = {}
-
-          if (qi.IndicatorCode) {
-            const label = getLabel("IndicatorCode", qi.IndicatorCode)
-            if (label) values.IndicatorCode = label
-          }
-
-          if (qi.SeverityCode) {
-            const label = getLabel("SeverityCode", qi.SeverityCode)
-            if (label) values.SeverityCode = label
-          }
-
-          if (qi.QualityIndicatorCause) {
-            const label = getLabel("Cause", qi.QualityIndicatorCause)
-            if (label) values.QualityIndicatorCause = label
-          }
-
-          return { ...qi, descriptiveValues: values }
-        })
+function extractProperties(cropField: any, options: EnrichOptions): Record<string, any> {
+  return buildFieldProperties(
+    cropField,
+    options,
+    (key, value) => {
+      if (key === "QualityIndicatorType") {
+        return processQualityIndicatorType(value, options, "QualityIndicatorCause")
       }
-    } else if (value && typeof value === "object" && "_" in value) {
-      // Simplify value if it's an object with "_" (text content) and attributes
-      properties[key] = value._
-    } else {
-      properties[key] = value
-    }
-
-    // Apply enrichment if requested
-    if (options.enrichResponse) {
-      // Convert indicators to boolean
-      const boolValue = mapIndicator(properties[key])
-      if (boolValue !== null) {
-        descriptiveValues[key] = boolValue
-      }
-
-      // Code lookups
-      if (key === "UseTitleCode") {
-        const label = getLabel("UseTitleCode", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "CropFieldCause") {
-        const label = getLabel("Cause", properties[key])
-        if (label) descriptiveValues[key] = label
-      } else if (key === "CropTypeCode") {
-        const label = getLabel("CropTypeCode", properties[key], "onbekend gewas")
-        if (label) descriptiveValues[key] = label
-      }
-    }
-  }
-
-  if (options.enrichResponse && Object.keys(descriptiveValues).length > 0) {
-    properties.descriptiveValues = descriptiveValues
-  }
-
-  return properties
+      return flattenXml2jsValue(value)
+    },
+    (key, value) => getDescriptiveValue(key, value, BEDRIJFS_CODE_LOOKUPS),
+  )
 }
