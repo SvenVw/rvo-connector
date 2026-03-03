@@ -239,4 +239,77 @@ describe("transformRegelingspercelenMestToGeoJSON", () => {
     expect(nateelt.Inzaaidatum).toBe("1")
     expect(nateelt.descriptiveValues.Inzaaidatum).toContain("oktober")
   })
+
+  it("should flatten xml2js text-node objects at the top-level of a mestField", () => {
+    const mockResponse = {
+      Farm: {
+        Field: {
+          MESTFieldid: "444",
+          // xml2js structure when an element has both text content and attributes
+          SomeCodedField: { _: "abc", $: { listID: "CL99" } },
+          Border: {
+            exterior: {
+              LinearRing: {
+                posList: "155000 463000 155000 463100 155100 463100 155000 463000",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    const geojson = transformRegelingspercelenMestToGeoJSON(mockResponse)
+    expect(geojson.features[0].properties?.SomeCodedField).toBe("abc")
+  })
+
+  it("should enrich Grondbedekking on a mestField directly with CropTypeCode label", () => {
+    const mockResponse = {
+      Farm: {
+        Field: {
+          MESTFieldid: "555",
+          Grondbedekking: "259",
+          Border: {
+            exterior: {
+              LinearRing: {
+                posList: "155000 463000 155000 463100 155100 463100 155000 463000",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    const geojson = transformRegelingspercelenMestToGeoJSON(mockResponse, { enrichResponse: true })
+    const props = geojson.features[0].properties
+
+    expect(props?.Grondbedekking).toBe("259")
+    expect(props?.descriptiveValues.Grondbedekking).toBe("mais, snij-")
+  })
+
+  it("should enrich Grondbedekking inside Voorteelt/Nateelt with CropTypeCode label", () => {
+    const mockResponse = {
+      Farm: {
+        Field: {
+          MESTFieldid: "666",
+          Border: {
+            exterior: {
+              LinearRing: {
+                posList: "155000 463000 155000 463100 155100 463100 155000 463000",
+              },
+            },
+          },
+          Voorteelt: {
+            Grondbedekking: "233",
+            Oppervlakte: "2.0",
+          },
+        },
+      },
+    }
+
+    const geojson = transformRegelingspercelenMestToGeoJSON(mockResponse, { enrichResponse: true })
+    const voorteelt = geojson.features[0].properties?.Voorteelt
+
+    expect(voorteelt.Grondbedekking).toBe("233")
+    expect(voorteelt.descriptiveValues.Grondbedekking).toBe("tarwe, winter-")
+  })
 })
