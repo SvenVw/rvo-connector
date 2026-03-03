@@ -69,7 +69,7 @@ export interface SoapRequestParams {
   abaCredentials?: {
     /** The ABA username. */
     username: string
-    /** The ABA password? */
+    /** The ABA password. */
     password?: string
   }
   /**
