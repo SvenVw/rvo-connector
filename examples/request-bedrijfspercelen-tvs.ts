@@ -40,7 +40,6 @@ try {
   const client = new RvoClient({
     environment: env,
     authMode: "TVS",
-    clientId: clientId,
     clientName: clientName,
     requestTimeoutMs: 30000,
     tvs: {

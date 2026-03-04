@@ -126,6 +126,32 @@ describe("RvoClient (Acceptance Environment)", () => {
 
       expect(actualScope).toBe(expectedFullScope)
     })
+
+    it("should work with tvs.clientId and no root clientId", async () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientName: TVS_CLIENT_NAME!,
+        tvs: tvsConfig,
+      })
+      const authUrl = client.getAuthorizationUrl()
+      expect(authUrl).toContain(`client_id=${TVS_CLIENT_ID}`)
+    })
+
+    it("should fallback to root clientId if tvs.clientId is missing (backward compatibility)", () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: "fallback-id",
+        clientName: TVS_CLIENT_NAME!,
+        tvs: {
+          redirectUri: TVS_REDIRECT_URI!,
+          pkioPrivateKey: PKIO_PRIVATE_KEY!,
+        } as any,
+      })
+      const authUrl = client.getAuthorizationUrl()
+      expect(authUrl).toContain("client_id=fallback-id")
+    })
   })
 
   describe("Timeout Behavior", () => {

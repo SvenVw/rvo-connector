@@ -26,7 +26,6 @@ try {
   const client = new RvoClient({
     environment: env,
     authMode: "ABA",
-    clientId: clientId,
     clientName: clientName,
     requestTimeoutMs: 30000,
     aba: {

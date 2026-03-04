@@ -112,6 +112,7 @@ export class RvoClient {
       }
       const tvsAuthConf: RvoAuthTvsConfig = {
         ...this.config.tvs, // user config first
+        clientId: this.config.tvs.clientId || (this.config.clientId as string) || "",
         authorizeEndpoint: this.config.tvs.authorizeEndpoint ?? envEndpoints.tvsAuthorize,
         tokenEndpoint: this.config.tvs.tokenEndpoint ?? envEndpoints.tvsToken,
       }

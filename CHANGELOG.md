@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enrichment: Added `enrichResponse` option to both Bedrijfspercelen and Regelingspercelen MEST services. This adds a `descriptiveValues` object to the GeoJSON output with human-readable labels for RVO codes and boolean mappings for indicators.
 - Example: Added `examples/request-regelingspercelen-mest-tvs.ts` to demonstrate usage of the new service using TVS authentication.
 
+### Deprecated
+
+- Configuration: Deprecated `clientId` in the root of `RvoClientConfig`. Use `tvs.clientId` instead. Backward compatibility is maintained in this version, but the root property will be removed in the next major version.
+
 ### Changed
 
 - Refactoring: Consolidated SOAP request execution logic and geometry conversion functions (GML to GeoJSON) into shared internal utilities to reduce code duplication and improve maintainability.

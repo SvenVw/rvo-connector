@@ -62,25 +62,24 @@ yarn add @nmi-agro/rvo-connector
 
 ### 1. Initialization
 
-First, instantiate the `RvoClient`. You must provide the `clientId` (typically your organization's reference/OIN) and the target `environment`. This `clientId` will be used for both the Issuer and Sender in SOAP requests.
+First, instantiate the `RvoClient`. You must provide the `environment`. The `clientName` will be used for both the Issuer and Sender in SOAP requests. If using `TVS` mode (default), provide the `clientId` within the `tvs` configuration.
 
 ```typescript
 import { RvoClient } from "@nmi-agro/rvo-connector"
 
 const client = new RvoClient({
-  // 'acceptance' or 'production'
+  // 'acceptance' (default) or 'production'
   environment: "acceptance",
 
-  // Your organization's identifiers
-  clientId: "YOUR_CLIENT_ID", // e.g. OIN or KVK
-  clientName: "YOUR_CLIENT_NAME", // Name of your organization
+  // Name of your organization (used in SOAP Issuer/Sender)
+  clientName: "YOUR_CLIENT_NAME",
 
   // Configure Authentication Modes
   authMode: "TVS", // 'TVS' (default) or 'ABA'
 
   // TVS Configuration (if using TVS)
   tvs: {
-    clientId: "YOUR_CLIENT_ID",
+    clientId: "YOUR_CLIENT_ID", // e.g. OIN or KVK
     redirectUri: "https://your-app.com/callback",
     pkioPrivateKey: "YOUR_PKIO_PRIVATE_KEY_CONTENT",
   },
@@ -191,7 +190,6 @@ If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The 
 const abaClient = new RvoClient({
   authMode: "ABA",
   environment: "production",
-  clientId: "YOUR_CLIENT_ID",
   clientName: "YOUR_CLIENT_NAME",
   aba: {
     username: "user",
@@ -235,7 +233,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | Option       | Type               | Description                                                                 |
 | ------------ | ------------------ | --------------------------------------------------------------------------- |
 | `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                 |
-| `clientId`   | `string`           | **Required**. Your organization's Client ID (e.g., OIN).                    |
+| `clientId`   | `string`           | **Deprecated**. Your organization's Client ID (e.g., OIN).                  |
 | `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP. |
 | `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                          |
 | `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                          |

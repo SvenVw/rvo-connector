@@ -53,8 +53,10 @@ export interface RvoClientConfig {
   /**
    * ID of the Client (e.g., your organization's OIN or KVK number).
    * This is typically the OIN used for eHerkenning.
+   *
+   * @deprecated Use `tvs.clientId` instead. This root property will be removed in the next major version.
    */
-  clientId: string
+  clientId?: string
 
   /**
    * Name of the Client (e.g., your organization's name).
