@@ -142,7 +142,7 @@ describe("transformRegelingspercelenMestToGeoJSON", () => {
     expect(qi[0].descriptiveValues.IndicatorCode).toContain("gebruikstitel")
     expect(qi[0].descriptiveValues.SeverityCode).toBe("Fataal")
     expect(qi[0].descriptiveValues.MESTFieldQICause).toBe("Actief (Nieuw)")
-    expect(qi[1].descriptiveValues).toEqual({})
+    expect(qi[1].descriptiveValues).toBeNull()
   })
 
   it("should enrich properties with code lookups and J/N mapping when enrichResponse is true", () => {

@@ -289,8 +289,8 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
     expect(qi[0].descriptiveValues.IndicatorCode).toContain("gebruikstitel")
     expect(qi[0].descriptiveValues.SeverityCode).toBe("Fataal")
     expect(qi[0].descriptiveValues.QualityIndicatorCause).toBe("Actief (Nieuw)")
-    // Second indicator: unknown codes → no descriptiveValues entries for those keys
-    expect(qi[1].descriptiveValues).toEqual({})
+    // Second indicator: unknown codes → descriptiveValues should be null
+    expect(qi[1].descriptiveValues).toBeNull()
   })
 
   it("should enrich properties with descriptive values for J/N, UseTitleCode, and CropFieldCause", () => {

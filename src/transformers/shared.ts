@@ -32,7 +32,11 @@ export function enrichQualityIndicatorItem(qi: any, causeKey: string): any {
     const label = getLabel("Cause", qi[causeKey])
     if (label) values[causeKey] = label
   }
-  return { ...qi, descriptiveValues: values }
+
+  return {
+    ...qi,
+    descriptiveValues: Object.keys(values).length > 0 ? values : null,
+  }
 }
 
 /**
