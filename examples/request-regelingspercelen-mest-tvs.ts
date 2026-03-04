@@ -90,6 +90,14 @@ try {
       "\nPlease enter Period End Date (YYYY-MM-DD) [default: begin + 2 years]: ",
     )
 
+    const mutationStartDate = await ask(
+      "\nPlease enter Mutation Start Date (YYYY-MM-DD) [optional]: ",
+    )
+
+    const mandatedRepresentative = await ask(
+      "\nPlease enter Mandated Representative [optional]: ",
+    )
+
     const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
     const formatInput = formatRaw.trim().toLowerCase() || "geojson"
     const format: "xml" | "geojson" = formatInput === "xml" ? "xml" : "geojson"
@@ -99,6 +107,8 @@ try {
       farmId: farmId.trim() || undefined,
       periodBeginDate: beginDate.trim() || undefined,
       periodEndDate: endDate.trim() || undefined,
+      mutationStartDate: mutationStartDate.trim() || undefined,
+      mandatedRepresentative: mandatedRepresentative.trim() || undefined,
       outputFormat: format,
       enrichResponse: format === "geojson",
     })
