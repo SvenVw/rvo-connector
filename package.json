@@ -91,5 +91,8 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "inlinedDependencies": {
+    "@types/geojson": "7946.0.16"
   }
 }
