@@ -331,7 +331,10 @@ export class RvoClient {
     })
     const result = await parser.parseStringPromise(responseText)
 
-    if (outputFormat === "geojson" && transformer) {
+    if (outputFormat === "geojson") {
+      if (!transformer) {
+        throw new Error("GeoJSON output requested but no transformer was provided.")
+      }
       return transformer(result)
     }
 
