@@ -151,7 +151,7 @@ try {
   const geoJsonResult = await client.opvragenBedrijfspercelen({
     farmId: "KVK_NUMBER",
     outputFormat: "geojson",
-    // Optional: add a descriptiveValues object with labels and booleans (Only for GeoJSON)
+    // Optional: when true, adds a descriptiveValues object with labels and booleans (only for GeoJSON)
     enrichResponse: true,
   })
   console.log("GeoJSON Data:", geoJsonResult)
@@ -169,7 +169,7 @@ try {
   const mestResult = await client.opvragenRegelingspercelenMest({
     farmId: "KVK_NUMBER",
     outputFormat: "geojson",
-    // Optional: add a descriptiveValues object with labels and booleans (Only for GeoJSON)
+    // Optional: when true, adds a descriptiveValues object with labels and booleans (only for GeoJSON)
     enrichResponse: true,
     // Optional: Only fetch fields mutated after a certain date
     mutationStartDate: "2024-01-01 00:00:00",
@@ -230,13 +230,13 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ## Configuration Options
 
-| Option       | Type               | Description                                                                 |
-| ------------ | ------------------ | --------------------------------------------------------------------------- |
-| `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                 |
-| `clientId`   | `string`           | **Deprecated**. Your organization's Client ID (e.g., OIN).                  |
-| `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP. |
-| `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                          |
-| `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                          |
+| Option       | Type               | Description                                                                                                                   |
+| ------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                                                                   |
+| `clientId`   | `string`           | **Deprecated** (use `tvs.clientId` instead). Your organization's Client ID (e.g., OIN). Only kept for backward compatibility. |
+| `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                   |
+| `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                                                                            |
+| `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                                                                            |
 
 ### Method Options: `opvragenBedrijfspercelen`
 
