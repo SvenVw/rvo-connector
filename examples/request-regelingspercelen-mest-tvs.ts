@@ -82,17 +82,25 @@ try {
 
     const farmId = await ask("\nPlease enter the Farm ID (KvK-nummer) to query (optional): ")
 
-    const beginDate = await ask(
+    const beginDateInput = await ask(
       "\nPlease enter Period Begin Date (YYYY-MM-DD) [default: current year-01-01]: ",
     )
+    const beginDate = beginDateInput.trim() || `${new Date().getFullYear()}-01-01`
 
-    const endDate = await ask(
+    const endDateInput = await ask(
       "\nPlease enter Period End Date (YYYY-MM-DD) [default: begin + 2 years]: ",
     )
+    let endDate = endDateInput.trim()
+    if (!endDate) {
+      const d = new Date(beginDate)
+      d.setFullYear(d.getFullYear() + 2)
+      endDate = d.toISOString().split("T")[0]
+    }
 
-    const mutationStartDate = await ask(
-      "\nPlease enter Mutation Start Date (YYYY-MM-DD) [optional]: ",
+    const mutationStartDateInput = await ask(
+      "\nPlease enter Mutation Start Date (YYYY-MM-DD [HH:mm:ss]) [optional, defaults to midnight]: ",
     )
+    const mutationStartDate = mutationStartDateInput.trim() || undefined
 
     const mandatedRepresentative = await ask("\nPlease enter Mandated Representative [optional]: ")
 
@@ -103,9 +111,9 @@ try {
     console.log("\n3. Fetching Regelingspercelen Mest...")
     const result = await client.opvragenRegelingspercelenMest({
       farmId: farmId.trim() || undefined,
-      periodBeginDate: beginDate.trim() || undefined,
-      periodEndDate: endDate.trim() || undefined,
-      mutationStartDate: mutationStartDate.trim() || undefined,
+      periodBeginDate: beginDate,
+      periodEndDate: endDate,
+      mutationStartDate,
       mandatedRepresentative: mandatedRepresentative.trim() || undefined,
       outputFormat: format,
       enrichResponse: format === "geojson",

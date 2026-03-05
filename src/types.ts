@@ -246,7 +246,8 @@ export interface RegelingspercelenMestOptions {
    */
   periodEndDate?: string
   /**
-   * Mutation start date (YYYY-MM-DD HH:mm:ss).
+   * Mutation start date (YYYY-MM-DD [HH:mm:ss]).
+   * If time is omitted, midnight (00:00:00) is used.
    * If provided, only fields mutated after this date are retrieved.
    */
   mutationStartDate?: string
