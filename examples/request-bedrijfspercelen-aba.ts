@@ -62,5 +62,5 @@ try {
   }
 } catch (error) {
   console.error("\nAn error occurred:", error)
-  process.exit(1)
+  process.exitCode = 1
 }
