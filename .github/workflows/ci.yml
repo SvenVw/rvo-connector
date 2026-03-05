@@ -47,6 +47,9 @@ jobs:
           REDIRECT_URI: https://example.com
           PKIO_PRIVATE_KEY: dummy
 
+      - name: Run Build
+        run: pnpm build
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
         env:

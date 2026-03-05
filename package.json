@@ -1,6 +1,6 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "keywords": [
     "ABA",
@@ -38,8 +38,6 @@
     "dist"
   ],
   "type": "module",
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
@@ -80,7 +78,7 @@
     "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
     "oxlint-tsgolint": "^0.16.0",
-    "tsdown": "^0.20.3",
+    "tsdown": "^0.21.0",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.17",
     "typescript": "^5.9.3",
@@ -93,5 +91,8 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "inlinedDependencies": {
+    "@types/geojson": "7946.0.16"
   }
 }
