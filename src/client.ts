@@ -110,9 +110,15 @@ export class RvoClient {
       if (!this.config.tvs) {
         throw new Error("TVS authentication mode selected but TVS configuration is missing.")
       }
+
+      const clientId = this.config.tvs.clientId || (this.config.clientId as string)
+      if (!clientId) {
+        throw new Error("TVS clientId is required for TVS authentication")
+      }
+
       const tvsAuthConf: RvoAuthTvsConfig = {
         ...this.config.tvs, // user config first
-        clientId: this.config.tvs.clientId || (this.config.clientId as string) || "",
+        clientId,
         authorizeEndpoint: this.config.tvs.authorizeEndpoint ?? envEndpoints.tvsAuthorize,
         tokenEndpoint: this.config.tvs.tokenEndpoint ?? envEndpoints.tvsToken,
       }
