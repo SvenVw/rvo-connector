@@ -230,13 +230,13 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ## Configuration Options
 
-| Option       | Type               | Description                                                                                                                   |
-| ------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                                                                   |
-| `clientId`   | `string`           | **Deprecated** (use `tvs.clientId` instead). Your organization's Client ID (e.g., OIN). Only kept for backward compatibility. |
-| `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                   |
-| `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                                                                            |
-| `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                                                                            |
+| Option       | Type               | Description                                                                                                                          |
+| ------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                                                                          |
+| `clientId`   | `string`           | **Deprecated** (use `tvs.clientId` instead). Your organization's Client ID (e.g., OIN or KvK). Only kept for backward compatibility. |
+| `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                          |
+| `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                                                                                   |
+| `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                                                                                   |
 
 ### Method Options: `opvragenBedrijfspercelen`
 
