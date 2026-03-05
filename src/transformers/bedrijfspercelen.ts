@@ -1,4 +1,4 @@
-import type { Feature, FeatureCollection } from "geojson"
+import type { Feature, Geometry } from "geojson"
 import { convertGmlToGeoJson, findSoapBodyContent } from "../utils/geometry"
 import {
   buildFieldProperties,
@@ -8,6 +8,7 @@ import {
   type CodeLookupTable,
   type EnrichOptions,
 } from "./shared"
+import type { BedrijfspercelenGeoJSONResponse, CropFieldProperties } from "../types"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
@@ -18,8 +19,8 @@ import {
 export function transformBedrijfspercelenToGeoJSON(
   response: any,
   options: EnrichOptions = {},
-): FeatureCollection {
-  const features: Feature[] = []
+): BedrijfspercelenGeoJSONResponse {
+  const features: Feature<Geometry, CropFieldProperties>[] = []
 
   // Navigate the deep object structure to find CropFields
   const root = findSoapBodyContent(response, "OpvragenBedrijfspercelenResponse")
@@ -44,7 +45,7 @@ export function transformBedrijfspercelenToGeoJSON(
     const geometry = convertGmlToGeoJson(cropField["Border"])
 
     // Extract Properties (everything except Border/Geometry)
-    const properties = extractProperties(cropField, options)
+    const properties = extractProperties(cropField, options) as unknown as CropFieldProperties
 
     if (geometry) {
       features.push({

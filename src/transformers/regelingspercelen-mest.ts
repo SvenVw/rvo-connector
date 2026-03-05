@@ -1,4 +1,4 @@
-import type { Feature, FeatureCollection } from "geojson"
+import type { Feature, Geometry } from "geojson"
 import { convertGmlToGeoJson, findSoapBodyContent } from "../utils/geometry"
 import { getLabel } from "../utils/codelists"
 import {
@@ -9,6 +9,7 @@ import {
   type CodeLookupTable,
   type EnrichOptions,
 } from "./shared"
+import type { RegelingspercelenMestGeoJSONResponse } from "../types"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
@@ -19,7 +20,7 @@ import {
 export function transformRegelingspercelenMestToGeoJSON(
   response: any,
   options: EnrichOptions = {},
-): FeatureCollection {
+): RegelingspercelenMestGeoJSONResponse {
   const root = findSoapBodyContent(response, "OpvragenRegelingspercelenMESTResponse")
 
   const farmsRaw = root["Farm"]
@@ -28,7 +29,7 @@ export function transformRegelingspercelenMestToGeoJSON(
   }
 
   const farms = Array.isArray(farmsRaw) ? farmsRaw : [farmsRaw]
-  const features: Feature[] = []
+  const features: Feature<Geometry, Record<string, any>>[] = []
 
   for (const farm of farms) {
     if (!farm) continue
@@ -40,9 +41,12 @@ export function transformRegelingspercelenMestToGeoJSON(
   return { type: "FeatureCollection", features }
 }
 
-function processFarmFields(fieldsRaw: any, options: EnrichOptions): Feature[] {
+function processFarmFields(
+  fieldsRaw: any,
+  options: EnrichOptions,
+): Feature<Geometry, Record<string, any>>[] {
   const fields = Array.isArray(fieldsRaw) ? fieldsRaw : [fieldsRaw]
-  const features: Feature[] = []
+  const features: Feature<Geometry, Record<string, any>>[] = []
 
   for (const mestField of fields) {
     if (!mestField) continue

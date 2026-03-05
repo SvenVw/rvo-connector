@@ -217,8 +217,11 @@ export class RvoClient {
       senderId: this.config.clientName,
     })
 
-    return this.executeSoapRequest(soapXml, options.outputFormat, (result) =>
-      transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    return this.executeSoapRequest<BedrijfspercelenResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 
@@ -247,8 +250,11 @@ export class RvoClient {
       senderId: this.config.clientName,
     })
 
-    return this.executeSoapRequest(soapXml, options.outputFormat, (result) =>
-      transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    return this.executeSoapRequest<RegelingspercelenMestResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
     )
   }
 
@@ -276,11 +282,11 @@ export class RvoClient {
    * @param transformer Function to convert parsed XML to GeoJSON.
    * @returns A promise resolving to the parsed XML result or transformed GeoJSON.
    */
-  private async executeSoapRequest(
+  private async executeSoapRequest<TResult>(
     soapXml: string,
     outputFormat?: "xml" | "geojson",
-    transformer?: (result: any) => any,
-  ): Promise<any> {
+    transformer?: (result: unknown) => TResult,
+  ): Promise<TResult> {
     const isTvs = this.config.authMode === "TVS"
     const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!
 
@@ -308,8 +314,8 @@ export class RvoClient {
         body: soapXml,
         signal: controller.signal,
       })
-    } catch (error: any) {
-      if (error.name === "AbortError") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`Request to RVO service timed out after ${timeout}ms`)
       }
       throw error
@@ -329,7 +335,7 @@ export class RvoClient {
       explicitArray: false,
       tagNameProcessors: [xml2js.processors.stripPrefix],
     })
-    const result = await parser.parseStringPromise(responseText)
+    const result = (await parser.parseStringPromise(responseText)) as unknown
 
     if (outputFormat === "geojson") {
       if (!transformer) {
@@ -338,6 +344,6 @@ export class RvoClient {
       return transformer(result)
     }
 
-    return result
+    return result as TResult
   }
 }
