@@ -170,9 +170,9 @@ export interface CropFieldProperties {
   CropFieldVersion: string
   /** User-assigned name/designator for the field. */
   CropFieldDesignator: string
-  /** Start date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  /** Start date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
   BeginDate: string
-  /** End date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  /** End date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
   EndDate?: string
   /** Country code (ISO 2 letter), usually 'NL'. */
   Country: string
@@ -246,7 +246,7 @@ export interface RegelingspercelenMestOptions {
    */
   periodEndDate?: string
   /**
-   * Mutation start date (YYYY-MM-DD HH24 MI SS).
+   * Mutation start date (YYYY-MM-DD HH:mm:ss).
    * If provided, only fields mutated after this date are retrieved.
    */
   mutationStartDate?: string

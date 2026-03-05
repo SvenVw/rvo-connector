@@ -255,7 +255,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `farmId`                 | `string`             | Optional. KvK/BSN to query.                                                                                                         |
 | `periodBeginDate`        | `string`             | Start date (YYYY-MM-DD).                                                                                                            |
 | `periodEndDate`          | `string`             | End date (YYYY-MM-DD).                                                                                                              |
-| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:MM:SS).                                                          |
+| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:mm:ss).                                                          |
 | `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                                                               |
 | `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
 | `enrichResponse`         | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
