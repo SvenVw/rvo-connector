@@ -26,7 +26,6 @@ try {
   const client = new RvoClient({
     environment: env,
     authMode: "ABA",
-    clientId: clientId,
     clientName: clientName,
     requestTimeoutMs: 30000,
     aba: {
@@ -54,6 +53,7 @@ try {
     const result = await client.opvragenBedrijfspercelen({
       farmId: farmId.trim() || undefined,
       outputFormat: format,
+      enrichResponse: format === "geojson",
     })
     console.log("\nSuccessfully fetched Bedrijfspercelen:")
     console.log(JSON.stringify(result, null, 2))
@@ -62,5 +62,5 @@ try {
   }
 } catch (error) {
   console.error("\nAn error occurred:", error)
-  process.exit(1)
+  process.exitCode = 1
 }

@@ -1,6 +1,6 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "keywords": [
     "ABA",
@@ -51,8 +51,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "test": "vitest",
-    "test:ci": "vitest --run --coverage",
+    "test": "vitest --run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
@@ -78,10 +77,10 @@
     "@vitest/coverage-v8": "^4.0.18",
     "bumpp": "^10.4.1",
     "dotenv": "^17.3.1",
-    "oxfmt": "^0.23.0",
+    "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
-    "oxlint-tsgolint": "^0.10.1",
-    "tsdown": "^0.18.4",
+    "oxlint-tsgolint": "^0.16.0",
+    "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.17",
     "typescript": "^5.9.3",

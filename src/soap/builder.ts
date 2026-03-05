@@ -17,6 +17,33 @@ function escapeXml(unsafe: string): string {
 }
 
 /**
+ * Normalizes a date-time string to standard ISO format (YYYY-MM-DDTHH:MM:SS).
+ *
+ * - If only a date (YYYY-MM-DD) is provided, appends T00:00:00.
+ * - If a space or colon is used as a date/time separator, replaces it with T.
+ *
+ * @param dateTime The raw date or date-time string.
+ * @returns The normalized ISO 8601 date-time string, or undefined if input is empty.
+ */
+function normalizeDateTime(dateTime?: string): string | undefined {
+  if (!dateTime) return undefined
+
+  // Handle space or colon separator (e.g. YYYY-MM-DD HH:MM:SS or YYYY-MM-DD:HH:MM:SS)
+  // Use regex to find the separator between date and time
+  const match = /^(\d{4}-\d{2}-\d{2})[ :T](\d{2}:\d{2}:\d{2})$/.exec(dateTime)
+  if (match) {
+    return `${match[1]}T${match[2]}`
+  }
+
+  // If it's just the date (YYYY-MM-DD), append time with T separator
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateTime)) {
+    return `${dateTime}T00:00:00`
+  }
+
+  return dateTime
+}
+
+/**
  * Parameters required to build the SOAP request for OpvragenBedrijfspercelen.
  */
 export interface SoapRequestParams {
@@ -58,28 +85,43 @@ export interface SoapRequestParams {
 }
 
 /**
- * Constructs the SOAP XML string for the OpvragenBedrijfspercelen request.
- *
- * @param params The parameters for the request.
- * @returns The complete SOAP XML string.
- * @internal
+ * Parameters required to build the SOAP request for OpvragenRegelingspercelenMest.
  */
-export function buildBedrijfspercelenRequest(params: SoapRequestParams): string {
+export interface RegelingspercelenMestRequestParams extends SoapRequestParams {
+  /**
+   * Mutation start date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS).
+   * If provided, only fields mutated after this date are retrieved.
+   */
+  mutationStartDate?: string
+  /**
+   * KVK number (8 digits) of the mandated representative.
+   */
+  mandatedRepresentative?: string
+}
+
+/**
+ * Shared helper to build the SOAP envelope and standard ExchangedDocument.
+ */
+function buildSoapEnvelope(
+  params: SoapRequestParams,
+  options: {
+    serviceNamespace: string
+    requestName: string
+    messageType: string
+    /** Extra XML to append AFTER ExchangedDocument at the top level of the Request element */
+    extraRequestXml?: string
+  },
+): string {
   const now = new Date()
   const currentYear = now.getFullYear()
 
   const messageId = uuidv4()
-  const issueDate = now.toISOString().slice(0, 19) // YYYY-MM-DDTHH:MM:SS
+  const issueDate = now.toISOString().slice(0, 19) // Standard YYYY-MM-DDTHH:MM:SS
 
   const periodBeginDate = escapeXml(params.periodBeginDate || `${currentYear}-01-01`)
   const periodEndDate = escapeXml(params.periodEndDate || `${currentYear + 2}-01-01`)
 
-  if (!params.issuerId) {
-    throw new Error(
-      'Client Name is required for the SOAP request. Please configure "clientName" in the client options.',
-    )
-  }
-  if (!params.senderId) {
+  if (!params.issuerId || !params.senderId) {
     throw new Error(
       'Client Name is required for the SOAP request. Please configure "clientName" in the client options.',
     )
@@ -87,10 +129,6 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
 
   const issuerId = escapeXml(params.issuerId)
   const senderId = escapeXml(params.senderId)
-
-  const thirdPartyFarmIdXml = params.farmId
-    ? `<opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
-    : ""
 
   let headerXml = ""
   if (params.abaCredentials) {
@@ -103,23 +141,16 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
     </UsernameToken>
    </Security>
 </soapenv:Header>`
-  } else {
-    // For TVS, we might need an empty header or no header.
-    // Experiment has <soapenv:Body> directly if no header?
-    // Actually experiment shows:
-    // TVS: <soapenv:Envelope ...><soapenv:Body>...
-    // ABA: <soapenv:Envelope ...><soapenv:Header>...</soapenv:Header><soapenv:Body>...
-    // So header is optional.
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:opv="http://www.minez.nl/ws/edicrop/1.0/OpvragenBedrijfspercelen" xmlns:exc="http://www.minez.nl/ws/edicrop/1.0/ExchangedDocument" xmlns:spec="http://www.minez.nl/ws/edicrop/1.0/SpecifiedDataset">
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:opv="${options.serviceNamespace}" xmlns:exc="http://www.minez.nl/ws/edicrop/1.0/ExchangedDocument" xmlns:spec="http://www.minez.nl/ws/edicrop/1.0/SpecifiedDataset">
 ${headerXml}
   <soapenv:Body>
-    <opv:OpvragenBedrijfspercelenRequest>
+    <opv:${options.requestName}>
          <opv:ExchangedDocument>
             <exc:ID>${messageId}</exc:ID>
-            <exc:Type>CRPRQBP</exc:Type>
+            <exc:Type>${options.messageType}</exc:Type>
             <exc:EdiCropVersion>CRP4.0</exc:EdiCropVersion>
             <exc:MessageTypeVersion>4.0</exc:MessageTypeVersion>
             <exc:IssueDate>${issueDate}</exc:IssueDate>
@@ -137,9 +168,62 @@ ${headerXml}
                <spec:PeriodBeginDate>${periodBeginDate}</spec:PeriodBeginDate>
                <spec:PeriodEndDate>${periodEndDate}</spec:PeriodEndDate>
             </exc:SpecifiedDataset>
-         </opv:ExchangedDocument>
-         ${thirdPartyFarmIdXml}
-      </opv:OpvragenBedrijfspercelenRequest>
+         </opv:ExchangedDocument>${options.extraRequestXml || ""}
+      </opv:${options.requestName}>
   </soapenv:Body>
 </soapenv:Envelope>`
+}
+
+/**
+ * Constructs the SOAP XML string for the OpvragenBedrijfspercelen request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
+export function buildBedrijfspercelenRequest(params: SoapRequestParams): string {
+  let extraXml = ""
+  if (params.farmId) {
+    extraXml += `\n         <opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
+  }
+
+  return buildSoapEnvelope(params, {
+    serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenBedrijfspercelen",
+    requestName: "OpvragenBedrijfspercelenRequest",
+    messageType: "CRPRQBP",
+    extraRequestXml: extraXml,
+  })
+}
+
+/**
+ * Constructs the SOAP XML string for the OpvragenRegelingspercelenMest request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
+export function buildRegelingspercelenMestRequest(
+  params: RegelingspercelenMestRequestParams,
+): string {
+  let extraXml = ""
+
+  if (params.mandatedRepresentative) {
+    extraXml += `\n         <opv:MandatedRepresentative schemeAgencyName="KVK">${escapeXml(params.mandatedRepresentative)}</opv:MandatedRepresentative>`
+  }
+
+  if (params.farmId) {
+    extraXml += `\n         <opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
+  }
+
+  const normalizedMutationDate = normalizeDateTime(params.mutationStartDate)
+  if (normalizedMutationDate) {
+    extraXml += `\n         <opv:MutationStartDate>${escapeXml(normalizedMutationDate)}</opv:MutationStartDate>`
+  }
+
+  return buildSoapEnvelope(params, {
+    serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenMEST",
+    requestName: "OpvragenRegelingspercelenMESTRequest",
+    messageType: "CRPRQRM",
+    extraRequestXml: extraXml,
+  })
 }

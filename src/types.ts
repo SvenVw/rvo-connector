@@ -5,7 +5,7 @@ import type { FeatureCollection, Geometry } from "geojson"
  */
 export interface RvoAuthTvsConfig {
   /** Client ID (e.g., from RVO portal). Typically your OIN or similar identifier. */
-  clientId: string
+  clientId?: string
   /** Redirect URI registered with RVO for the OAuth 2.0 callback. */
   redirectUri: string
   /**
@@ -53,8 +53,10 @@ export interface RvoClientConfig {
   /**
    * ID of the Client (e.g., your organization's OIN or KVK number).
    * This is typically the OIN used for eHerkenning.
+   *
+   * @deprecated Use `tvs.clientId` instead. This root property will be removed in the next major version.
    */
-  clientId: string
+  clientId?: string
 
   /**
    * Name of the Client (e.g., your organization's name).
@@ -118,6 +120,13 @@ export interface BedrijfspercelenOptions {
    * @default 'xml'
    */
   outputFormat?: "xml" | "geojson"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing boolean mappings for "J"/"N" indicators and human-readable
+   * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
+   * @default false
+   */
+  enrichResponse?: boolean
 }
 
 /**
@@ -161,9 +170,9 @@ export interface CropFieldProperties {
   CropFieldVersion: string
   /** User-assigned name/designator for the field. */
   CropFieldDesignator: string
-  /** Start date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  /** Start date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
   BeginDate: string
-  /** End date of the field's validity (YYYY-MM-DDTHH:MM:SS). */
+  /** End date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
   EndDate?: string
   /** Country code (ISO 2 letter), usually 'NL'. */
   Country: string
@@ -218,6 +227,69 @@ export type BedrijfspercelenGeoJSONResponse = FeatureCollection<Geometry, CropFi
  * Union type for the response of `opvragenBedrijfspercelen`.
  */
 export type BedrijfspercelenResponse = BedrijfspercelenXmlResponse | BedrijfspercelenGeoJSONResponse
+
+/**
+ * Options for the `opvragenRegelingspercelenMest` service.
+ */
+export interface RegelingspercelenMestOptions {
+  /**
+   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
+   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   */
+  farmId?: string
+  /**
+   * Start date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodBeginDate?: string
+  /**
+   * End date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodEndDate?: string
+  /**
+   * Mutation start date (YYYY-MM-DD [HH:mm:ss]).
+   * If time is omitted, midnight (00:00:00) is used.
+   * If provided, only fields mutated after this date are retrieved.
+   */
+  mutationStartDate?: string
+  /**
+   * KVK number (8 digits) of the mandated representative.
+   */
+  mandatedRepresentative?: string
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'geojson'`: Converts the response to a GeoJSON FeatureCollection.
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "geojson"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing boolean mappings for "J"/"N" indicators and human-readable
+   * labels for RVO codes (e.g. Grondsoort, GebruiksTitel).
+   * @default false
+   */
+  enrichResponse?: boolean
+}
+
+/**
+ * Generic interface for the parsed XML response from RegelingspercelenMest service.
+ */
+export interface RegelingspercelenMestXmlResponse {
+  [key: string]: unknown
+}
+
+/**
+ * GeoJSON output for RegelingspercelenMest.
+ * A FeatureCollection where each feature represents a MestField.
+ */
+export type RegelingspercelenMestGeoJSONResponse = FeatureCollection<Geometry, Record<string, any>>
+
+/**
+ * Union type for the response of `opvragenRegelingspercelenMest`.
+ */
+export type RegelingspercelenMestResponse =
+  | RegelingspercelenMestXmlResponse
+  | RegelingspercelenMestGeoJSONResponse
 
 /**
  * Response from the RVO OAuth 2.0 Token Endpoint.

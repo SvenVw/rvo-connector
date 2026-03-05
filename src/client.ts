@@ -3,13 +3,15 @@ import type {
   RvoClientConfig,
   BedrijfspercelenOptions,
   BedrijfspercelenResponse,
-  BedrijfspercelenGeoJSONResponse,
+  RegelingspercelenMestOptions,
+  RegelingspercelenMestResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
-import { buildBedrijfspercelenRequest } from "./soap/builder"
+import { buildBedrijfspercelenRequest, buildRegelingspercelenMestRequest } from "./soap/builder"
 import { transformBedrijfspercelenToGeoJSON } from "./transformers/bedrijfspercelen"
+import { transformRegelingspercelenMestToGeoJSON } from "./transformers/regelingspercelen-mest"
 
 // Default Endpoints for different environments
 const ENDPOINTS = {
@@ -37,12 +39,17 @@ const EHERKENNING_SCOPES = {
  * RVO Service types supported by the client.
  * - `'opvragenBedrijfspercelen'`: Retrieve crop fields (EDI-Crop).
  * - `'muterenBedrijfspercelen'`: Mutate/Update crop fields.
+ * - `'opvragenRegelingspercelenMest'`: Retrieve regulation fields for manure.
  */
-export type RvoService = "opvragenBedrijfspercelen" | "muterenBedrijfspercelen"
+export type RvoService =
+  | "opvragenBedrijfspercelen"
+  | "muterenBedrijfspercelen"
+  | "opvragenRegelingspercelenMest"
 
 const SERVICE_SCOPES: Record<RvoService, string> = {
   opvragenBedrijfspercelen: "RVO-WS.GEO.bp.lezen",
   muterenBedrijfspercelen: "RVO-WS.GEO.bp.muteren",
+  opvragenRegelingspercelenMest: "RVO-WS.GEO.rp.lezen",
 }
 
 /**
@@ -103,8 +110,23 @@ export class RvoClient {
       if (!this.config.tvs) {
         throw new Error("TVS authentication mode selected but TVS configuration is missing.")
       }
+
+      let clientId = this.config.tvs.clientId
+      if (!clientId && this.config.clientId) {
+        console.warn(
+          "Deprecation Warning: Root 'clientId' in RvoClientConfig is deprecated for TVS mode. " +
+            "Please move it to the 'tvs.clientId' property.",
+        )
+        clientId = this.config.clientId
+      }
+
+      if (!clientId) {
+        throw new Error("TVS clientId is required for TVS authentication")
+      }
+
       const tvsAuthConf: RvoAuthTvsConfig = {
         ...this.config.tvs, // user config first
+        clientId,
         authorizeEndpoint: this.config.tvs.authorizeEndpoint ?? envEndpoints.tvsAuthorize,
         tokenEndpoint: this.config.tvs.tokenEndpoint ?? envEndpoints.tvsToken,
       }
@@ -183,16 +205,8 @@ export class RvoClient {
   public async opvragenBedrijfspercelen(
     options: BedrijfspercelenOptions = {},
   ): Promise<BedrijfspercelenResponse> {
+    this.validateAuth()
     const isTvs = this.config.authMode === "TVS"
-
-    if (isTvs && !this.accessToken) {
-      throw new Error(
-        "Access token is missing. Authenticate via TVS first or set the access token.",
-      )
-    }
-    if (!isTvs && (!this.config.aba?.username || !this.config.aba?.password)) {
-      throw new Error("ABA authentication mode selected but ABA username or password is missing.")
-    }
 
     const soapXml = buildBedrijfspercelenRequest({
       farmId: options.farmId,
@@ -203,6 +217,77 @@ export class RvoClient {
       senderId: this.config.clientName,
     })
 
+    return this.executeSoapRequest<BedrijfspercelenResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    )
+  }
+
+  /**
+   * Calls the `OpvragenRegelingspercelenMest` SOAP service.
+   * Retrieves regulation fields for manure for a farm.
+   *
+   * @param options Optional parameters for the request (farm ID, date range, etc.).
+   * @returns A promise resolving to the parsed XML response from RVO.
+   * @throws Error if authentication fails or the SOAP request returns an error.
+   */
+  public async opvragenRegelingspercelenMest(
+    options: RegelingspercelenMestOptions = {},
+  ): Promise<RegelingspercelenMestResponse> {
+    this.validateAuth()
+    const isTvs = this.config.authMode === "TVS"
+
+    const soapXml = buildRegelingspercelenMestRequest({
+      farmId: options.farmId,
+      periodBeginDate: options.periodBeginDate,
+      periodEndDate: options.periodEndDate,
+      mutationStartDate: options.mutationStartDate,
+      mandatedRepresentative: options.mandatedRepresentative,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+      issuerId: this.config.clientName,
+      senderId: this.config.clientName,
+    })
+
+    return this.executeSoapRequest<RegelingspercelenMestResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    )
+  }
+
+  /**
+   * Validates that the current configuration and state are sufficient for an API call.
+   */
+  private validateAuth(): void {
+    const isTvs = this.config.authMode === "TVS"
+
+    if (isTvs && !this.accessToken) {
+      throw new Error(
+        "Access token is missing. Authenticate via TVS first or set the access token.",
+      )
+    }
+    if (!isTvs && (!this.config.aba?.username || !this.config.aba?.password)) {
+      throw new Error("ABA authentication mode selected but ABA username or password is missing.")
+    }
+  }
+
+  /**
+   * Executes a SOAP request, handling authentication, timeouts, and XML parsing.
+   *
+   * @param soapXml The complete SOAP XML request body.
+   * @param outputFormat Preferred output format (xml or geojson).
+   * @param transformer Function to convert parsed XML to GeoJSON.
+   * @returns A promise resolving to the parsed XML result or transformed GeoJSON.
+   */
+  private async executeSoapRequest<TResult>(
+    soapXml: string,
+    outputFormat?: "xml" | "geojson",
+    transformer?: (result: unknown) => TResult,
+  ): Promise<TResult> {
+    const isTvs = this.config.authMode === "TVS"
     const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!
 
     const headers: Record<string, string> = {
@@ -229,8 +314,8 @@ export class RvoClient {
         body: soapXml,
         signal: controller.signal,
       })
-    } catch (error: any) {
-      if (error.name === "AbortError") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`Request to RVO service timed out after ${timeout}ms`)
       }
       throw error
@@ -250,12 +335,15 @@ export class RvoClient {
       explicitArray: false,
       tagNameProcessors: [xml2js.processors.stripPrefix],
     })
-    const result = await parser.parseStringPromise(responseText)
+    const result = (await parser.parseStringPromise(responseText)) as unknown
 
-    if (options.outputFormat === "geojson") {
-      return transformBedrijfspercelenToGeoJSON(result) as BedrijfspercelenGeoJSONResponse
+    if (outputFormat === "geojson") {
+      if (!transformer) {
+        throw new Error("GeoJSON output requested but no transformer was provided.")
+      }
+      return transformer(result)
     }
 
-    return result
+    return result as TResult
   }
 }

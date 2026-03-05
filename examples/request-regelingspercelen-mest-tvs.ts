@@ -9,9 +9,7 @@ try {
   const clientName = process.env.CLIENT_NAME
   const redirectUri = process.env.REDIRECT_URI
   let pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
-  const env = (process.env.NODE_ENV === "production" ? "production" : "acceptance") as
-    | "acceptance"
-    | "production"
+  const env = process.env.NODE_ENV === "production" ? "production" : "acceptance"
 
   if (!clientId || !clientName || !redirectUri || !pkioPrivateKey) {
     console.error(
@@ -34,7 +32,7 @@ try {
     }
   }
 
-  console.log("--- RVO TVS Connection Example (Bedrijfspercelen) ---")
+  console.log("--- RVO TVS Connection Example (Regelingspercelen Mest) ---")
   console.log(`Environment: ${env}`)
 
   const client = new RvoClient({
@@ -51,7 +49,7 @@ try {
 
   // Step 1: Get Authorization URL
   const authUrl = client.getAuthorizationUrl({
-    service: "opvragenBedrijfspercelen",
+    service: "opvragenRegelingspercelenMest",
   })
 
   console.log("\n1. Please open the following URL in your browser to authorize:")
@@ -82,20 +80,46 @@ try {
     const tokenData = await client.exchangeAuthCode(authorizationCode)
     console.log("Expires In (seconds):", tokenData.expires_in)
 
-    const farmId = await ask(
-      "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
+    const farmId = await ask("\nPlease enter the Farm ID (KvK-nummer) to query (optional): ")
+
+    const beginDateInput = await ask(
+      "\nPlease enter Period Begin Date (YYYY-MM-DD) [default: current year-01-01]: ",
     )
+    const beginDate = beginDateInput.trim() || `${new Date().getFullYear()}-01-01`
+
+    const endDateInput = await ask(
+      "\nPlease enter Period End Date (YYYY-MM-DD) [default: begin + 2 years]: ",
+    )
+    let endDate = endDateInput.trim()
+    if (!endDate) {
+      const d = new Date(beginDate)
+      d.setFullYear(d.getFullYear() + 2)
+      endDate = d.toISOString().split("T")[0]
+    }
+
+    const mutationStartDateInput = await ask(
+      "\nPlease enter Mutation Start Date (YYYY-MM-DD [HH:mm:ss]) [optional, defaults to midnight]: ",
+    )
+    const mutationStartDate = mutationStartDateInput.trim() || undefined
+
+    const mandatedRepresentative = await ask("\nPlease enter Mandated Representative [optional]: ")
+
     const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
     const formatInput = formatRaw.trim().toLowerCase() || "geojson"
     const format: "xml" | "geojson" = formatInput === "xml" ? "xml" : "geojson"
 
-    console.log("\n3. Fetching Bedrijfspercelen...")
-    const result = await client.opvragenBedrijfspercelen({
+    console.log("\n3. Fetching Regelingspercelen Mest...")
+    const result = await client.opvragenRegelingspercelenMest({
       farmId: farmId.trim() || undefined,
+      periodBeginDate: beginDate,
+      periodEndDate: endDate,
+      mutationStartDate,
+      mandatedRepresentative: mandatedRepresentative.trim() || undefined,
       outputFormat: format,
       enrichResponse: format === "geojson",
     })
-    console.log("\nSuccessfully fetched Bedrijfspercelen:")
+
+    console.log("\nSuccessfully fetched Regelingspercelen Mest:")
     console.log(JSON.stringify(result, null, 2))
   } finally {
     rl.close()

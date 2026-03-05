@@ -254,6 +254,96 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
     expect(qi.Geometry).toBeUndefined()
   })
 
+  it("should enrich QualityIndicatorType with descriptive labels when enrichResponse is true", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID_ENRICH_QI",
+            Border: {
+              exterior: {
+                LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
+              },
+            },
+            QualityIndicatorType: [
+              {
+                IndicatorCode: "KI001",
+                SeverityCode: "FATAAL",
+                QualityIndicatorCause: "A",
+              },
+              {
+                IndicatorCode: "KI_UNKNOWN",
+                SeverityCode: "SEVERITY_UNKNOWN",
+              },
+            ],
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input, { enrichResponse: true })
+    const qi = result.features[0].properties?.QualityIndicatorType
+
+    expect(qi).toHaveLength(2)
+    // First indicator: known codes → descriptiveValues set
+    expect(qi[0].descriptiveValues.IndicatorCode).toContain("gebruikstitel")
+    expect(qi[0].descriptiveValues.SeverityCode).toBe("Fataal")
+    expect(qi[0].descriptiveValues.QualityIndicatorCause).toBe("Actief (Nieuw)")
+    // Second indicator: unknown codes → descriptiveValues should be null
+    expect(qi[1].descriptiveValues).toBeNull()
+  })
+
+  it("should enrich properties with descriptive values for J/N, UseTitleCode, and CropFieldCause", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID_ENRICH",
+            SomeFlag: "J",
+            AnotherFlag: "N",
+            UseTitleCode: "01",
+            CropFieldCause: "A",
+            Border: {
+              exterior: {
+                LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input, { enrichResponse: true })
+    const props = result.features[0].properties
+
+    expect(props?.descriptiveValues).toBeDefined()
+    expect(props?.descriptiveValues.SomeFlag).toBe(true)
+    expect(props?.descriptiveValues.AnotherFlag).toBe(false)
+    expect(props?.descriptiveValues.UseTitleCode).toBe("Eigendom")
+    expect(props?.descriptiveValues.CropFieldCause).toBe("Actief (Nieuw)")
+  })
+
+  it("should not add descriptiveValues when enrichResponse is false", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID_NO_ENRICH",
+            UseTitleCode: "01",
+            Border: {
+              exterior: {
+                LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input)
+    expect(result.features[0].properties?.descriptiveValues).toBeUndefined()
+  })
+
   it("should transform geometry inside array of QualityIndicatorTypes", () => {
     const input = createEnvelope({
       Farm: {
