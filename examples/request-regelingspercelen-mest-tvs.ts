@@ -94,9 +94,7 @@ try {
       "\nPlease enter Mutation Start Date (YYYY-MM-DD) [optional]: ",
     )
 
-    const mandatedRepresentative = await ask(
-      "\nPlease enter Mandated Representative [optional]: ",
-    )
+    const mandatedRepresentative = await ask("\nPlease enter Mandated Representative [optional]: ")
 
     const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
     const formatInput = formatRaw.trim().toLowerCase() || "geojson"
