@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.1] - 2026-03-05
 
+### Changed
+
+- CI: Added a "Run Build" step to the GitHub Actions workflow to verify build and bundling integrity on every PR and push.
+
 ### Fixed
 
 - Build: Resolved an issue where `@types/geojson` was unintentionally bundled by `tsdown`, causing a build error.
