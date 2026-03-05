@@ -5,7 +5,7 @@ import type { FeatureCollection, Geometry } from "geojson"
  */
 export interface RvoAuthTvsConfig {
   /** Client ID (e.g., from RVO portal). Typically your OIN or similar identifier. */
-  clientId: string
+  clientId?: string
   /** Redirect URI registered with RVO for the OAuth 2.0 callback. */
   redirectUri: string
   /**

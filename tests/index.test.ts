@@ -147,7 +147,7 @@ describe("RvoClient (Acceptance Environment)", () => {
         tvs: {
           redirectUri: TVS_REDIRECT_URI!,
           pkioPrivateKey: PKIO_PRIVATE_KEY!,
-        } as any,
+        },
       })
       const authUrl = client.getAuthorizationUrl()
       expect(authUrl).toContain("client_id=fallback-id")

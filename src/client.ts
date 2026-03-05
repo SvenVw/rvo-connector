@@ -111,7 +111,15 @@ export class RvoClient {
         throw new Error("TVS authentication mode selected but TVS configuration is missing.")
       }
 
-      const clientId = this.config.tvs.clientId || (this.config.clientId as string)
+      let clientId = this.config.tvs.clientId
+      if (!clientId && this.config.clientId) {
+        console.warn(
+          "Deprecation Warning: Root 'clientId' in RvoClientConfig is deprecated for TVS mode. " +
+            "Please move it to the 'tvs.clientId' property.",
+        )
+        clientId = this.config.clientId
+      }
+
       if (!clientId) {
         throw new Error("TVS clientId is required for TVS authentication")
       }
