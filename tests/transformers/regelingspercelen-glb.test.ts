@@ -38,14 +38,14 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
           Voorteelt: {
             Grondbedekking: "233",
             Oppervlakte: "1.0",
-            GewasbeschermingVoorteelt: "1",
+            GewasbeschermingVoorteelt: "1"
           },
           Nateelt: [
             {
               Grondbedekking: "236",
               Oppervlakte: "0.5",
-              Inzaaidatum: "1",
-            },
+              Inzaaidatum: "1"
+            }
           ],
           Task: {
             Taskid: "TASK1",
@@ -54,6 +54,10 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
               TreatmentZone: {
                 TreatmentZoneId: "TZ1",
                 ActivityCode: "ACT1",
+                QualityIndicator: {
+                  IndicatorCode: "KI001",
+                  ActivityCause: "A",
+                },
                 Border: {
                   exterior: {
                     LinearRing: {
@@ -92,11 +96,13 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
     const task = Array.isArray(feature.properties.Task)
       ? feature.properties.Task[0]
       : feature.properties.Task
-
+    
     const op = Array.isArray(task.Operation) ? task.Operation[0] : task.Operation
-
+    
     const tz = Array.isArray(op.TreatmentZone) ? op.TreatmentZone[0] : op.TreatmentZone
     expect(tz.TreatmentZoneId).toBe("TZ1")
+    expect(tz.QualityIndicator).toBeDefined()
+    expect(tz.QualityIndicator.IndicatorCode).toBe("KI001")
     expect(tz.geometry).toBeDefined()
     expect(tz.geometry.type).toBe("Polygon")
   })
@@ -117,12 +123,12 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
           Voorteelt: {
             Grondbedekking: "233",
             Oppervlakte: "1.0",
-            GewasbeschermingVoorteelt: "1",
+            GewasbeschermingVoorteelt: "1"
           },
           Nateelt: {
             Grondbedekking: "265",
             Inzaaidatum: "1",
-            Oppervlakte: "1.5",
+            Oppervlakte: "1.5"
           },
           Task: {
             Operation: {
@@ -185,22 +191,16 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
                   {
                     OperationId: "O1",
                     TreatmentZone: [
-                      {
-                        TreatmentZoneId: "TZ1",
-                        Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
-                      },
-                      {
-                        TreatmentZoneId: "TZ2",
-                        Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
+                      { TreatmentZoneId: "TZ1", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } },
+                      { TreatmentZoneId: "TZ2", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     })
 
     const result = transformRegelingspercelenGLBToGeoJSON(input)
@@ -225,17 +225,14 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
                 {
                   TreatmentZone: [
                     null, // Coverage for !tz
-                    {
-                      TreatmentZoneId: "TZ_OK",
-                      Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
+                    { TreatmentZoneId: "TZ_OK", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
     })
     const result = transformRegelingspercelenGLBToGeoJSON(input)
     expect(result.features).toHaveLength(1)

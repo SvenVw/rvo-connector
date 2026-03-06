@@ -41,6 +41,18 @@ describe("buildRegelingspercelenGLBRequest", () => {
     )
   })
 
+  it("should handle peildatum (PeriodEndDate = PeriodBeginDate + 1 day)", () => {
+    const xml = buildRegelingspercelenGLBRequest({
+      issuerId: "TestClient",
+      senderId: "TestClient",
+      periodBeginDate: "2024-05-15",
+      periodEndDate: "2024-05-16",
+    })
+
+    expect(xml).toContain("<spec:PeriodBeginDate>2024-05-15</spec:PeriodBeginDate>")
+    expect(xml).toContain("<spec:PeriodEndDate>2024-05-16</spec:PeriodEndDate>")
+  })
+
   it("should throw error if issuerId or senderId is missing", () => {
     expect(() => buildRegelingspercelenGLBRequest({ senderId: "S" }) as any).toThrow(
       "Client Name is required",
