@@ -100,6 +100,11 @@ export interface RegelingspercelenMestRequestParams extends SoapRequestParams {
 }
 
 /**
+ * Parameters required to build the SOAP request for OpvragenRegelingspercelenGLB.
+ */
+export type RegelingspercelenGLBRequestParams = RegelingspercelenMestRequestParams
+
+/**
  * Shared helper to build the SOAP envelope and standard ExchangedDocument.
  */
 function buildSoapEnvelope(
@@ -224,6 +229,39 @@ export function buildRegelingspercelenMestRequest(
     serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenMEST",
     requestName: "OpvragenRegelingspercelenMESTRequest",
     messageType: "CRPRQRM",
+    extraRequestXml: extraXml,
+  })
+}
+
+/**
+ * Constructs the SOAP XML string for the OpvragenRegelingspercelenGLB request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
+export function buildRegelingspercelenGLBRequest(
+  params: RegelingspercelenGLBRequestParams,
+): string {
+  let extraXml = ""
+
+  if (params.mandatedRepresentative) {
+    extraXml += `\n         <opv:MandatedRepresentative schemeAgencyName="KVK">${escapeXml(params.mandatedRepresentative)}</opv:MandatedRepresentative>`
+  }
+
+  if (params.farmId) {
+    extraXml += `\n         <opv:ThirdPartyFarmID schemeAgencyName="KVK">${escapeXml(params.farmId)}</opv:ThirdPartyFarmID>`
+  }
+
+  const normalizedMutationDate = normalizeDateTime(params.mutationStartDate)
+  if (normalizedMutationDate) {
+    extraXml += `\n         <opv:MutationStartDate>${escapeXml(normalizedMutationDate)}</opv:MutationStartDate>`
+  }
+
+  return buildSoapEnvelope(params, {
+    serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenGLB",
+    requestName: "OpvragenRegelingspercelenGLBRequest",
+    messageType: "CRPRQRG",
     extraRequestXml: extraXml,
   })
 }

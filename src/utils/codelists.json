@@ -43,6 +43,34 @@
     "4": "Vanaf 1 november",
     "5": "Na 1 oktober"
   },
+  "BiologischeProductiewijze": {
+    "1": "Biologisch",
+    "3": "In omschakeling met certificaat",
+    "4": "In omschakeling zonder certificaat"
+  },
+  "AgroforestryTeelmethode": {
+    "1": "Bomen en struiken gecombineerd met veeteelt",
+    "2": "Bomen en struiken gecombineerd met akkerbouw en/of groenteteelt",
+    "3": "Bomen en struiken",
+    "4": "voedselbos gecombineerd met veeteelt EN Bomen en struiken gecombineerd met akkerbouw en/of groenteteelt"
+  },
+  "IndNPGOptie": {
+    "1": "Perceel",
+    "2": "Bomen",
+    "3": "zowel Perceel als Bomen"
+  },
+  "VerzekeraarBwv": {
+    "01": "Agriver",
+    "02": "Verenigde Hagel",
+    "03": "OFH / BFAO U.A.",
+    "04": "Interpolis",
+    "05": "Avero Achmea"
+  },
+  "Gewasbescherming": {
+    "1": "Ja, op hele perceel",
+    "2": "Ja, op maximaal 10% van het perceel",
+    "3": "Nee"
+  },
   "SeverityCode": {
     "FATAAL": "Fataal",
     "FOUT": "Fout",
