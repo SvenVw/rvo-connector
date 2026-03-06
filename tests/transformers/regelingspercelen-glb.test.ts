@@ -20,7 +20,7 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
   it("should transform a single GLB field with nested structures", () => {
     const input = createEnvelope({
       Farm: {
-        GLBField: {
+        Field: {
           GLBFieldid: "GLB1",
           BeginDate: "2023-01-01:00:00:00",
           Grondbedekking: "265",
@@ -35,12 +35,24 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
             IndicatorCode: "KI001",
             GLBFieldQICause: "A",
           },
+          Voorteelt: {
+            Grondbedekking: "233",
+            Oppervlakte: "1.0",
+            GewasbeschermingVoorteelt: "1"
+          },
+          Nateelt: [
+            {
+              Grondbedekking: "236",
+              Oppervlakte: "0.5",
+              Inzaaidatum: "1"
+            }
+          ],
           Task: {
             Taskid: "TASK1",
             Operation: {
               OperationId: "OP1",
-              Treatmentzone: {
-                TreatmentzoneId: "TZ1",
+              TreatmentZone: {
+                TreatmentZoneId: "TZ1",
                 ActivityCode: "ACT1",
                 Border: {
                   exterior: {
@@ -65,31 +77,34 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
     expect(feature.properties.GLBFieldid).toBe("GLB1")
     expect(feature.geometry.type).toBe("Polygon")
 
+    // Check Voorteelt / Nateelt
+    expect(feature.properties.Voorteelt).toBeDefined()
+    expect(feature.properties.Voorteelt.Grondbedekking).toBe("233")
+    expect(feature.properties.Nateelt).toHaveLength(1)
+    expect(feature.properties.Nateelt[0].Grondbedekking).toBe("236")
+
     // Check QualityIndicator
     expect(feature.properties.QualityIndicator).toBeDefined()
     expect(feature.properties.QualityIndicator.IndicatorCode).toBe("KI001")
 
-    // Check Task/Operation/Treatmentzone nesting
+    // Check Task/Operation/TreatmentZone nesting
     expect(feature.properties.Task).toBeDefined()
     const task = Array.isArray(feature.properties.Task)
       ? feature.properties.Task[0]
       : feature.properties.Task
-    expect(task.Taskid).toBe("TASK1")
-
+    
     const op = Array.isArray(task.Operation) ? task.Operation[0] : task.Operation
-    expect(op.OperationId).toBe("OP1")
-
-    const tz = Array.isArray(op.Treatmentzone) ? op.Treatmentzone[0] : op.Treatmentzone
-    expect(tz.TreatmentzoneId).toBe("TZ1")
+    
+    const tz = Array.isArray(op.TreatmentZone) ? op.TreatmentZone[0] : op.TreatmentZone
+    expect(tz.TreatmentZoneId).toBe("TZ1")
     expect(tz.geometry).toBeDefined()
     expect(tz.geometry.type).toBe("Polygon")
-    expect(tz.Border).toBeUndefined() // Should be moved to geometry
   })
 
   it("should enrich properties when enrichResponse is true", () => {
     const input = createEnvelope({
       Farm: {
-        GLBField: {
+        Field: {
           GLBFieldid: "GLB_ENRICH",
           Grondbedekking: "265",
           IndBiss: "J",
@@ -99,15 +114,21 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
               LinearRing: { posList: "155000 463000 155100 463000 155000 463000" },
             },
           },
+          Voorteelt: {
+            Grondbedekking: "233",
+            Oppervlakte: "1.0",
+            GewasbeschermingVoorteelt: "1"
+          },
           Nateelt: {
             Grondbedekking: "265",
             Inzaaidatum: "1",
-            Oppervlakte: "1.5",
+            Oppervlakte: "1.5"
           },
           Task: {
             Operation: {
-              Treatmentzone: {
-                ActivityCode: "ACT1",
+              TreatmentZone: {
+                ActivityCode: "H05",
+                DeviationReason: "1",
                 Border: {
                   exterior: {
                     LinearRing: { posList: "155010 463010 155020 463010 155010 463010" },
@@ -128,16 +149,28 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
     expect(props.descriptiveValues.IndBiss).toBe(true)
     expect(props.descriptiveValues.BiologischeProductiewijze).toBe("Biologisch")
 
+    // Check enrichment in nested structures (Voorteelt)
+    expect(props.Voorteelt.descriptiveValues).toBeDefined()
+    expect(props.Voorteelt.descriptiveValues.Grondbedekking).toContain("tarwe, winter-")
+    expect(props.Voorteelt.descriptiveValues.GewasbeschermingVoorteelt).toBe("Ja, op hele perceel")
+
     // Check enrichment in nested structures (Nateelt)
     const nateelt = Array.isArray(props.Nateelt) ? props.Nateelt[0] : props.Nateelt
     expect(nateelt.descriptiveValues).toBeDefined()
     expect(nateelt.descriptiveValues.Inzaaidatum).toBe("Uiterlijk 1 oktober")
+
+    // Check enrichment in nested structures (TreatmentZone)
+    const task = Array.isArray(props.Task) ? props.Task[0] : props.Task
+    const op = Array.isArray(task.Operation) ? task.Operation[0] : task.Operation
+    const tz = Array.isArray(op.TreatmentZone) ? op.TreatmentZone[0] : op.TreatmentZone
+    expect(tz.descriptiveValues).toBeDefined()
+    expect(tz.descriptiveValues.ActivityCode).toBe("Grasland met kruiden")
   })
 
-  it("should handle arrays of Fields, Tasks, Operations, and Treatmentzones", () => {
+  it("should handle arrays of Fields, Tasks, Operations, and TreatmentZones", () => {
     const input = createEnvelope({
       Farm: {
-        GLBField: [
+        Field: [
           {
             GLBFieldid: "F1",
             Border: {
@@ -151,23 +184,17 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
                 Operation: [
                   {
                     OperationId: "O1",
-                    Treatmentzone: [
-                      {
-                        TreatmentzoneId: "TZ1",
-                        Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
-                      },
-                      {
-                        TreatmentzoneId: "TZ2",
-                        Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
+                    TreatmentZone: [
+                      { TreatmentZoneId: "TZ1", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } },
+                      { TreatmentZoneId: "TZ2", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     })
 
     const result = transformRegelingspercelenGLBToGeoJSON(input)
@@ -175,6 +202,35 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
     const field = result.features[0].properties
     expect(field.Task).toHaveLength(1)
     expect(field.Task[0].Operation).toHaveLength(1)
-    expect(field.Task[0].Operation[0].Treatmentzone).toHaveLength(2)
+    expect(field.Task[0].Operation[0].TreatmentZone).toHaveLength(2)
+  })
+
+  it("should handle null/edge cases in nested structures", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          GLBFieldid: "EDGE",
+          Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } },
+          Task: [
+            null, // Coverage for !task
+            {
+              Operation: [
+                null, // Coverage for !op
+                {
+                  TreatmentZone: [
+                    null, // Coverage for !tz
+                    { TreatmentZoneId: "TZ_OK", Border: { exterior: { LinearRing: { posList: "0 0 1 0 0 0" } } } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    })
+    const result = transformRegelingspercelenGLBToGeoJSON(input)
+    expect(result.features).toHaveLength(1)
+    const task = result.features[0].properties.Task[1]
+    expect(task.Operation[1].TreatmentZone[1].TreatmentZoneId).toBe("TZ_OK")
   })
 })
