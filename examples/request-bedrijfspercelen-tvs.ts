@@ -1,6 +1,7 @@
 import { RvoClient } from "../src/client"
 import * as readline from "node:readline"
 import * as fs from "node:fs"
+import * as path from "node:path"
 import "dotenv/config"
 
 try {
@@ -95,8 +96,17 @@ try {
       outputFormat: format,
       enrichResponse: format === "geojson",
     })
-    console.log("\nSuccessfully fetched Bedrijfspercelen:")
-    console.log(JSON.stringify(result, null, 2))
+
+    const tempDir = path.join(process.cwd(), "temp")
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir)
+    }
+
+    const filename = `output-bedrijfspercelen.${format === "xml" ? "xml" : "json"}`
+    const filePath = path.join(tempDir, filename)
+
+    fs.writeFileSync(filePath, JSON.stringify(result, null, 2))
+    console.log(`\nSuccessfully fetched Bedrijfspercelen. Output written to: ${filePath}`)
   } finally {
     rl.close()
   }

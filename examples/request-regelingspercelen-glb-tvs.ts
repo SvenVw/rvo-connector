@@ -1,6 +1,7 @@
 import { RvoClient } from "../src/client"
 import * as readline from "node:readline"
 import * as fs from "node:fs"
+import * as path from "node:path"
 import "dotenv/config"
 
 try {
@@ -9,7 +10,9 @@ try {
   const clientName = process.env.CLIENT_NAME
   const redirectUri = process.env.REDIRECT_URI
   let pkioPrivateKey = process.env.PKIO_PRIVATE_KEY
-  const env = process.env.NODE_ENV === "production" ? "production" : "acceptance"
+  const env = (process.env.NODE_ENV === "production" ? "production" : "acceptance") as
+    | "acceptance"
+    | "production"
 
   if (!clientId || !clientName || !redirectUri || !pkioPrivateKey) {
     console.error(
@@ -119,8 +122,16 @@ try {
       enrichResponse: format === "geojson",
     })
 
-    console.log("\nSuccessfully fetched Regelingspercelen GLB:")
-    console.log(JSON.stringify(result, null, 2))
+    const tempDir = path.join(process.cwd(), "temp")
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir)
+    }
+
+    const filename = `output-regelingspercelen-glb.${format === "xml" ? "xml" : "json"}`
+    const filePath = path.join(tempDir, filename)
+
+    fs.writeFileSync(filePath, JSON.stringify(result, null, 2))
+    console.log(`\nSuccessfully fetched Regelingspercelen GLB. Output written to: ${filename}`)
   } finally {
     rl.close()
   }
