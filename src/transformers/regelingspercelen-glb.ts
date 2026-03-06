@@ -5,6 +5,7 @@ import {
   buildFieldProperties,
   flattenXml2jsValue,
   getDescriptiveValue,
+  isXml2jsValue,
   processQualityIndicatorType,
   type CodeLookupTable,
   type EnrichOptions,
@@ -183,7 +184,7 @@ function handleProperty(
   }
 
   // Recurse for arrays/objects to ensure nested Borders are converted
-  if (value && typeof value === "object" && !("_" in value)) {
+  if (value && typeof value === "object" && !isXml2jsValue(value)) {
     newObj[key] = simplifyObject(value, options)
   } else {
     newObj[key] = flattenXml2jsValue(value)
