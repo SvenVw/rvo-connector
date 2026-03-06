@@ -128,7 +128,9 @@ try {
     const filename = `output-regelingspercelen-mest.${format === "xml" ? "xml" : "json"}`
     const filePath = path.join(tempDir, filename)
 
-    fs.writeFileSync(filePath, JSON.stringify(result, null, 2))
+    const output = format === "xml" ? (result as string) : JSON.stringify(result, null, 2)
+
+    fs.writeFileSync(filePath, output, "utf8")
     console.log(`\nSuccessfully fetched Regelingspercelen Mest. Output written to: ${filePath}`)
   } finally {
     rl.close()

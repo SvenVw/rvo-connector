@@ -128,8 +128,10 @@ try {
     const filename = `output-regelingspercelen-glb.${format === "xml" ? "xml" : "json"}`
     const filePath = path.join(tempDir, filename)
 
-    fs.writeFileSync(filePath, JSON.stringify(result, null, 2))
-    console.log(`\nSuccessfully fetched Regelingspercelen GLB. Output written to: ${filename}`)
+    const output = format === "xml" ? (result as string) : JSON.stringify(result, null, 2)
+
+    fs.writeFileSync(filePath, output, "utf8")
+    console.log(`\nSuccessfully fetched Regelingspercelen GLB. Output written to: ${filePath}`)
   } finally {
     rl.close()
   }
