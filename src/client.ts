@@ -130,10 +130,6 @@ export class RvoClient {
         clientId = this.config.clientId
       }
 
-      if (!clientId) {
-        throw new Error("TVS clientId is required for TVS authentication")
-      }
-
       const tvsAuthConf: RvoAuthTvsConfig = {
         ...this.config.tvs, // user config first
         clientId,
