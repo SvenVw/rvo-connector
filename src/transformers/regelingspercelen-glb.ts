@@ -161,9 +161,6 @@ function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | 
   if (key === "ActivityCode") {
     return getLabel("ActivityCode", value) ?? null
   }
-  if (key === "DeviationReason") {
-    return getLabel("DeviationReason", value) ?? null
-  }
   // Fallback to boolean indicator mapping for nested fields
   return mapIndicator(value)
 }

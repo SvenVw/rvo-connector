@@ -171,8 +171,6 @@ describe("transformRegelingspercelenGLBToGeoJSON", () => {
     const tz = Array.isArray(op.TreatmentZone) ? op.TreatmentZone[0] : op.TreatmentZone
     expect(tz.descriptiveValues).toBeDefined()
     expect(tz.descriptiveValues.ActivityCode).toBe("Grasland met kruiden")
-    // Check DeviationReason is enriched
-    expect(tz.descriptiveValues.DeviationReason).toBe("Overige reden")
   })
 
   it("should handle arrays of Fields, Tasks, Operations, and TreatmentZones", () => {
