@@ -340,7 +340,7 @@ export interface RegelingspercelenGLBOptions {
  */
 export interface GLBFieldProperties {
   /** Unique identification of the parcel (e.g., AGRONL...). */
-  GLBFieldid: string
+  GLBFieldId: string
   /** Version number of the GLB field. */
   GLBFieldVersion: string
   /** Start date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
@@ -348,7 +348,7 @@ export interface GLBFieldProperties {
   /** End date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
   EndDate?: string
   /** User-assigned name/designator for the field. */
-  Fielddesignator?: string
+  FieldDesignator?: string
   /** Calculated area in hectares (4 decimals). */
   CalculatedArea?: number
   /** Proposed area in hectares. */
