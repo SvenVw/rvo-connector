@@ -1,6 +1,6 @@
 import type { Feature, Geometry } from "geojson"
 import { convertGmlToGeoJson, findSoapBodyContent } from "../utils/geometry"
-import { getLabel } from "../utils/codelists"
+import { getLabel, mapIndicator } from "../utils/codelists"
 import {
   buildFieldProperties,
   flattenXml2jsValue,
@@ -33,7 +33,7 @@ export function transformRegelingspercelenGLBToGeoJSON(
 
   for (const farm of farms) {
     if (!farm) continue
-    
+
     // Support both the documented "GLBField" and the actually returned "Field" tag
     const fieldsRaw = farm["Field"] || farm["GLBField"]
     if (fieldsRaw) {
@@ -50,13 +50,13 @@ function processFarmFields(fieldsRaw: any, options: EnrichOptions): Feature<Geom
 
   for (const fieldRaw of fields) {
     if (!fieldRaw) continue
-    
+
     // Support both direct field properties and nested "GLBField" containers
     const glbField = fieldRaw["GLBField"] || fieldRaw
-    
+
     const geometry = convertGmlToGeoJson(glbField["Border"])
     const properties = extractProperties(glbField, options)
-    
+
     if (geometry) {
       features.push({ type: "Feature", geometry, properties })
     }
@@ -118,36 +118,37 @@ function processTask(task: any, options: EnrichOptions): any {
 function processOperation(op: any, options: EnrichOptions): any {
   if (!op) return op
   const simplified = { ...op }
-  if (simplified.Treatmentzone) {
-    simplified.Treatmentzone = Array.isArray(simplified.Treatmentzone)
-      ? simplified.Treatmentzone.map((tz: any) => processTreatmentzone(tz, options))
-      : processTreatmentzone(simplified.Treatmentzone, options)
+  if (simplified.Treatmentzone || simplified.TreatmentZone) {
+    const tzRaw = simplified.Treatmentzone || simplified.TreatmentZone
+    const processedTz = Array.isArray(tzRaw)
+      ? tzRaw.map((tz: any) => processTreatmentzone(tz, options))
+      : processTreatmentzone(tzRaw, options)
+
+    // Cleanup both casings
+    delete simplified.Treatmentzone
+    delete simplified.TreatmentZone
+    simplified.TreatmentZone = processedTz
   }
   return simplifyObject(simplified, options)
 }
 
 function processTreatmentzone(tz: any, options: EnrichOptions): any {
   if (!tz) return tz
-  const simplified = { ...tz }
 
-  // Extract geometry if present
-  if (simplified.Border) {
-    simplified.geometry = convertGmlToGeoJson(simplified.Border)
-    delete simplified.Border
-  }
+  let processed = { ...tz }
 
-  if (simplified.QualityIndicator) {
-    simplified.QualityIndicator = processQualityIndicatorType(
-      simplified.QualityIndicator,
+  if (processed.QualityIndicator) {
+    processed.QualityIndicator = processQualityIndicatorType(
+      processed.QualityIndicator,
       options,
       "ActivityCause",
     )
   }
 
-  return simplifyObject(simplified, options)
+  return simplifyObject(processed, options)
 }
 
-function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | null {
+function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | boolean | null {
   if (key === "Inzaaidatum") {
     return getLabel("InzaaidatumCode", value) ?? null
   }
@@ -163,18 +164,43 @@ function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | 
   if (key === "DeviationReason") {
     return getLabel("DeviationReason", value) ?? null
   }
-  return null
+  // Fallback to boolean indicator mapping for nested fields
+  return mapIndicator(value)
 }
 
+/**
+ * Recursively simplifies an object or array, converting GML Borders to GeoJSON.
+ */
 function simplifyObject(obj: any, options: EnrichOptions = {}): any {
   if (!obj || typeof obj !== "object") return obj
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => simplifyObject(item, options))
+  }
 
   const newObj: Record<string, any> = {}
   const descriptiveValues: Record<string, any> = {}
 
   for (const key of Object.keys(obj)) {
     if (key === "descriptiveValues") continue
-    newObj[key] = flattenXml2jsValue(obj[key])
+
+    // Check for GML Border and convert to GeoJSON
+    if (key === "Border") {
+      const geoJson = convertGmlToGeoJson(obj[key])
+      if (geoJson) {
+        newObj.geometry = geoJson
+      }
+      continue
+    }
+
+    const value = obj[key]
+
+    // Recurse for arrays/objects to ensure nested Borders are converted
+    if (value && typeof value === "object" && !("_" in value)) {
+      newObj[key] = simplifyObject(value, options)
+    } else {
+      newObj[key] = flattenXml2jsValue(value)
+    }
 
     if (options.enrichResponse) {
       const dv = getSimplifiedObjectDescriptiveValue(key, newObj[key])
