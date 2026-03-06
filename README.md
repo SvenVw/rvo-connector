@@ -255,6 +255,8 @@ This project includes example scripts to demonstrate how to connect to RVO servi
    npx tsx examples/request-regelingspercelen-glb-tvs.ts
    ```
 
+   _Note: These scripts save the service response (JSON or raw XML) to the gitignored `temp/` directory._
+
 ## Configuration Options
 
 | Option       | Type               | Description                                                                                                                          |
