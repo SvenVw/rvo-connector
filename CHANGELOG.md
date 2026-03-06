@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - UNRELEASED
+
+### Added
+
+- Service Support: Implemented the `OpvragenRegelingspercelenGLB` service (nGLB), providing access to BISS and ECO regulation fields as defined in RVO documentation version 2.0.
+- Enrichment: Added `enrichResponse` support for the GLB service, which automatically maps RVO codes to human-readable labels in the GeoJSON output.
+- Example: Added `examples/request-regelingspercelen-glb-tvs.ts` to demonstrate usage of the new GLB service.
+
+### Changed
+
+- Examples: Updated all example scripts to save service responses to a gitignored `temp/` directory instead of logging to the console, improving usability for large datasets and preventing accidental commits.
+
 ## [2.1.1] - 2026-03-05
 
 ### Changed
