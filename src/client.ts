@@ -370,6 +370,10 @@ export class RvoClient {
       throw new Error(`Request failed: ${response.status} - ${responseText}`)
     }
 
+    if (outputFormat === "xml") {
+      return responseText as TResult
+    }
+
     const parser = new xml2js.Parser({
       explicitArray: false,
       tagNameProcessors: [xml2js.processors.stripPrefix],

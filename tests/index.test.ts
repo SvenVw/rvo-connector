@@ -428,6 +428,26 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(result.features).toHaveLength(0)
     })
 
+    it("should return raw XML string when outputFormat is xml", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientName: "Test",
+        aba: { username: "u", password: "p" },
+      })
+
+      const xmlResponse = "<Envelope>Raw XML</Envelope>"
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => xmlResponse,
+      })
+
+      const result = await client.opvragenBedrijfspercelen({ outputFormat: "xml" })
+
+      expect(result).toBe(xmlResponse)
+      expect(typeof result).toBe("string")
+    })
+
     it("should throw if geojson output requested but no transformer provided (internal safety)", async () => {
       const client = new RvoClient({
         authMode: "ABA",
