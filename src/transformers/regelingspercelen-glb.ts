@@ -169,9 +169,20 @@ function getSimplifiedObjectDescriptiveValue(key: string, value: any): string | 
 }
 
 /**
+ * Handles processing of a single value during simplification.
+ */
+function processValue(value: any, options: EnrichOptions): any {
+  // Recurse for arrays/objects to ensure nested Borders are converted
+  if (value && typeof value === "object" && !("_" in value)) {
+    return simplifyObject(value, options)
+  }
+  return flattenXml2jsValue(value)
+}
+
+/**
  * Recursively simplifies an object or array, converting GML Borders to GeoJSON.
  */
-function simplifyObject(obj: any, options: EnrichOptions = {}): any {
+export function simplifyObject(obj: any, options: EnrichOptions = {}): any {
   if (!obj || typeof obj !== "object") return obj
 
   if (Array.isArray(obj)) {
@@ -187,20 +198,11 @@ function simplifyObject(obj: any, options: EnrichOptions = {}): any {
     // Check for GML Border and convert to GeoJSON
     if (key === "Border") {
       const geoJson = convertGmlToGeoJson(obj[key])
-      if (geoJson) {
-        newObj.geometry = geoJson
-      }
+      if (geoJson) newObj.geometry = geoJson
       continue
     }
 
-    const value = obj[key]
-
-    // Recurse for arrays/objects to ensure nested Borders are converted
-    if (value && typeof value === "object" && !("_" in value)) {
-      newObj[key] = simplifyObject(value, options)
-    } else {
-      newObj[key] = flattenXml2jsValue(value)
-    }
+    newObj[key] = processValue(obj[key], options)
 
     if (options.enrichResponse) {
       const dv = getSimplifiedObjectDescriptiveValue(key, newObj[key])
