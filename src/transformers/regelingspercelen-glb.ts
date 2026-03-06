@@ -33,9 +33,12 @@ export function transformRegelingspercelenGLBToGeoJSON(
 
   for (const farm of farms) {
     if (!farm) continue
-    const fieldsRaw = farm["GLBField"]
-    if (!fieldsRaw) continue
-    features.push(...processFarmFields(fieldsRaw, options))
+    
+    // Support both the documented "GLBField" and the actually returned "Field" tag
+    const fieldsRaw = farm["Field"] || farm["GLBField"]
+    if (fieldsRaw) {
+      features.push(...processFarmFields(fieldsRaw, options))
+    }
   }
 
   return { type: "FeatureCollection", features }
@@ -45,10 +48,15 @@ function processFarmFields(fieldsRaw: any, options: EnrichOptions): Feature<Geom
   const fields = Array.isArray(fieldsRaw) ? fieldsRaw : [fieldsRaw]
   const features: Feature<Geometry, any>[] = []
 
-  for (const glbField of fields) {
-    if (!glbField) continue
+  for (const fieldRaw of fields) {
+    if (!fieldRaw) continue
+    
+    // Support both direct field properties and nested "GLBField" containers
+    const glbField = fieldRaw["GLBField"] || fieldRaw
+    
     const geometry = convertGmlToGeoJson(glbField["Border"])
     const properties = extractProperties(glbField, options)
+    
     if (geometry) {
       features.push({ type: "Feature", geometry, properties })
     }
