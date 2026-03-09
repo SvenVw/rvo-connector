@@ -292,6 +292,204 @@ export type RegelingspercelenMestResponse =
   | RegelingspercelenMestGeoJSONResponse
 
 /**
+ * Options for the `opvragenRegelingspercelenGLB` service.
+ */
+export interface RegelingspercelenGLBOptions {
+  /**
+   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
+   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   */
+  farmId?: string
+  /**
+   * Start date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodBeginDate?: string
+  /**
+   * End date of the period to retrieve data for (YYYY-MM-DD).
+   */
+  periodEndDate?: string
+  /**
+   * Mutation start date (YYYY-MM-DD [HH:mm:ss]).
+   * If time is omitted, midnight (00:00:00) is used.
+   * If provided, only fields mutated after this date are retrieved.
+   */
+  mutationStartDate?: string
+  /**
+   * KVK number (8 digits) of the mandated representative.
+   */
+  mandatedRepresentative?: string
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'geojson'`: Converts the response to a GeoJSON FeatureCollection.
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "geojson"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing boolean mappings for "J"/"N" indicators and human-readable
+   * labels for RVO codes.
+   * @default false
+   */
+  enrichResponse?: boolean
+}
+
+/**
+ * Properties of a GLB Field (Regelingsperceel nGLB).
+ * Derived from `GLBField` in RVO documentation.
+ */
+export interface GLBFieldProperties {
+  /** Unique identification of the parcel (e.g., AGRONL...). */
+  GLBFieldId: string
+  /** Version number of the GLB field. */
+  GLBFieldVersion: string
+  /** Start date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
+  BeginDate: string
+  /** End date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
+  EndDate?: string
+  /** User-assigned name/designator for the field. */
+  FieldDesignator?: string
+  /** Calculated area in hectares (4 decimals). */
+  CalculatedArea?: number
+  /** Proposed area in hectares. */
+  VoorgesteldeOppervlakte?: number
+  /** Declared area in hectares. */
+  OpgegevenOppervlakte?: number
+  /** Theoretical maximum subsidizable area. */
+  SubsOppervlakteMax?: number
+  /** ECO region/area code. */
+  RegioGebiedsEcoCode?: string
+  /** Ground cover code. Codelist: CL263. */
+  Grondbedekking?: string
+  /** Variety of the ground cover. */
+  Grondbedekkingras?: string
+  /** Use title code (e.g., '01' for Eigendom). Codelist: CL412. */
+  GebruiksTitel?: string
+  /** Biological production method code. */
+  BiologischeProductiewijze?: string
+  /** Agroforestry cultivation method code. */
+  AgroforestryTeelmethode?: string
+  /** Indicator for BISS scheme. */
+  IndBiss?: "J" | "N"
+  /** Indicator for ECO scheme. */
+  IndEco?: "J" | "N"
+  /** Indicator for Ecologically Sensitive Grassland. */
+  IndEKGB?: "J" | "N"
+  /** Indicator for ANLb overlap. */
+  IndANLB?: "J" | "N"
+  /** Indicator for Non-Productive Ground (NPG). */
+  IndNpg?: "J" | "N"
+  /** Indicator for Fallow land. */
+  IndBraak?: "J" | "N"
+  /** Indicator for significant hindrance. */
+  IndNoemenswaardigeHinder?: "J" | "N"
+  /** Indicator option for NPG. */
+  IndNPGOptie?: string
+  /** Indicator for managed ditch edge. */
+  IndBeheerdeRand?: "J" | "N"
+  /** Indicator for catch crop as manure requirement. */
+  IndNateeltMest?: "J" | "N"
+  /** Indicator for catch crop as NPG requirement. */
+  IndNPGNateelt?: "J" | "N"
+  /** Indicator for Coastal Plain Peat (GLMC2). */
+  IndKustvlakteveen?: "J" | "N"
+  /** Soil type code. */
+  Grondsoort?: string
+  /** Number of suggested trees. */
+  BomenVoorgesteld?: number
+  /** Number of trees for ECO scheme. */
+  BomenOpgegevenEco?: number
+  /** Number of trees for NPG scheme. */
+  BomenOpgegevenNpg?: number
+  /** Quantity of seed/planting material (kg/ha). */
+  ZaaipootgoedHoeveelheid?: number
+  /** Indicator for Broad Weather Insurance (BWV). */
+  BredeWeersverzekering?: "J" | "N"
+  /** Name/Code of the insurer. */
+  VerzekeraarBwv?: string
+  /** Indicator for buffer strips. */
+  IndBufferstrook?: "J" | "N"
+  /** Surface area of buffer strips. */
+  BufferstrookOppervlakte?: number
+  /** Indicator for previous crop (voorteelt). */
+  IndVoorteelt?: "J" | "N"
+  /** Indicator for catch crop (nateelt). */
+  IndNateelt?: "J" | "N"
+  /** Crop protection used for main crop. */
+  GewasbeschermingHoofdteelt?: string
+  /** Previous crop (Voorteelt) details. */
+  Voorteelt?: Array<{
+    Grondbedekking: string
+    Oppervlakte: number
+    GewasbeschermingVoorteelt?: string
+  }>
+  /** Catch crop (Nateelt) details. */
+  Nateelt?: Array<{
+    Grondbedekking: string
+    Oppervlakte: number
+    Inzaaidatum?: string
+  }>
+  /** Quality indicators for this field. */
+  QualityIndicator?: QualityIndicator[] | QualityIndicator
+  /** Tasks/Operations performed on this field. */
+  Task?: GLBTask[] | GLBTask
+}
+
+/**
+ * Task performed on a GLB field.
+ */
+export interface GLBTask {
+  Taskid: string
+  Operation: GLBOperation[] | GLBOperation
+}
+
+/**
+ * Operation within a GLB task.
+ */
+export interface GLBOperation {
+  OperationId: string
+  Treatmentzone: GLBTreatmentzone[] | GLBTreatmentzone
+}
+
+/**
+ * Treatment zone for a GLB operation.
+ */
+export interface GLBTreatmentzone {
+  TreatmentzoneId: string
+  TreatmentzoneIdVersion: string
+  ActivityCode: string
+  DatumStart?: string
+  DatumGerealiseerd?: string
+  BeginDate: string
+  EndDate?: string
+  Area: number
+  Border?: Geometry
+  DeviationReason?: string
+  ActivityCause?: string
+  QualityIndicator?: QualityIndicator[] | QualityIndicator
+}
+
+/**
+ * Generic interface for the parsed XML response from RegelingspercelenGLB service.
+ */
+export interface RegelingspercelenGLBXmlResponse {
+  [key: string]: unknown
+}
+
+/**
+ * GeoJSON output for RegelingspercelenGLB.
+ * A FeatureCollection where each feature represents a GLBField.
+ */
+export type RegelingspercelenGLBGeoJSONResponse = FeatureCollection<Geometry, GLBFieldProperties>
+
+/**
+ * Union type for the response of `opvragenRegelingspercelenGLB`.
+ */
+export type RegelingspercelenGLBResponse =
+  | RegelingspercelenGLBXmlResponse
+  | RegelingspercelenGLBGeoJSONResponse
+
+/**
  * Response from the RVO OAuth 2.0 Token Endpoint.
  */
 export interface RvoTokenResponse {

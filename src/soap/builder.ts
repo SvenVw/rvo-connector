@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid"
  * @param unsafe The raw string to escape.
  * @returns An XML-safe encoded string.
  */
-function escapeXml(unsafe: string): string {
+export function escapeXml(unsafe: string): string {
   return unsafe
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -25,7 +25,7 @@ function escapeXml(unsafe: string): string {
  * @param dateTime The raw date or date-time string.
  * @returns The normalized ISO 8601 date-time string, or undefined if input is empty.
  */
-function normalizeDateTime(dateTime?: string): string | undefined {
+export function normalizeDateTime(dateTime?: string): string | undefined {
   if (!dateTime) return undefined
 
   // Handle space or colon separator (e.g. YYYY-MM-DD HH:MM:SS or YYYY-MM-DD:HH:MM:SS)
@@ -100,9 +100,14 @@ export interface RegelingspercelenMestRequestParams extends SoapRequestParams {
 }
 
 /**
+ * Parameters required to build the SOAP request for OpvragenRegelingspercelenGLB.
+ */
+export type RegelingspercelenGLBRequestParams = RegelingspercelenMestRequestParams
+
+/**
  * Shared helper to build the SOAP envelope and standard ExchangedDocument.
  */
-function buildSoapEnvelope(
+export function buildSoapEnvelope(
   params: SoapRequestParams,
   options: {
     serviceNamespace: string
@@ -196,14 +201,15 @@ export function buildBedrijfspercelenRequest(params: SoapRequestParams): string 
 }
 
 /**
- * Constructs the SOAP XML string for the OpvragenRegelingspercelenMest request.
- *
- * @param params The parameters for the request.
- * @returns The complete SOAP XML string.
- * @internal
+ * Shared helper to build the request body for Regelingspercelen (Mest or GLB).
  */
-export function buildRegelingspercelenMestRequest(
-  params: RegelingspercelenMestRequestParams,
+function buildRegelingspercelenRequest(
+  params: RegelingspercelenGLBRequestParams,
+  options: {
+    serviceNamespace: string
+    requestName: string
+    messageType: string
+  },
 ): string {
   let extraXml = ""
 
@@ -221,9 +227,41 @@ export function buildRegelingspercelenMestRequest(
   }
 
   return buildSoapEnvelope(params, {
+    ...options,
+    extraRequestXml: extraXml,
+  })
+}
+
+/**
+ * Constructs the SOAP XML string for the OpvragenRegelingspercelenMest request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
+export function buildRegelingspercelenMestRequest(
+  params: RegelingspercelenMestRequestParams,
+): string {
+  return buildRegelingspercelenRequest(params, {
     serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenMEST",
     requestName: "OpvragenRegelingspercelenMESTRequest",
     messageType: "CRPRQRM",
-    extraRequestXml: extraXml,
+  })
+}
+
+/**
+ * Constructs the SOAP XML string for the OpvragenRegelingspercelenGLB request.
+ *
+ * @param params The parameters for the request.
+ * @returns The complete SOAP XML string.
+ * @internal
+ */
+export function buildRegelingspercelenGLBRequest(
+  params: RegelingspercelenGLBRequestParams,
+): string {
+  return buildRegelingspercelenRequest(params, {
+    serviceNamespace: "http://www.minez.nl/ws/edicrop/1.0/OpvragenRegelingspercelenGLB",
+    requestName: "OpvragenRegelingspercelenGLBRequest",
+    messageType: "CRPRQRG",
   })
 }

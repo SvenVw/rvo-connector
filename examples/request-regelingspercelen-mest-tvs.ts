@@ -1,6 +1,7 @@
 import { RvoClient } from "../src/client"
 import * as readline from "node:readline"
 import * as fs from "node:fs"
+import * as path from "node:path"
 import "dotenv/config"
 
 try {
@@ -119,8 +120,18 @@ try {
       enrichResponse: format === "geojson",
     })
 
-    console.log("\nSuccessfully fetched Regelingspercelen Mest:")
-    console.log(JSON.stringify(result, null, 2))
+    const tempDir = path.join(process.cwd(), "temp")
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir)
+    }
+
+    const filename = `output-regelingspercelen-mest.${format === "xml" ? "xml" : "json"}`
+    const filePath = path.join(tempDir, filename)
+
+    const output = format === "xml" ? (result as string) : JSON.stringify(result, null, 2)
+
+    fs.writeFileSync(filePath, output, "utf8")
+    console.log(`\nSuccessfully fetched Regelingspercelen Mest. Output written to: ${filePath}`)
   } finally {
     rl.close()
   }

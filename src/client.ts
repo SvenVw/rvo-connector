@@ -5,13 +5,20 @@ import type {
   BedrijfspercelenResponse,
   RegelingspercelenMestOptions,
   RegelingspercelenMestResponse,
+  RegelingspercelenGLBOptions,
+  RegelingspercelenGLBResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
-import { buildBedrijfspercelenRequest, buildRegelingspercelenMestRequest } from "./soap/builder"
+import {
+  buildBedrijfspercelenRequest,
+  buildRegelingspercelenMestRequest,
+  buildRegelingspercelenGLBRequest,
+} from "./soap/builder"
 import { transformBedrijfspercelenToGeoJSON } from "./transformers/bedrijfspercelen"
 import { transformRegelingspercelenMestToGeoJSON } from "./transformers/regelingspercelen-mest"
+import { transformRegelingspercelenGLBToGeoJSON } from "./transformers/regelingspercelen-glb"
 
 // Default Endpoints for different environments
 const ENDPOINTS = {
@@ -40,16 +47,19 @@ const EHERKENNING_SCOPES = {
  * - `'opvragenBedrijfspercelen'`: Retrieve crop fields (EDI-Crop).
  * - `'muterenBedrijfspercelen'`: Mutate/Update crop fields.
  * - `'opvragenRegelingspercelenMest'`: Retrieve regulation fields for manure.
+ * - `'opvragenRegelingspercelenGLB'`: Retrieve regulation fields for GLB (BISS/ECO).
  */
 export type RvoService =
   | "opvragenBedrijfspercelen"
   | "muterenBedrijfspercelen"
   | "opvragenRegelingspercelenMest"
+  | "opvragenRegelingspercelenGLB"
 
 const SERVICE_SCOPES: Record<RvoService, string> = {
   opvragenBedrijfspercelen: "RVO-WS.GEO.bp.lezen",
   muterenBedrijfspercelen: "RVO-WS.GEO.bp.muteren",
   opvragenRegelingspercelenMest: "RVO-WS.GEO.rp.lezen",
+  opvragenRegelingspercelenGLB: "RVO-WS.GEO.rp.lezen",
 }
 
 /**
@@ -118,10 +128,6 @@ export class RvoClient {
             "Please move it to the 'tvs.clientId' property.",
         )
         clientId = this.config.clientId
-      }
-
-      if (!clientId) {
-        throw new Error("TVS clientId is required for TVS authentication")
       }
 
       const tvsAuthConf: RvoAuthTvsConfig = {
@@ -259,6 +265,39 @@ export class RvoClient {
   }
 
   /**
+   * Calls the `OpvragenRegelingspercelenGLB` SOAP service.
+   * Retrieves regulation fields for GLB (BISS/ECO) for a farm.
+   *
+   * @param options Optional parameters for the request (farm ID, date range, etc.).
+   * @returns A promise resolving to the parsed XML response from RVO.
+   * @throws Error if authentication fails or the SOAP request returns an error.
+   */
+  public async opvragenRegelingspercelenGLB(
+    options: RegelingspercelenGLBOptions = {},
+  ): Promise<RegelingspercelenGLBResponse> {
+    this.validateAuth()
+    const isTvs = this.config.authMode === "TVS"
+
+    const soapXml = buildRegelingspercelenGLBRequest({
+      farmId: options.farmId,
+      periodBeginDate: options.periodBeginDate,
+      periodEndDate: options.periodEndDate,
+      mutationStartDate: options.mutationStartDate,
+      mandatedRepresentative: options.mandatedRepresentative,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+      issuerId: this.config.clientName,
+      senderId: this.config.clientName,
+    })
+
+    return this.executeSoapRequest<RegelingspercelenGLBResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformRegelingspercelenGLBToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+    )
+  }
+
+  /**
    * Validates that the current configuration and state are sufficient for an API call.
    */
   private validateAuth(): void {
@@ -329,6 +368,10 @@ export class RvoClient {
 
     if (!response.ok) {
       throw new Error(`Request failed: ${response.status} - ${responseText}`)
+    }
+
+    if (outputFormat === "xml") {
+      return responseText as TResult
     }
 
     const parser = new xml2js.Parser({

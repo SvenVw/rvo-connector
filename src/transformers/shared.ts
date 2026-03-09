@@ -5,16 +5,38 @@ export type EnrichOptions = { enrichResponse?: boolean }
 export type CodeLookupTable = Record<string, [string, string?]>
 
 /**
+ * Detects if a value is an xml2js text node: `{ _: "value", $: {...} }`.
+ * An xml2js text node typically only has the "_" property (content)
+ * and optionally the "$" property (attributes).
+ */
+export function isXml2jsValue(value: any): boolean {
+  if (!value || typeof value !== "object" || !("_" in value)) {
+    return false
+  }
+
+  const keys = Object.keys(value)
+  // xml2js text nodes only have "_" (text) and optionally "$" (attributes)
+  const isOnlyXmlKeys = keys.every((k) => k === "_" || k === "$")
+
+  // The "_" property should be a primitive (string, number, boolean) or null/undefined
+  const textValue = value._
+  const isPrimitive = textValue === null || typeof textValue !== "object"
+
+  return isOnlyXmlKeys && isPrimitive
+}
+
+/**
  * Flattens xml2js text nodes: `{ _: "value", $: {...} }` → `"value"`.
- * Returns the value unchanged if it is not an xml2js text node.
+ * Returns the value unchanged if it is not a simple xml2js text node.
  */
 export function flattenXml2jsValue(value: any): any {
-  return value && typeof value === "object" && "_" in value ? value._ : value
+  return isXml2jsValue(value) ? value._ : value
 }
 
 /**
  * Enriches a single QualityIndicator item with descriptive labels.
  *
+ * @param qi The raw QualityIndicator object.
  * @param causeKey The field-specific XML element name for the cause
  *   (e.g. `"QualityIndicatorCause"` or `"MESTFieldQICause"`).
  */
@@ -42,6 +64,8 @@ export function enrichQualityIndicatorItem(qi: any, causeKey: string): any {
 /**
  * Processes a QualityIndicatorType value, optionally enriching each item with descriptive labels.
  *
+ * @param value The raw QualityIndicator data (array or single object).
+ * @param options Transformation options.
  * @param causeKey The field-specific XML element name for the cause.
  */
 export function processQualityIndicatorType(
@@ -59,6 +83,10 @@ export function processQualityIndicatorType(
 /**
  * Returns a descriptive value for a field property using a code lookup table,
  * falling back to boolean indicator mapping.
+ *
+ * @param key The property key.
+ * @param value The property value.
+ * @param table The lookup table for code-to-label mapping.
  */
 export function getDescriptiveValue(
   key: string,

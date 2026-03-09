@@ -27,6 +27,7 @@ Before using this package, ensure you have completed the following steps with RV
 - **Service Support**:
   - `OpvragenBedrijfspercelen`: Retrieve registered `Bedrijfspercelen`.
   - `OpvragenRegelingspercelenMest`: Retrieve `Regelingspercelen Mest`.
+  - `OpvragenRegelingspercelenGLB`: Retrieve `Regelingspercelen nGLB` (BISS/ECO).
 - **Environment Handling**: Built-in support for `acceptance` and `production` environments with automatic endpoint selection.
 - **Type Safety**: Written in TypeScript with full type definitions.
 - **SOAP Integration**: Automates XML request building and response parsing for RVO's SOAP services.
@@ -182,6 +183,26 @@ try {
 }
 ```
 
+#### OpvragenRegelingspercelenGLB
+
+Retrieve `Regelingspercelen nGLB` (BISS/ECO). This service includes detailed information about GLB schemes, tasks, and treatment zones.
+
+```typescript
+try {
+  const glbResult = await client.opvragenRegelingspercelenGLB({
+    farmId: "KVK_NUMBER",
+    outputFormat: "geojson",
+    enrichResponse: true,
+    // Optional: fetch fields for a specific period
+    periodBeginDate: "2024-01-01",
+    periodEndDate: "2025-01-01",
+  })
+  console.log("Regelingspercelen GLB GeoJSON Data:", glbResult)
+} catch (error) {
+  console.error("Error fetching Regelingspercelen GLB:", error)
+}
+```
+
 ### ABA Authentication
 
 If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The client will automatically include the `UsernameToken` in the SOAP header. No manual token exchange is required.
@@ -228,6 +249,14 @@ This project includes example scripts to demonstrate how to connect to RVO servi
    npx tsx examples/request-regelingspercelen-mest-tvs.ts
    ```
 
+   **TVS Authentication (Regelingspercelen GLB):**
+
+   ```bash
+   npx tsx examples/request-regelingspercelen-glb-tvs.ts
+   ```
+
+   _Note: These scripts save the service response (JSON or raw XML) to the gitignored `temp/` directory._
+
 ## Configuration Options
 
 | Option       | Type               | Description                                                                                                                          |
@@ -247,6 +276,10 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                                                              |
 | `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
 | `enrichResponse`  | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
+
+### Method Options: `opvragenRegelingspercelenGLB`
+
+Same options as `opvragenRegelingspercelenMest`.
 
 ### Method Options: `opvragenRegelingspercelenMest`
 

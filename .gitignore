@@ -7,3 +7,4 @@ docs/
 rvo-webservice-docs/
 .gemini/
 coverage/
+temp/

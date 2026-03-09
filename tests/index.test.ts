@@ -139,6 +139,7 @@ describe("RvoClient (Acceptance Environment)", () => {
     })
 
     it("should fallback to root clientId if tvs.clientId is missing (backward compatibility)", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
       const client = new RvoClient({
         authMode: "TVS",
         environment: "acceptance",
@@ -149,8 +150,10 @@ describe("RvoClient (Acceptance Environment)", () => {
           pkioPrivateKey: PKIO_PRIVATE_KEY!,
         },
       })
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Deprecation Warning"))
       const authUrl = client.getAuthorizationUrl()
       expect(authUrl).toContain("client_id=fallback-id")
+      warnSpy.mockRestore()
     })
   })
 
@@ -423,6 +426,76 @@ describe("RvoClient (Acceptance Environment)", () => {
 
       expect(result.type).toBe("FeatureCollection")
       expect(result.features).toHaveLength(0)
+    })
+
+    it("should return raw XML string when outputFormat is xml", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientName: "Test",
+        aba: { username: "u", password: "p" },
+      })
+
+      const xmlResponse = "<Envelope>Raw XML</Envelope>"
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => xmlResponse,
+      })
+
+      const result = await client.opvragenBedrijfspercelen({ outputFormat: "xml" })
+
+      expect(result).toBe(xmlResponse)
+      expect(typeof result).toBe("string")
+    })
+
+    it("should throw if geojson output requested but no transformer provided (internal safety)", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        clientName: "Test",
+        aba: { username: "u", password: "p" },
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => "<xml></xml>",
+      })
+
+      // We bypass the public method to hit the private executeSoapRequest branch
+      // using a manual call to the private method via 'any'
+      await expect(
+        (client as any).executeSoapRequest("<xml></xml>", "geojson", undefined),
+      ).rejects.toThrow("GeoJSON output requested but no transformer was provided.")
+    })
+  })
+
+  describe("opvragenRegelingspercelenGLB", () => {
+    it("should call the GLB SOAP endpoint", async () => {
+      const client = new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        aba: {
+          username: ABA_USERNAME!,
+          password: ABA_PASSWORD!,
+        },
+      })
+
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () =>
+          `<?xml version="1.0"?><Envelope><Body><OpvragenRegelingspercelenGLBResponse></OpvragenRegelingspercelenGLBResponse></Body></Envelope>`,
+      })
+
+      const result = await client.opvragenRegelingspercelenGLB({
+        farmId: "12345678",
+        outputFormat: "geojson",
+      })
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(result.type).toBe("FeatureCollection")
     })
   })
 })
