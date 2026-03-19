@@ -67,9 +67,16 @@ const SERVICE_SCOPES: Record<RvoService, string> = {
  */
 export interface AuthUrlOptions {
   /**
+   * The services you want to access.
+   * This determines the scopes requested from eHerkenning.
+   * If not provided, it falls back to `service`.
+   */
+  services?: RvoService[]
+  /**
    * The service you want to access.
    * This determines the scope requested from eHerkenning.
    * @default 'opvragenBedrijfspercelen'
+   * @deprecated Use `services` instead to request multiple scopes.
    */
   service?: RvoService
   /**
@@ -160,13 +167,16 @@ export class RvoClient {
       throw new Error("Authentication mode is not TVS or TVS configuration is missing.")
     }
 
-    const service = options.service || "opvragenBedrijfspercelen"
+    const requestedServices =
+      options.services ?? (options.service ? [options.service] : ["opvragenBedrijfspercelen"])
+
     const env = this.config.environment || "acceptance"
     const eherkenningScope = EHERKENNING_SCOPES[env]
-    const serviceScope = SERVICE_SCOPES[service]
+
+    const serviceScopes = [...new Set(requestedServices.map((s) => SERVICE_SCOPES[s]))].join(" ")
 
     // Combine scopes separated by space
-    const fullScope = `${serviceScope} ${eherkenningScope}`
+    const fullScope = `${serviceScopes} ${eherkenningScope}`
 
     return this.tvsAuth.getAuthorizationUrl(fullScope, options.state)
   }

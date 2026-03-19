@@ -104,7 +104,7 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(config.body).not.toContain("<UsernameToken>")
     })
 
-    it("getAuthorizationUrl should return acceptance URL with correct scopes", () => {
+    it("getAuthorizationUrl should return acceptance URL with correct default scopes", () => {
       const client = new RvoClient({
         authMode: "TVS",
         environment: "acceptance",
@@ -123,6 +123,34 @@ describe("RvoClient (Acceptance Environment)", () => {
         "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45"
       const expectedServiceScope = "RVO-WS.GEO.bp.lezen"
       const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`
+
+      expect(actualScope).toBe(expectedFullScope)
+    })
+
+    it("getAuthorizationUrl should support requesting multiple services uniquely", () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        tvs: tvsConfig,
+      })
+      const authUrl = client.getAuthorizationUrl({
+        services: [
+          "opvragenBedrijfspercelen",
+          "opvragenRegelingspercelenMest",
+          "opvragenRegelingspercelenGLB",
+        ],
+      })
+
+      const urlParams = new URLSearchParams(authUrl.split("?")[1])
+      const actualScope = urlParams.get("scope")
+
+      const expectedEherkenningScope =
+        "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45"
+      // Notice that rp.lezen is deduplicated (both mest and glb share the same scope)
+      const expectedServiceScopes = "RVO-WS.GEO.bp.lezen RVO-WS.GEO.rp.lezen"
+      const expectedFullScope = `${expectedServiceScopes} ${expectedEherkenningScope}`
 
       expect(actualScope).toBe(expectedFullScope)
     })
