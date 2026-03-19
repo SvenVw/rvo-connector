@@ -178,6 +178,29 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(actualScope).toBe(expectedFullScope)
     })
 
+    it("getAuthorizationUrl should support the deprecated 'service' property (backward compatibility)", () => {
+      const client = new RvoClient({
+        authMode: "TVS",
+        environment: "acceptance",
+        clientId: TVS_CLIENT_ID!,
+        clientName: TVS_CLIENT_NAME!,
+        tvs: tvsConfig,
+      })
+      const authUrl = client.getAuthorizationUrl({
+        service: "opvragenRegelingspercelenMest",
+      })
+
+      const urlParams = new URLSearchParams(authUrl.split("?")[1])
+      const actualScope = urlParams.get("scope")
+
+      const expectedEherkenningScope =
+        "urn:nl-eid-gdi:1.0:ServiceUUID:44345953-4138-4f53-3454-593459414d45"
+      const expectedServiceScope = "RVO-WS.GEO.rp.lezen"
+      const expectedFullScope = `${expectedServiceScope} ${expectedEherkenningScope}`
+
+      expect(actualScope).toBe(expectedFullScope)
+    })
+
     it("should work with tvs.clientId and no root clientId", async () => {
       const client = new RvoClient({
         authMode: "TVS",
