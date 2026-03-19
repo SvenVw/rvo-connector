@@ -52,7 +52,7 @@ try {
 
   // Step 1: Get Authorization URL
   const authUrl = client.getAuthorizationUrl({
-    service: "opvragenBedrijfspercelen",
+    services: ["opvragenBedrijfspercelen"],
   })
 
   console.log("\n1. Please open the following URL in your browser to authorize:")

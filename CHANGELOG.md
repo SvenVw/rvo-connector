@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-03-19
+
+### Added
+
+- Multi-Service Scopes: Updated `getAuthorizationUrl` to support requesting multiple service scopes in a single OAuth 2.0 flow via the new `services` property in `AuthUrlOptions`.
+
+### Fixed
+
+- Authentication: Resolved 401 Unauthorized errors when using a single token to call multiple services with different scope requirements (e.g., Bedrijfspercelen and Regelingspercelen) #15.
+
+### Changed
+
+- Examples: Updated all TVS-related examples and documentation to use the new `services` property for generating authorization URLs.
+
+### Deprecated
+
+- Configuration: Deprecated the single `service` property in `AuthUrlOptions` in favor of the more flexible `services` array.
+
 ## [2.2.0] - 2026-03-09
 
 ### Added
