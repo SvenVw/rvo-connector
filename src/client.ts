@@ -167,16 +167,22 @@ export class RvoClient {
       throw new Error("Authentication mode is not TVS or TVS configuration is missing.")
     }
 
-    const requestedServices =
+    let requestedServices =
       options.services ?? (options.service ? [options.service] : ["opvragenBedrijfspercelen"])
+
+    if (requestedServices.length === 0) {
+      requestedServices = ["opvragenBedrijfspercelen"]
+    }
 
     const env = this.config.environment || "acceptance"
     const eherkenningScope = EHERKENNING_SCOPES[env]
 
-    const serviceScopes = [...new Set(requestedServices.map((s) => SERVICE_SCOPES[s]))].join(" ")
+    const serviceScopes = [
+      ...new Set(requestedServices.filter(Boolean).map((s) => SERVICE_SCOPES[s])),
+    ].join(" ")
 
-    // Combine scopes separated by space
-    const fullScope = `${serviceScopes} ${eherkenningScope}`
+    // Combine scopes separated by space, ensuring no leading/trailing spaces
+    const fullScope = serviceScopes ? `${serviceScopes} ${eherkenningScope}` : eherkenningScope
 
     return this.tvsAuth.getAuthorizationUrl(fullScope, options.state)
   }
