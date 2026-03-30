@@ -365,7 +365,10 @@ export class RvoClient {
         signal,
       })
     } catch (error: unknown) {
-      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      if (
+        error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError")
+      ) {
         throw new Error(`Request to RVO service timed out after ${timeout}ms`)
       }
       throw error
