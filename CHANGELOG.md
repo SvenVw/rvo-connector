@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Requirements: Raised minimum Node.js version from `>=18` to `>=24`. Node.js 18–23 have reached end-of-life.
 - Dependencies: Removed the `uuid` dependency. UUID generation now uses the built-in `crypto.randomUUID()`.
+- Dependencies: Removed the `qs` dependency. URL query string and form-data encoding now use the built-in `URLSearchParams`.
+- Refactoring: Simplified network request timeout logic using `AbortSignal.timeout()`, replacing manual `setTimeout`/`AbortController` patterns.
 - TypeScript: Updated `lib` compiler option from `es2023` to `es2024`, matching Node.js 24 / V8 13.x capabilities.
 - Types: `RegelingspercelenMestGeoJSONResponse` is now typed as `FeatureCollection<Geometry, MestFieldProperties>` instead of `FeatureCollection<Geometry, Record<string, any>>`.
 

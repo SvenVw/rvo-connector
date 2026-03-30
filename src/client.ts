@@ -353,13 +353,8 @@ export class RvoClient {
       headers["Authorization"] = `Bearer ${this.accessToken}`
     }
 
-    const controller = new AbortController()
     const timeout = this.config.requestTimeoutMs ?? 30000
-    let timeoutId: NodeJS.Timeout | undefined
-
-    if (timeout > 0) {
-      timeoutId = setTimeout(() => controller.abort(), timeout)
-    }
+    const signal = timeout > 0 ? AbortSignal.timeout(timeout) : undefined
 
     let response: Response
     try {
@@ -367,17 +362,13 @@ export class RvoClient {
         method: "POST",
         headers,
         body: soapXml,
-        signal: controller.signal,
+        signal,
       })
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === "AbortError") {
+      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
         throw new Error(`Request to RVO service timed out after ${timeout}ms`)
       }
       throw error
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-      }
     }
 
     const responseText = await response.text()
