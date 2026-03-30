@@ -63,7 +63,6 @@
     "jsonwebtoken": "^9.0.3",
     "proj4": "^2.20.4",
     "qs": "^6.15.0",
-    "uuid": "^13.0.0",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
@@ -85,7 +84,7 @@
     "vitest": "^4.1.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

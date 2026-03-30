@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
+import { randomUUID } from "node:crypto"
 import qs from "qs"
 import jwt from "jsonwebtoken"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
@@ -24,7 +24,7 @@ export class TvsAuth {
    * @returns The fully qualified authorization URL.
    */
   public getAuthorizationUrl(scope: string, state?: string): string {
-    const finalState = state || uuidv4()
+    const finalState = state || randomUUID()
     const params = {
       client_id: this.config.clientId,
       response_type: "code",
@@ -61,7 +61,7 @@ export class TvsAuth {
       iss: this.config.clientId,
       sub: this.config.clientId,
       aud: tokenEndpoint,
-      jti: uuidv4(),
+      jti: randomUUID(),
       exp: now + 5 * 60,
       iat: now,
     }
