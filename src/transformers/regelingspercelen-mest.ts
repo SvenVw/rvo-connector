@@ -9,7 +9,7 @@ import {
   type CodeLookupTable,
   type EnrichOptions,
 } from "./shared"
-import type { RegelingspercelenMestGeoJSONResponse } from "../types"
+import type { RegelingspercelenMestGeoJSONResponse, MestFieldProperties } from "../types"
 
 /**
  * Transforms the raw RVO XML response object into a GeoJSON FeatureCollection.
@@ -38,7 +38,10 @@ export function transformRegelingspercelenMestToGeoJSON(
     features.push(...processFarmFields(fieldsRaw, options))
   }
 
-  return { type: "FeatureCollection", features }
+  return {
+    type: "FeatureCollection",
+    features: features as Feature<Geometry, MestFieldProperties>[],
+  }
 }
 
 function processFarmFields(
