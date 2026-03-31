@@ -151,6 +151,11 @@ describe("TvsAuth", () => {
     }
   })
 
+  it("should throw error if clientId is missing in constructor", () => {
+    const config = { ...mockConfig, clientId: undefined }
+    expect(() => new TvsAuth(config as any)).toThrow("TVS clientId is required.")
+  })
+
   it("should throw error if authorizeEndpoint is missing in getAuthorizationUrl", () => {
     const config = { ...mockConfig, authorizeEndpoint: undefined }
     const tvsAuth = new TvsAuth(config as any)

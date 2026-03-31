@@ -12,6 +12,10 @@ export class TvsAuth {
   private readonly timeoutMs: number
 
   constructor(config: RvoAuthTvsConfig, timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS) {
+    const clientId = config.clientId?.trim()
+    if (!clientId) {
+      throw new Error("TVS clientId is required.")
+    }
     this.config = config
     this.timeoutMs = timeoutMs
   }
@@ -26,7 +30,7 @@ export class TvsAuth {
   public getAuthorizationUrl(scope: string, state?: string): string {
     const finalState = state || randomUUID()
     const params = new URLSearchParams({
-      client_id: this.config.clientId || "",
+      client_id: this.config.clientId,
       response_type: "code",
       redirect_uri: this.config.redirectUri,
       scope: scope,
@@ -74,7 +78,7 @@ export class TvsAuth {
       grant_type: "authorization_code",
       code: authorizationCode,
       redirect_uri: this.config.redirectUri,
-      client_id: this.config.clientId || "",
+      client_id: this.config.clientId,
       client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
       client_assertion: clientAssertion,
     })
