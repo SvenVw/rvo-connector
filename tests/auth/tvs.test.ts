@@ -115,38 +115,40 @@ describe("TvsAuth", () => {
       return controller.signal
     })
 
-    const tvsAuth = new TvsAuth(mockConfig) // No timeout configured
+    try {
+      const tvsAuth = new TvsAuth(mockConfig) // No timeout configured
 
-    const mockFetch = global.fetch as any
-    mockFetch.mockImplementation((url: string, options: any) => {
-      return new Promise((resolve, reject) => {
-        if (options.signal) {
-          if (options.signal.aborted) {
-            const error = new Error("The operation was aborted")
-            error.name = "AbortError"
-            reject(error)
-            return
+      const mockFetch = global.fetch as any
+      mockFetch.mockImplementation((url: string, options: any) => {
+        return new Promise((resolve, reject) => {
+          if (options.signal) {
+            if (options.signal.aborted) {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+              return
+            }
+            options.signal.addEventListener("abort", () => {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+            })
           }
-          options.signal.addEventListener("abort", () => {
-            const error = new Error("The operation was aborted")
-            error.name = "AbortError"
-            reject(error)
-          })
-        }
+        })
       })
-    })
 
-    const promise = tvsAuth.getAccessToken("mock-auth-code")
+      const promise = tvsAuth.getAccessToken("mock-auth-code")
 
-    vi.advanceTimersByTime(DEFAULT_REQUEST_TIMEOUT_MS)
+      vi.advanceTimersByTime(DEFAULT_REQUEST_TIMEOUT_MS)
 
-    await expect(promise).rejects.toThrow(
-      `Request to token endpoint timed out after ${DEFAULT_REQUEST_TIMEOUT_MS}ms`,
-    )
-    expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_REQUEST_TIMEOUT_MS)
-
-    timeoutSpy.mockRestore()
-    vi.useRealTimers()
+      await expect(promise).rejects.toThrow(
+        `Request to token endpoint timed out after ${DEFAULT_REQUEST_TIMEOUT_MS}ms`,
+      )
+      expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_REQUEST_TIMEOUT_MS)
+    } finally {
+      timeoutSpy.mockRestore()
+      vi.useRealTimers()
+    }
   })
 
   it("should throw error if authorizeEndpoint is missing in getAuthorizationUrl", () => {
