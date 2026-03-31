@@ -215,7 +215,7 @@ export interface CropFieldProperties {
   /** List of quality indicators/warnings associated with this field. */
   QualityIndicatorType?: QualityIndicator[] | QualityIndicator
   /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
-  descriptiveValues?: Record<string, any>
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -288,7 +288,7 @@ export interface MestCropDetails {
   Grondbedekking: string
   Oppervlakte: string | number
   Inzaaidatum?: string
-  descriptiveValues?: Record<string, any>
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -347,7 +347,7 @@ export interface MestFieldProperties {
   /** Quality indicators for this field. */
   QualityIndicatorType?: QualityIndicator[] | QualityIndicator
   /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
-  descriptiveValues?: Record<string, any>
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -501,21 +501,21 @@ export interface GLBFieldProperties {
     Grondbedekking: string
     Oppervlakte: number
     GewasbeschermingVoorteelt?: string
-    descriptiveValues?: Record<string, any>
+    descriptiveValues?: Record<string, any> | null
   }>
   /** Catch crop (Nateelt) details. */
   Nateelt?: Array<{
     Grondbedekking: string
     Oppervlakte: number
     Inzaaidatum?: string
-    descriptiveValues?: Record<string, any>
+    descriptiveValues?: Record<string, any> | null
   }>
   /** Quality indicators for this field. */
   QualityIndicator?: QualityIndicator[] | QualityIndicator
   /** Tasks/Operations performed on this field. */
   Task?: GLBTask[] | GLBTask
   /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
-  descriptiveValues?: Record<string, any>
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
