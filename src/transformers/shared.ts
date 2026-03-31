@@ -74,8 +74,13 @@ export function processQualityIndicatorType(
   causeKey: string,
 ): any {
   const processed = processQualityIndicators(value)
-  if (options.enrichResponse && Array.isArray(processed)) {
-    return processed.map((qi) => enrichQualityIndicatorItem(qi, causeKey))
+  if (options.enrichResponse) {
+    if (Array.isArray(processed)) {
+      return processed.map((qi) => enrichQualityIndicatorItem(qi, causeKey))
+    }
+    if (processed && typeof processed === "object") {
+      return enrichQualityIndicatorItem(processed, causeKey)
+    }
   }
   return processed
 }
@@ -127,8 +132,9 @@ export function buildFieldProperties(
     }
   }
 
-  if (options.enrichResponse && Object.keys(descriptiveValues).length > 0) {
-    properties.descriptiveValues = descriptiveValues
+  if (options.enrichResponse) {
+    properties.descriptiveValues =
+      Object.keys(descriptiveValues).length > 0 ? descriptiveValues : null
   }
 
   return properties

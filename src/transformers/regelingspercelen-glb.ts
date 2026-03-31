@@ -214,8 +214,8 @@ export function simplifyObject(obj: any, options: EnrichOptions = {}): any {
     handleProperty(key, obj[key], options, newObj, descriptiveValues)
   }
 
-  if (options.enrichResponse && Object.keys(descriptiveValues).length > 0) {
-    newObj.descriptiveValues = descriptiveValues
+  if (options.enrichResponse) {
+    newObj.descriptiveValues = Object.keys(descriptiveValues).length > 0 ? descriptiveValues : null
   }
 
   return newObj

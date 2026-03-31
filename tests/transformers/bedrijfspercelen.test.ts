@@ -104,6 +104,76 @@ describe("transformBedrijfspercelenToGeoJSON", () => {
     expect(result.features[1].properties?.CropFieldID).toBe("ID2")
   })
 
+  it("should enrich a single QualityIndicator with descriptive values", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID1",
+            Border: { exterior: { LinearRing: { posList: "0 0 1 0 1 1 0 0" } } },
+            QualityIndicatorType: {
+              IndicatorCode: "KI001",
+              SeverityCode: "INFO",
+              QualityIndicatorCause: "A",
+            },
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input, { enrichResponse: true })
+    const feature = result.features[0]
+    const qi = feature.properties?.QualityIndicatorType as any
+
+    expect(qi).toHaveProperty("descriptiveValues")
+    expect(qi.descriptiveValues).toEqual({
+      IndicatorCode:
+        "De gebruikstitel is gedurende (een deel van) de looptijd van dit perceel ongeldig.",
+      SeverityCode: "Informatie",
+      QualityIndicatorCause: "Actief (Nieuw)",
+    })
+  })
+
+  it("should set descriptiveValues to null if enrichResponse is true but no labels are found", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID1",
+            Border: { exterior: { LinearRing: { posList: "0 0 1 0 1 1 0 0" } } },
+            // Key that has no mapping in BEDRIJFS_CODE_LOOKUPS
+            SomeUnknownKey: "UnknownValue",
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input, { enrichResponse: true })
+    const feature = result.features[0]
+
+    expect(feature.properties).toHaveProperty("descriptiveValues")
+    expect(feature.properties?.descriptiveValues).toBeNull()
+  })
+
+  it("should omit descriptiveValues if enrichResponse is false", () => {
+    const input = createEnvelope({
+      Farm: {
+        Field: {
+          CropField: {
+            CropFieldID: "ID1",
+            Border: { exterior: { LinearRing: { posList: "0 0 1 0 1 1 0 0" } } },
+            CropTypeCode: "101",
+          },
+        },
+      },
+    })
+
+    const result = transformBedrijfspercelenToGeoJSON(input, { enrichResponse: false })
+    const feature = result.features[0]
+
+    expect(feature.properties).not.toHaveProperty("descriptiveValues")
+  })
+
   it("should handle Polygon with holes (interior rings)", () => {
     const input = createEnvelope({
       Farm: {

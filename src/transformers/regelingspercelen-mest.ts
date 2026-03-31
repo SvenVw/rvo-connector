@@ -122,8 +122,8 @@ function simplifyObject(obj: any, options: EnrichOptions = {}): any {
     }
   }
 
-  if (options.enrichResponse && Object.keys(descriptiveValues).length > 0) {
-    newObj.descriptiveValues = descriptiveValues
+  if (options.enrichResponse) {
+    newObj.descriptiveValues = Object.keys(descriptiveValues).length > 0 ? descriptiveValues : null
   }
 
   return newObj
