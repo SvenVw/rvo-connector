@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { TvsAuth } from "../../src/auth/tvs"
+import { DEFAULT_REQUEST_TIMEOUT_MS } from "../../src/utils/constants"
 import type { RvoAuthTvsConfig } from "../../src/types"
 
 // Mock fetch globally
@@ -105,7 +106,7 @@ describe("TvsAuth", () => {
     expect(result).toEqual(mockResponse)
   })
 
-  it("should use default timeout of 30000ms if not configured", async () => {
+  it(`should use default timeout of ${DEFAULT_REQUEST_TIMEOUT_MS}ms if not configured`, async () => {
     vi.useFakeTimers()
     // Mock AbortSignal.timeout to use Vitest's fake timers
     const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
@@ -137,10 +138,12 @@ describe("TvsAuth", () => {
 
     const promise = tvsAuth.getAccessToken("mock-auth-code")
 
-    vi.advanceTimersByTime(30000)
+    vi.advanceTimersByTime(DEFAULT_REQUEST_TIMEOUT_MS)
 
-    await expect(promise).rejects.toThrow("Request to token endpoint timed out after 30000ms")
-    expect(timeoutSpy).toHaveBeenCalledWith(30000)
+    await expect(promise).rejects.toThrow(
+      `Request to token endpoint timed out after ${DEFAULT_REQUEST_TIMEOUT_MS}ms`,
+    )
+    expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_REQUEST_TIMEOUT_MS)
 
     timeoutSpy.mockRestore()
     vi.useRealTimers()

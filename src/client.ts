@@ -11,6 +11,7 @@ import type {
   RvoTokenResponse,
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
+import { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
 import {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,
@@ -353,7 +354,7 @@ export class RvoClient {
       headers["Authorization"] = `Bearer ${this.accessToken}`
     }
 
-    const timeout = this.config.requestTimeoutMs ?? 30000
+    const timeout = this.config.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS
     const signal = timeout > 0 ? AbortSignal.timeout(timeout) : undefined
 
     let response: Response

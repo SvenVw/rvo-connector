@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import jwt from "jsonwebtoken"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
+import { DEFAULT_REQUEST_TIMEOUT_MS } from "../utils/constants"
 
 /**
  * Handles TVS (Routeringsdienst TVS4) / OAuth 2.0 authentication with eHerkenning.
@@ -10,7 +11,7 @@ export class TvsAuth {
   private readonly config: RvoAuthTvsConfig
   private readonly timeoutMs: number
 
-  constructor(config: RvoAuthTvsConfig, timeoutMs: number = 30000) {
+  constructor(config: RvoAuthTvsConfig, timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS) {
     this.config = config
     this.timeoutMs = timeoutMs
   }

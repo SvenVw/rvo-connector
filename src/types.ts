@@ -89,7 +89,7 @@ export interface RvoClientConfig {
   /**
    * Timeout in milliseconds for API requests (e.g., SOAP calls).
    * Set to 0 to disable timeout.
-   * @default 30000 (30 seconds)
+   * @default DEFAULT_REQUEST_TIMEOUT_MS (30000ms)
    */
   requestTimeoutMs?: number
 }
