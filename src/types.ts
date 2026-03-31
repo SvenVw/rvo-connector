@@ -161,7 +161,7 @@ export interface QualityIndicator {
   /** Cause of the update/mutation (Treatmentzone context). */
   ActivityCause?: string
   /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
-  descriptiveValues?: Record<string, any>
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
