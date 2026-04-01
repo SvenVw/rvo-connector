@@ -16,6 +16,7 @@ export class TvsAuth {
     if (!clientId) {
       throw new Error("TVS clientId is required.")
     }
+    config.clientId = clientId
     this.config = config
     this.timeoutMs = timeoutMs
   }
