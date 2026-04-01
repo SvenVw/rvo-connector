@@ -30,10 +30,10 @@ const ENDPOINTS = {
     ediCropAba: "https://edicrop-acc.agro.nl/edicrop/EdiCropService",
   },
   production: {
-    tvsAuthorize: "https://toegang.overheid.nl/kvo/authorize",
-    tvsToken: "https://toegang.overheid.nl/kvo/token",
-    ediCropTvs: "https://edicrop.agro.nl/edicrop/EdiCrop-WebService/v2",
-    ediCropAba: "https://edicrop.agro.nl/edicrop/EdiCropService",
+    tvsAuthorize: "https://rd2.toegang.overheid.nl/kvo/authorize",
+    tvsToken: "https://rd2.toegang.overheid.nl/kvo/token",
+    ediCropTvs: "https://webapplicaties.agro.nl/edicrop/EdiCrop-WebService/v2",
+    ediCropAba: "https://webapplicaties.agro.nl/edicrop/EdiCropService",
   },
 }
 
