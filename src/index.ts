@@ -7,6 +7,7 @@
 
 export * from "./types"
 export * from "./client"
+export { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
 export {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,

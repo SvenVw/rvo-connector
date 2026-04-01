@@ -5,7 +5,7 @@ import type { FeatureCollection, Geometry } from "geojson"
  */
 export interface RvoAuthTvsConfig {
   /** Client ID (e.g., from RVO portal). Typically your OIN or similar identifier. */
-  clientId?: string
+  clientId: string
   /** Redirect URI registered with RVO for the OAuth 2.0 callback. */
   redirectUri: string
   /**
@@ -89,7 +89,7 @@ export interface RvoClientConfig {
   /**
    * Timeout in milliseconds for API requests (e.g., SOAP calls).
    * Set to 0 to disable timeout.
-   * @default 30000 (30 seconds)
+   * @default DEFAULT_REQUEST_TIMEOUT_MS (30000ms)
    */
   requestTimeoutMs?: number
 }
@@ -154,6 +154,14 @@ export interface QualityIndicator {
   geometry?: Geometry
   /** Cause of the update/mutation (e.g., 'A' for Active/New, 'D' for Delete). Only present in mutation contexts. */
   QualityIndicatorCause?: string
+  /** Cause of the update/mutation (MEST context). */
+  MESTFieldQICause?: string
+  /** Cause of the update/mutation (GLB context). */
+  GLBFieldQICause?: string
+  /** Cause of the update/mutation (Treatmentzone context). */
+  ActivityCause?: string
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -206,6 +214,8 @@ export interface CropFieldProperties {
   CropFieldCause?: string
   /** List of quality indicators/warnings associated with this field. */
   QualityIndicatorType?: QualityIndicator[] | QualityIndicator
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -272,6 +282,75 @@ export interface RegelingspercelenMestOptions {
 }
 
 /**
+ * Details for previous (Voorteelt) or catch (Nateelt) crops in MEST context.
+ */
+export interface MestCropDetails {
+  Grondbedekking: string
+  Oppervlakte: string | number
+  Inzaaidatum?: string
+  descriptiveValues?: Record<string, any> | null
+}
+
+/**
+ * Properties of a MEST Field (Regelingsperceel MEST).
+ * Derived from `MESTField` in RVO documentation.
+ */
+export interface MestFieldProperties {
+  /** Unique identification of the parcel (e.g. AGRONL...). */
+  MESTFieldid: string
+  /** Version number of the MEST field. */
+  MESTFieldVersion: string
+  /** Start date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
+  BeginDate: string
+  /** End date of the field's validity (YYYY-MM-DDTHH:mm:ss). */
+  EndDate?: string
+  /** Date of the statement. */
+  OpgaveDatum?: string
+  /** User-assigned name/designator for the field. */
+  Fielddesignator?: string
+  /** Calculated area in hectares (4 decimals). */
+  CalculatedArea?: string | number
+  /** Proposed area in hectares. */
+  VoorgesteldeOppervlakte?: string | number
+  /** Declared area in hectares. */
+  OpgegevenOppervlakte?: string | number
+  /** Crop Type Code. Codelist: CL263 or CL411. */
+  Grondbedekking?: string | number
+  /** Use Title Code. Codelist: CL412. */
+  GebruiksTitel?: string
+  /** Regulatory Soil Type Code. Codelist: CL405. */
+  Grondsoort?: string
+  /** Natural land type code. */
+  TypeGrond?: string
+  /** Indicator for buffer strips. */
+  IndBufferstrook?: "J" | "N"
+  /** Surface area of buffer strips. */
+  BufferstrookOppervlakte?: string | number
+  /** Sampling date. */
+  BemonsteringDatum?: string
+  /** Sampling protocol code. */
+  BemonsteringProtocol?: string
+  /** Indicator for phosphate differentiation. */
+  IndFosfaatdifferentiatie?: "J" | "N"
+  /** PCA CL2 value. */
+  PCACL2Waarde?: string | number
+  /** Pal value from 2021 onwards. */
+  PalWaardeVanaf2021?: string | number
+  /** Indicator for catch crop (nateelt) as manure requirement. */
+  IndNateeltMest?: string
+  /** Cause of the update/mutation. */
+  MESTFieldCause?: string
+  /** Previous crop (Voorteelt) details. */
+  Voorteelt?: MestCropDetails[] | MestCropDetails
+  /** Catch crop (Nateelt) details. */
+  Nateelt?: MestCropDetails[] | MestCropDetails
+  /** Quality indicators for this field. */
+  QualityIndicatorType?: QualityIndicator[] | QualityIndicator
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
+}
+
+/**
  * Generic interface for the parsed XML response from RegelingspercelenMest service.
  */
 export interface RegelingspercelenMestXmlResponse {
@@ -282,7 +361,7 @@ export interface RegelingspercelenMestXmlResponse {
  * GeoJSON output for RegelingspercelenMest.
  * A FeatureCollection where each feature represents a MestField.
  */
-export type RegelingspercelenMestGeoJSONResponse = FeatureCollection<Geometry, Record<string, any>>
+export type RegelingspercelenMestGeoJSONResponse = FeatureCollection<Geometry, MestFieldProperties>
 
 /**
  * Union type for the response of `opvragenRegelingspercelenMest`.
@@ -422,25 +501,30 @@ export interface GLBFieldProperties {
     Grondbedekking: string
     Oppervlakte: number
     GewasbeschermingVoorteelt?: string
+    descriptiveValues?: Record<string, any> | null
   }>
   /** Catch crop (Nateelt) details. */
   Nateelt?: Array<{
     Grondbedekking: string
     Oppervlakte: number
     Inzaaidatum?: string
+    descriptiveValues?: Record<string, any> | null
   }>
   /** Quality indicators for this field. */
   QualityIndicator?: QualityIndicator[] | QualityIndicator
   /** Tasks/Operations performed on this field. */
   Task?: GLBTask[] | GLBTask
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
-
 /**
  * Task performed on a GLB field.
  */
 export interface GLBTask {
   Taskid: string
   Operation: GLBOperation[] | GLBOperation
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -449,6 +533,8 @@ export interface GLBTask {
 export interface GLBOperation {
   OperationId: string
   Treatmentzone: GLBTreatmentzone[] | GLBTreatmentzone
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -467,6 +553,8 @@ export interface GLBTreatmentzone {
   DeviationReason?: string
   ActivityCause?: string
   QualityIndicator?: QualityIndicator[] | QualityIndicator
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**

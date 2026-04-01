@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-04-01
+
+### Added
+
+- Types: Added new `MestFieldProperties` and `MestCropDetails` interfaces, and extended `QualityIndicator`, `CropFieldProperties`, and `GLBFieldProperties` with additional optional properties.
+
+### Changed
+
+- Requirements: Raised minimum Node.js version from `>=18` to `>=24`. Node.js 18–23 have reached end-of-life.
+- Dependencies: Removed the `uuid` dependency. UUID generation now uses the built-in `crypto.randomUUID()`.
+- Dependencies: Removed the `qs` dependency. URL query string and form-data encoding now use the built-in `URLSearchParams`.
+- Refactoring: Simplified network request timeout logic using `AbortSignal.timeout()`, replacing manual `setTimeout`/`AbortController` patterns.
+- TypeScript: Updated `lib` compiler option from `es2023` to `es2024`, matching Node.js 24 / V8 13.x capabilities.
+- Types: `RegelingspercelenMestGeoJSONResponse` is now typed as `FeatureCollection<Geometry, MestFieldProperties>` instead of `FeatureCollection<Geometry, Record<string, any>>`.
+
+### Security
+
+- Patch for CVE-2026-33671
+- Patch for CVE-2026-33750
+- Patch for CVE-2026-33672
+- Patch for CVE-2026-33532
+
 ## [2.2.1] - 2026-03-19
 
 ### Added

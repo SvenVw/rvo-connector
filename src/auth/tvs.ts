@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from "uuid"
-import qs from "qs"
+import { randomUUID } from "node:crypto"
 import jwt from "jsonwebtoken"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
+import { DEFAULT_REQUEST_TIMEOUT_MS } from "../utils/constants"
 
 /**
  * Handles TVS (Routeringsdienst TVS4) / OAuth 2.0 authentication with eHerkenning.
@@ -11,7 +11,12 @@ export class TvsAuth {
   private readonly config: RvoAuthTvsConfig
   private readonly timeoutMs: number
 
-  constructor(config: RvoAuthTvsConfig, timeoutMs: number = 30000) {
+  constructor(config: RvoAuthTvsConfig, timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS) {
+    const clientId = config.clientId?.trim()
+    if (!clientId) {
+      throw new Error("TVS clientId is required.")
+    }
+    config.clientId = clientId
     this.config = config
     this.timeoutMs = timeoutMs
   }
@@ -24,20 +29,20 @@ export class TvsAuth {
    * @returns The fully qualified authorization URL.
    */
   public getAuthorizationUrl(scope: string, state?: string): string {
-    const finalState = state || uuidv4()
-    const params = {
+    const finalState = state || randomUUID()
+    const params = new URLSearchParams({
       client_id: this.config.clientId,
       response_type: "code",
       redirect_uri: this.config.redirectUri,
       scope: scope,
       state: finalState,
-    }
+    })
 
     const authEndpoint = this.config.authorizeEndpoint
     if (!authEndpoint) {
       throw new Error("TVS Authorize Endpoint not configured.")
     }
-    return `${authEndpoint}?${qs.stringify(params)}`
+    return `${authEndpoint}?${params.toString()}`
   }
 
   /**
@@ -53,7 +58,7 @@ export class TvsAuth {
     }
     const now = Math.floor(Date.now() / 1000)
 
-    let privateKey = this.config.pkioPrivateKey
+    const privateKey = this.config.pkioPrivateKey
 
     this.validatePrivateKey(privateKey)
 
@@ -61,7 +66,7 @@ export class TvsAuth {
       iss: this.config.clientId,
       sub: this.config.clientId,
       aud: tokenEndpoint,
-      jti: uuidv4(),
+      jti: randomUUID(),
       exp: now + 5 * 60,
       iat: now,
     }
@@ -70,7 +75,7 @@ export class TvsAuth {
       algorithm: "RS256",
     })
 
-    const requestBody = qs.stringify({
+    const requestBody = new URLSearchParams({
       grant_type: "authorization_code",
       code: authorizationCode,
       redirect_uri: this.config.redirectUri,
@@ -79,13 +84,7 @@ export class TvsAuth {
       client_assertion: clientAssertion,
     })
 
-    const controller = new AbortController()
-    const timeout = this.timeoutMs
-    let timeoutId: NodeJS.Timeout | undefined
-
-    if (timeout > 0) {
-      timeoutId = setTimeout(() => controller.abort(), timeout)
-    }
+    const signal = this.timeoutMs > 0 ? AbortSignal.timeout(this.timeoutMs) : undefined
 
     try {
       const response = await fetch(tokenEndpoint, {
@@ -93,8 +92,8 @@ export class TvsAuth {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: requestBody,
-        signal: controller.signal,
+        body: requestBody.toString(),
+        signal,
       })
 
       if (!response.ok) {
@@ -104,14 +103,10 @@ export class TvsAuth {
 
       return (await response.json()) as RvoTokenResponse
     } catch (error: any) {
-      if (error.name === "AbortError") {
-        throw new Error(`Request to token endpoint timed out after ${timeout}ms`)
+      if (error.name === "TimeoutError" || error.name === "AbortError") {
+        throw new Error(`Request to token endpoint timed out after ${this.timeoutMs}ms`)
       }
       throw error
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-      }
     }
   }
 

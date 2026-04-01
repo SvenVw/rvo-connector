@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
+import { randomUUID } from "node:crypto"
 
 /**
  * Escapes special characters in a string for use in XML.
@@ -120,7 +120,7 @@ export function buildSoapEnvelope(
   const now = new Date()
   const currentYear = now.getFullYear()
 
-  const messageId = uuidv4()
+  const messageId = randomUUID()
   const issueDate = now.toISOString().slice(0, 19) // Standard YYYY-MM-DDTHH:MM:SS
 
   const periodBeginDate = escapeXml(params.periodBeginDate || `${currentYear}-01-01`)

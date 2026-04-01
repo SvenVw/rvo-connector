@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { TvsAuth } from "../../src/auth/tvs"
+import { DEFAULT_REQUEST_TIMEOUT_MS } from "../../src/utils/constants"
 import type { RvoAuthTvsConfig } from "../../src/types"
 
 // Mock fetch globally
@@ -28,7 +29,7 @@ describe("TvsAuth", () => {
   })
 
   afterEach(() => {
-    // vi.useRealTimers() // Not strictly necessary if we never set fake, but good practice if we change back
+    vi.useRealTimers()
   })
 
   it("should successfully get access token", async () => {
@@ -105,36 +106,54 @@ describe("TvsAuth", () => {
     expect(result).toEqual(mockResponse)
   })
 
-  it("should use default timeout of 30000ms if not configured", async () => {
+  it(`should use default timeout of ${DEFAULT_REQUEST_TIMEOUT_MS}ms if not configured`, async () => {
     vi.useFakeTimers()
-    const tvsAuth = new TvsAuth(mockConfig) // No timeout configured
-
-    const mockFetch = global.fetch as any
-    mockFetch.mockImplementation((url: string, options: any) => {
-      return new Promise((resolve, reject) => {
-        if (options.signal) {
-          if (options.signal.aborted) {
-            const error = new Error("The operation was aborted")
-            error.name = "AbortError"
-            reject(error)
-            return
-          }
-          options.signal.addEventListener("abort", () => {
-            const error = new Error("The operation was aborted")
-            error.name = "AbortError"
-            reject(error)
-          })
-        }
-      })
+    // Mock AbortSignal.timeout to use Vitest's fake timers
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
+      const controller = new AbortController()
+      setTimeout(() => controller.abort(), ms)
+      return controller.signal
     })
 
-    const promise = tvsAuth.getAccessToken("mock-auth-code")
+    try {
+      const tvsAuth = new TvsAuth(mockConfig) // No timeout configured
 
-    // Advance time by 30000ms
-    vi.advanceTimersByTime(30000)
+      const mockFetch = global.fetch as any
+      mockFetch.mockImplementation((url: string, options: any) => {
+        return new Promise((resolve, reject) => {
+          if (options.signal) {
+            if (options.signal.aborted) {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+              return
+            }
+            options.signal.addEventListener("abort", () => {
+              const error = new Error("The operation was aborted")
+              error.name = "AbortError"
+              reject(error)
+            })
+          }
+        })
+      })
 
-    await expect(promise).rejects.toThrow("Request to token endpoint timed out after 30000ms")
-    vi.useRealTimers()
+      const promise = tvsAuth.getAccessToken("mock-auth-code")
+
+      vi.advanceTimersByTime(DEFAULT_REQUEST_TIMEOUT_MS)
+
+      await expect(promise).rejects.toThrow(
+        `Request to token endpoint timed out after ${DEFAULT_REQUEST_TIMEOUT_MS}ms`,
+      )
+      expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_REQUEST_TIMEOUT_MS)
+    } finally {
+      timeoutSpy.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it("should throw error if clientId is missing in constructor", () => {
+    const config = { ...mockConfig, clientId: undefined }
+    expect(() => new TvsAuth(config as any)).toThrow("TVS clientId is required.")
   })
 
   it("should throw error if authorizeEndpoint is missing in getAuthorizationUrl", () => {
