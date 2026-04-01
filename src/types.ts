@@ -517,13 +517,14 @@ export interface GLBFieldProperties {
   /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
   descriptiveValues?: Record<string, any> | null
 }
-
 /**
  * Task performed on a GLB field.
  */
 export interface GLBTask {
   Taskid: string
   Operation: GLBOperation[] | GLBOperation
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -532,6 +533,8 @@ export interface GLBTask {
 export interface GLBOperation {
   OperationId: string
   Treatmentzone: GLBTreatmentzone[] | GLBTreatmentzone
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
@@ -550,6 +553,8 @@ export interface GLBTreatmentzone {
   DeviationReason?: string
   ActivityCause?: string
   QualityIndicator?: QualityIndicator[] | QualityIndicator
+  /** Descriptive labels for codes and indicators. Only present if `enrichResponse` is true. */
+  descriptiveValues?: Record<string, any> | null
 }
 
 /**
