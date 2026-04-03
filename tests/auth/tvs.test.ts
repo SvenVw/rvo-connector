@@ -164,6 +164,21 @@ describe("TvsAuth", () => {
     )
   })
 
+  it("should encode spaces as %20 in authorization URL scope", () => {
+    const config = {
+      ...mockConfig,
+      authorizeEndpoint: "https://mock-auth-endpoint",
+    }
+    const tvsAuth = new TvsAuth(config)
+    const scope = "scope1 scope2 scope3"
+    const authUrl = tvsAuth.getAuthorizationUrl(scope)
+
+    // URLSearchParams.toString() would normally produce scope1+scope2+scope3
+    // We expect scope1%20scope2%20scope3
+    expect(authUrl).toContain("scope=scope1%20scope2%20scope3")
+    expect(authUrl).not.toContain("scope=scope1+scope2+scope3")
+  })
+
   it("should throw error if tokenEndpoint is missing in getAccessToken", async () => {
     const config = { ...mockConfig, tokenEndpoint: undefined }
     const tvsAuth = new TvsAuth(config as any)
