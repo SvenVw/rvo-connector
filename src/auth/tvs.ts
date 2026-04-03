@@ -42,7 +42,7 @@ export class TvsAuth {
     if (!authEndpoint) {
       throw new Error("TVS Authorize Endpoint not configured.")
     }
-    return `${authEndpoint}?${params.toString()}`
+    return `${authEndpoint}?${params.toString().replace(/\+/g, "%20")}`
   }
 
   /**
