@@ -57,7 +57,8 @@
     "lint:fix-suggest-unsafe": "oxlint --type-aware --fix --fix-suggestions",
     "format": "oxfmt",
     "docs": "typedoc",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "prepare": "pnpm run build"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.3",
