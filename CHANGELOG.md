@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration: Set explicit config values for pnpm to mitigate supply chain attacks
 - Patch for CVE-2026-35209
 - Patch for CVE-2026-45149
+- Patch for CVE-2026-39363
+- Patch for CVE-2026-39364
+- Patch for CVE-2026-39365
 
 ## [2.2.3] - 2026-04-01
 
