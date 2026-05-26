@@ -2,5 +2,7 @@ blockExoticSubdeps: true
 strictDepBuilds: true
 minimumReleaseAge: 1440
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - 'tinyexec@1.2.2'
 allowBuilds:
   esbuild: true
