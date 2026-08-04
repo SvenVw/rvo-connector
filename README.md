@@ -28,6 +28,8 @@ Before using this package, ensure you have completed the following steps with RV
   - `OpvragenBedrijfspercelen`: Retrieve registered `Bedrijfspercelen`.
   - `OpvragenRegelingspercelenMest`: Retrieve `Regelingspercelen Mest`.
   - `OpvragenRegelingspercelenGLB`: Retrieve `Regelingspercelen nGLB` (BISS/ECO).
+  - `raadplegenDieren`: Retrieve registered animal list (BMS/I&R DierenWS).
+  - `raadplegenDierDetails`: Retrieve extensive details for an individual animal (BMS/I&R DierenWS).
 - **Environment Handling**: Built-in support for `acceptance` and `production` environments with automatic endpoint selection.
 - **Type Safety**: Written in TypeScript with full type definitions.
 - **SOAP Integration**: Automates XML request building and response parsing for RVO's SOAP services.
@@ -203,6 +205,38 @@ try {
 }
 ```
 
+#### DierenWS (Animal Registrations)
+
+Retrieve registered animal lists and detailed records on individual animals (e.g. pedigree, flags, health status, and verblijfplaatsen) via BMS/I&R.
+
+```typescript
+try {
+  // 1. List animals using raadplegenDieren
+  const listResult = await client.raadplegenDieren({
+    selRelatienummerHouder: "RELATIENUMMER_HOUDER",
+    selMeldingeenheid: "UBN_NUMBER",
+    outputFormat: "json", // returns clean Javascript array structure
+  })
+  console.log("Registered Animals:", listResult.dieren)
+
+  // 2. Fetch extensive details for a single animal
+  const detailsResult = await client.raadplegenDierDetails({
+    selRelatienummerHouder: "RELATIENUMMER_HOUDER",
+    selMeldingeenheid: "UBN_NUMBER",
+    selDierLevensnummer: "123456789012",
+    selDierLandcode: "NL",
+    indVerblijfplaatsen: "J", // Include historical stays
+    indVlaggen: "J", // Include flags/sanctions
+    indNakomelingen: "J", // Include children
+    indMerken: "J", // Include ear tags / chip details
+    outputFormat: "json",
+  })
+  console.log("Animal Extensive Details:", detailsResult.dierDetails)
+} catch (error) {
+  console.error("Error fetching animal data:", error)
+}
+```
+
 ### ABA Authentication
 
 If using ABA, simply configure the `aba` options and set `authMode: 'ABA'`. The client will automatically include the `UsernameToken` in the SOAP header. No manual token exchange is required.
@@ -253,6 +287,12 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
    ```bash
    npx tsx examples/request-regelingspercelen-glb-tvs.ts
+   ```
+
+   **TVS Authentication (DierenWS - Animal Registrations):**
+
+   ```bash
+   npx tsx examples/request-dieren-tvs.ts
    ```
 
    _Note: These scripts save the service response (JSON or raw XML) to the gitignored `temp/` directory._

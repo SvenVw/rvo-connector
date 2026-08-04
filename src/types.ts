@@ -85,6 +85,16 @@ export interface RvoClientConfig {
    * If omitted, the default URL for the selected environment is used.
    */
   ediCropAbaUrl?: string
+  /**
+   * Optional override for the BMS DierenWS webservice URL (TVS mode).
+   * If omitted, the default URL for the selected environment is used.
+   */
+  bmsDierenUrl?: string
+  /**
+   * Optional override for the BMS DierenWS webservice URL (ABA mode).
+   * If omitted, the default URL for the selected environment is used.
+   */
+  bmsDierenAbaUrl?: string
 
   /**
    * Timeout in milliseconds for API requests (e.g., SOAP calls).
@@ -608,3 +618,84 @@ export interface RvoTokenResponse {
    */
   [key: string]: unknown
 }
+
+/**
+ * Options for the `raadplegenDieren` SOAP service.
+ */
+export interface RaadplegenDierenOptions {
+  selDierSoort?: string
+  selDierLandcode?: string
+  selDierLevensnummer?: string
+  selRelatienummerHouder: string
+  selMeldingeenheid: string
+  selDierOorspronkelijkeID?: string
+  selPeildatum?: string
+  selPeildatumHoog?: string
+  selDierWerknummer?: string
+  selDierWerknummerHoog?: string
+  selMoederLandcode?: string
+  selMoederLevensnummer?: string
+  selGeboorteDatumLaag?: string
+  selGeboorteDatumHoog?: string
+  selDierGeslacht?: string
+  selVlagsoortCodeReden?: string
+  indDierMetVlagOverslaan?: string
+  indExportwaardigheid?: string
+  selCodeExportwaardigheid?: string
+  aantal?: number
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'json'`: Converts the response to a cleaned JSON array/object structure.
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "json"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing human-readable labels for Diersoort and DierGeslacht,
+   * and mapping J/N indicators to booleans.
+   * @default false
+   */
+  enrichResponse?: boolean
+}
+
+/**
+ * Options for the `raadplegenDierDetails` SOAP service.
+ */
+export interface RaadplegenDierDetailsOptions {
+  selRelatienummerHouder?: string
+  selMeldingeenheid?: string
+  selDierLandcode?: string
+  selDierLevensnummer?: string
+  selDierWerknummer?: string
+  selDierSoort?: string
+  selNummerGezondheidscertificaat?: string
+  indVerblijfplaatsen?: string
+  indBuitenlandseVerblijven?: string
+  indVlaggen?: string
+  indNakomelingen?: string
+  indPaspoorten?: string
+  indMerken?: string
+  indRegistratiesEnInstanties?: string
+  indAndereDatabases?: string
+  indExportwaardigheid?: string
+  selCodeExportwaardigheid?: string
+  aantal?: number
+  /**
+   * Output format for the response.
+   * - `'xml'`: Returns the raw JavaScript object parsed from the SOAP XML.
+   * - `'json'`: Converts the response to a cleaned JSON array/object structure.
+   * @default 'xml'
+   */
+  outputFormat?: "xml" | "json"
+  /**
+   * If true, enriches the response by adding a `descriptiveValues` object
+   * containing human-readable labels for Diersoort and DierGeslacht,
+   * and mapping J/N indicators to booleans.
+   * @default false
+   */
+  enrichResponse?: boolean
+}
+
+export type RaadplegenDierenResponse = any
+export type RaadplegenDierDetailsResponse = any

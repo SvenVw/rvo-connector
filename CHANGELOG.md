@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-08-04
+
+### Added
+
+- BMS (I&R): Added support for retrieving animal registrations from RVO DierenWS webservice.
+- Client: Added `raadplegenDieren(options)` method to list registered animals.
+- Client: Added `raadplegenDierDetails(options)` method to fetch extensive details (e.g. pedigree, flags/sanctions, movements, and tags) for an individual animal.
+- Configuration: Added `bmsDierenUrl` and `bmsDierenAbaUrl` overrides to `RvoClientConfig`.
+- Builders: Added SOAP builders `buildRaadplegenDierenRequest` and `buildRaadplegenDierDetailsRequest` with WS-Security support.
+- Transformers: Added XML-to-JSON transformers for DierenWS responses with automatic list normalization and XML flattening.
+- Examples: Added interactive `examples/request-dieren-tvs.ts` to showcase both new animal services in action.
+
 ## [2.2.4] - 2026-05-26
 
 ### Security

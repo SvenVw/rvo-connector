@@ -7,6 +7,10 @@ import type {
   RegelingspercelenMestResponse,
   RegelingspercelenGLBOptions,
   RegelingspercelenGLBResponse,
+  RaadplegenDierenOptions,
+  RaadplegenDierDetailsOptions,
+  RaadplegenDierenResponse,
+  RaadplegenDierDetailsResponse,
   RvoAuthTvsConfig,
   RvoTokenResponse,
 } from "./types"
@@ -16,10 +20,13 @@ import {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,
   buildRegelingspercelenGLBRequest,
+  buildRaadplegenDierenRequest,
+  buildRaadplegenDierDetailsRequest,
 } from "./soap/builder"
 import { transformBedrijfspercelenToGeoJSON } from "./transformers/bedrijfspercelen"
 import { transformRegelingspercelenMestToGeoJSON } from "./transformers/regelingspercelen-mest"
 import { transformRegelingspercelenGLBToGeoJSON } from "./transformers/regelingspercelen-glb"
+import { transformRaadplegenDieren, transformRaadplegenDierDetails } from "./transformers/dieren"
 
 // Default Endpoints for different environments
 const ENDPOINTS = {
@@ -28,12 +35,16 @@ const ENDPOINTS = {
     tvsToken: "https://pp2.toegang.overheid.nl/kvo/token",
     ediCropTvs: "https://edicrop-acc.agro.nl/edicrop/EdiCrop-WebService/v2",
     ediCropAba: "https://edicrop-acc.agro.nl/edicrop/EdiCropService",
+    bmsDierenTvs: "https://dierregister-acc.minlnv.nl/bmsservice/services/DierenWS",
+    bmsDierenAba: "https://dierregister-acc.minlnv.nl/bmsservice/services/DierenWS",
   },
   production: {
     tvsAuthorize: "https://rd2.toegang.overheid.nl/kvo/authorize",
     tvsToken: "https://rd2.toegang.overheid.nl/kvo/token",
     ediCropTvs: "https://webapplicaties.agro.nl/edicrop/EdiCrop-WebService/v2",
     ediCropAba: "https://webapplicaties.agro.nl/edicrop/EdiCropService",
+    bmsDierenTvs: "https://dierregister.minlnv.nl/bmsservice/services/DierenWS",
+    bmsDierenAba: "https://dierregister.minlnv.nl/bmsservice/services/DierenWS",
   },
 }
 
@@ -49,18 +60,24 @@ const EHERKENNING_SCOPES = {
  * - `'muterenBedrijfspercelen'`: Mutate/Update crop fields.
  * - `'opvragenRegelingspercelenMest'`: Retrieve regulation fields for manure.
  * - `'opvragenRegelingspercelenGLB'`: Retrieve regulation fields for GLB (BISS/ECO).
+ * - `'raadplegenDieren'`: Retrieve animal registrations (BMS/I&R).
+ * - `'raadplegenDierDetails'`: Retrieve animal details (BMS/I&R).
  */
 export type RvoService =
   | "opvragenBedrijfspercelen"
   | "muterenBedrijfspercelen"
   | "opvragenRegelingspercelenMest"
   | "opvragenRegelingspercelenGLB"
+  | "raadplegenDieren"
+  | "raadplegenDierDetails"
 
 const SERVICE_SCOPES: Record<RvoService, string> = {
   opvragenBedrijfspercelen: "RVO-WS.GEO.bp.lezen",
   muterenBedrijfspercelen: "RVO-WS.GEO.bp.muteren",
   opvragenRegelingspercelenMest: "RVO-WS.GEO.rp.lezen",
   opvragenRegelingspercelenGLB: "RVO-WS.GEO.rp.lezen",
+  raadplegenDieren: "RVO-WS.IenR.Raadplegen",
+  raadplegenDierDetails: "RVO-WS.IenR.Raadplegen",
 }
 
 /**
@@ -122,6 +139,8 @@ export class RvoClient {
     // Override with explicit endpoints if provided in config
     const ediCropTvsUrl = this.config.ediCropUrl || envEndpoints.ediCropTvs
     const ediCropAbaUrl = this.config.ediCropAbaUrl || envEndpoints.ediCropAba
+    const bmsDierenTvsUrl = this.config.bmsDierenUrl || envEndpoints.bmsDierenTvs
+    const bmsDierenAbaUrl = this.config.bmsDierenAbaUrl || envEndpoints.bmsDierenAba
 
     // Configure TVS Auth
     if (this.config.authMode === "TVS") {
@@ -151,6 +170,8 @@ export class RvoClient {
     // Update config with resolved URLs for internal use
     this.config.ediCropUrl = ediCropTvsUrl
     this.config.ediCropAbaUrl = ediCropAbaUrl
+    this.config.bmsDierenUrl = bmsDierenTvsUrl
+    this.config.bmsDierenAbaUrl = bmsDierenAbaUrl
   }
 
   // --- Auth Methods (TVS) ---
@@ -315,6 +336,64 @@ export class RvoClient {
   }
 
   /**
+   * Calls the `raadplegenDieren` SOAP service.
+   * Retrieves animal registrations (BMS/I&R) for a farm.
+   *
+   * @param options Parameters for the query.
+   * @returns A promise resolving to the parsed response or cleaned JSON.
+   */
+  public async raadplegenDieren(
+    options: RaadplegenDierenOptions,
+  ): Promise<RaadplegenDierenResponse> {
+    this.validateAuth()
+    const isTvs = this.config.authMode === "TVS"
+
+    const soapXml = buildRaadplegenDierenRequest({
+      ...options,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+    })
+
+    const url = isTvs ? this.config.bmsDierenUrl! : this.config.bmsDierenAbaUrl!
+
+    return this.executeSoapRequest<RaadplegenDierenResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformRaadplegenDieren(result, { enrichResponse: options.enrichResponse }),
+      url,
+    )
+  }
+
+  /**
+   * Calls the `raadplegenDierDetails` SOAP service.
+   * Retrieves detailed animal registrations (BMS/I&R) for a farm.
+   *
+   * @param options Parameters for the query.
+   * @returns A promise resolving to the parsed response or cleaned JSON.
+   */
+  public async raadplegenDierDetails(
+    options: RaadplegenDierDetailsOptions,
+  ): Promise<RaadplegenDierDetailsResponse> {
+    this.validateAuth()
+    const isTvs = this.config.authMode === "TVS"
+
+    const soapXml = buildRaadplegenDierDetailsRequest({
+      ...options,
+      abaCredentials: isTvs ? undefined : this.config.aba,
+    })
+
+    const url = isTvs ? this.config.bmsDierenUrl! : this.config.bmsDierenAbaUrl!
+
+    return this.executeSoapRequest<RaadplegenDierDetailsResponse>(
+      soapXml,
+      options.outputFormat,
+      (result: unknown) =>
+        transformRaadplegenDierDetails(result, { enrichResponse: options.enrichResponse }),
+      url,
+    )
+  }
+
+  /**
    * Validates that the current configuration and state are sufficient for an API call.
    */
   private validateAuth(): void {
@@ -334,17 +413,19 @@ export class RvoClient {
    * Executes a SOAP request, handling authentication, timeouts, and XML parsing.
    *
    * @param soapXml The complete SOAP XML request body.
-   * @param outputFormat Preferred output format (xml or geojson).
-   * @param transformer Function to convert parsed XML to GeoJSON.
-   * @returns A promise resolving to the parsed XML result or transformed GeoJSON.
+   * @param outputFormat Preferred output format (xml, geojson, or json).
+   * @param transformer Function to convert parsed XML to GeoJSON or clean JSON.
+   * @param customUrl Optional custom endpoint URL.
+   * @returns A promise resolving to the parsed XML result or transformed output.
    */
   private async executeSoapRequest<TResult>(
     soapXml: string,
-    outputFormat?: "xml" | "geojson",
+    outputFormat?: "xml" | "geojson" | "json",
     transformer?: (result: unknown) => TResult,
+    customUrl?: string,
   ): Promise<TResult> {
     const isTvs = this.config.authMode === "TVS"
-    const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!
+    const url = customUrl || (isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!)
 
     const headers: Record<string, string> = {
       "Content-Type": "text/xml; charset=utf-8",
@@ -391,9 +472,10 @@ export class RvoClient {
     })
     const result = (await parser.parseStringPromise(responseText)) as unknown
 
-    if (outputFormat === "geojson") {
+    if (outputFormat === "geojson" || outputFormat === "json") {
       if (!transformer) {
-        throw new Error("GeoJSON output requested but no transformer was provided.")
+        const fmt = outputFormat === "geojson" ? "GeoJSON" : "JSON"
+        throw new Error(`${fmt} output requested but no transformer was provided.`)
       }
       return transformer(result)
     }
