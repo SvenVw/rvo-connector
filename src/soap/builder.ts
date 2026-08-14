@@ -265,3 +265,233 @@ export function buildRegelingspercelenGLBRequest(
     messageType: "CRPRQRG",
   })
 }
+
+/**
+ * Parameters required to build the SOAP request for BMS (I&R) webservices.
+ */
+export interface BmsSoapRequestParams {
+  abaCredentials?: {
+    username: string
+    password?: string
+  }
+}
+
+/**
+ * Helper to construct the SOAP envelope for BMS webservices.
+ */
+function buildBmsEnvelope(params: BmsSoapRequestParams, bodyXml: string): string {
+  let headerXml = ""
+  if (params.abaCredentials) {
+    headerXml = `
+ <soapenv:Header>
+   <Security xmlns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+    <UsernameToken>
+        <Username>${escapeXml(params.abaCredentials.username)}</Username>
+        <Password>${escapeXml(params.abaCredentials.password || "")}</Password>
+    </UsernameToken>
+   </Security>
+</soapenv:Header>`
+  }
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:dier="http://www.ienr.org/schemas/types/dieren_v3_0">
+${headerXml}
+  <soapenv:Body>
+${bodyXml}
+  </soapenv:Body>
+</soapenv:Envelope>`
+}
+
+/**
+ * Parameters required to build the SOAP request for RaadplegenDieren.
+ */
+export interface RaadplegenDierenRequestParams extends BmsSoapRequestParams {
+  selDierSoort?: string
+  selDierLandcode?: string
+  selDierLevensnummer?: string
+  selRelatienummerHouder: string
+  selMeldingeenheid: string
+  selDierOorspronkelijkeID?: string
+  selPeilDatum?: string
+  selPeilDatumHoog?: string
+  selDierWerknummer?: string
+  selDierWerknummerHoog?: string
+  selMoederLandcode?: string
+  selMoederLevensnummer?: string
+  selGeboorteDatumLaag?: string
+  selGeboorteDatumHoog?: string
+  selDierGeslacht?: string
+  selVlagsoortCodeReden?: string
+  indDierMetVlagOverslaan?: string
+  indExportwaardigheid?: string
+  selCodeExportwaardigheid?: string
+  aantal?: number
+}
+
+/**
+ * Constructs the SOAP XML string for the RaadplegenDieren request.
+ */
+export function buildRaadplegenDierenRequest(params: RaadplegenDierenRequestParams): string {
+  const messageId = randomUUID().substring(0, 20) // requestID is CHAR 20
+
+  let bodyXml = `    <dier:raadplegenDieren>
+      <dier:requestID>${escapeXml(messageId)}</dier:requestID>`
+
+  if (params.selDierSoort) {
+    bodyXml += `\n      <dier:selDierSoort>${escapeXml(params.selDierSoort)}</dier:selDierSoort>`
+  }
+  if (params.selDierLandcode) {
+    bodyXml += `\n      <dier:selDierLandcode>${escapeXml(params.selDierLandcode)}</dier:selDierLandcode>`
+  }
+  if (params.selDierLevensnummer) {
+    bodyXml += `\n      <dier:selDierLevensnummer>${escapeXml(params.selDierLevensnummer)}</dier:selDierLevensnummer>`
+  }
+
+  bodyXml += `\n      <dier:selRelatienummerHouder>${escapeXml(params.selRelatienummerHouder)}</dier:selRelatienummerHouder>`
+  bodyXml += `\n      <dier:selMeldingeenheid>${escapeXml(params.selMeldingeenheid)}</dier:selMeldingeenheid>`
+
+  if (params.selDierOorspronkelijkeID) {
+    bodyXml += `\n      <dier:selDierOorspronkelijkeID>${escapeXml(params.selDierOorspronkelijkeID)}</dier:selDierOorspronkelijkeID>`
+  }
+  if (params.selPeilDatum) {
+    bodyXml += `\n      <dier:selPeilDatum>${escapeXml(params.selPeilDatum)}</dier:selPeilDatum>`
+  }
+  if (params.selPeilDatumHoog) {
+    bodyXml += `\n      <dier:selPeilDatumHoog>${escapeXml(params.selPeilDatumHoog)}</dier:selPeilDatumHoog>`
+  }
+  if (params.selDierWerknummer) {
+    bodyXml += `\n      <dier:selDierWerknummer>${escapeXml(params.selDierWerknummer)}</dier:selDierWerknummer>`
+  }
+  if (params.selDierWerknummerHoog) {
+    bodyXml += `\n      <dier:selDierWerknummerHoog>${escapeXml(params.selDierWerknummerHoog)}</dier:selDierWerknummerHoog>`
+  }
+  if (params.selMoederLandcode) {
+    bodyXml += `\n      <dier:selMoederLandcode>${escapeXml(params.selMoederLandcode)}</dier:selMoederLandcode>`
+  }
+  if (params.selMoederLevensnummer) {
+    bodyXml += `\n      <dier:selMoederLevensnummer>${escapeXml(params.selMoederLevensnummer)}</dier:selMoederLevensnummer>`
+  }
+  if (params.selGeboorteDatumLaag) {
+    bodyXml += `\n      <dier:selGeboorteDatumLaag>${escapeXml(params.selGeboorteDatumLaag)}</dier:selGeboorteDatumLaag>`
+  }
+  if (params.selGeboorteDatumHoog) {
+    bodyXml += `\n      <dier:selGeboorteDatumHoog>${escapeXml(params.selGeboorteDatumHoog)}</dier:selGeboorteDatumHoog>`
+  }
+  if (params.selDierGeslacht) {
+    bodyXml += `\n      <dier:selDierGeslacht>${escapeXml(params.selDierGeslacht)}</dier:selDierGeslacht>`
+  }
+  if (params.selVlagsoortCodeReden) {
+    bodyXml += `\n      <dier:selVlagsoortCodeReden>${escapeXml(params.selVlagsoortCodeReden)}</dier:selVlagsoortCodeReden>`
+  }
+  if (params.indDierMetVlagOverslaan) {
+    bodyXml += `\n      <dier:indDierMetVlagOverslaan>${escapeXml(params.indDierMetVlagOverslaan)}</dier:indDierMetVlagOverslaan>`
+  }
+  if (params.indExportwaardigheid) {
+    bodyXml += `\n      <dier:indExportwaardigheid>${escapeXml(params.indExportwaardigheid)}</dier:indExportwaardigheid>`
+  }
+  if (params.selCodeExportwaardigheid) {
+    bodyXml += `\n      <dier:selCodeExportwaardigheid>${escapeXml(params.selCodeExportwaardigheid)}</dier:selCodeExportwaardigheid>`
+  }
+  if (params.aantal !== undefined) {
+    bodyXml += `\n      <dier:aantal>${params.aantal}</dier:aantal>`
+  }
+
+  bodyXml += `\n    </dier:raadplegenDieren>`
+
+  return buildBmsEnvelope(params, bodyXml)
+}
+
+/**
+ * Parameters required to build the SOAP request for RaadplegenDierDetails.
+ */
+export interface RaadplegenDierDetailsRequestParams extends BmsSoapRequestParams {
+  selRelatienummerHouder?: string
+  selMeldingeenheid?: string
+  selDierLandcode?: string
+  selDierLevensnummer?: string
+  selDierWerknummer?: string
+  selDierSoort?: string
+  selNummerGezondheidscertificaat?: string
+  indVerblijfplaatsen?: string
+  indBuitenlandseVerblijven?: string
+  indVlaggen?: string
+  indNakomelingen?: string
+  indPaspoorten?: string
+  indMerken?: string
+  indRegistratiesEnInstanties?: string
+  indAndereDatabases?: string
+  indExportwaardigheid?: string
+  selCodeExportwaardigheid?: string
+  aantal?: number
+}
+
+/**
+ * Constructs the SOAP XML string for the RaadplegenDierDetails request.
+ */
+export function buildRaadplegenDierDetailsRequest(
+  params: RaadplegenDierDetailsRequestParams,
+): string {
+  const messageId = randomUUID().substring(0, 20)
+
+  let bodyXml = `    <dier:raadplegenDierDetails>
+      <dier:requestID>${escapeXml(messageId)}</dier:requestID>`
+
+  if (params.selRelatienummerHouder) {
+    bodyXml += `\n      <dier:selRelatienummerHouder>${escapeXml(params.selRelatienummerHouder)}</dier:selRelatienummerHouder>`
+  }
+  if (params.selMeldingeenheid) {
+    bodyXml += `\n      <dier:selMeldingeenheid>${escapeXml(params.selMeldingeenheid)}</dier:selMeldingeenheid>`
+  }
+  if (params.selDierLandcode) {
+    bodyXml += `\n      <dier:selDierLandcode>${escapeXml(params.selDierLandcode)}</dier:selDierLandcode>`
+  }
+  if (params.selDierLevensnummer) {
+    bodyXml += `\n      <dier:selDierLevensnummer>${escapeXml(params.selDierLevensnummer)}</dier:selDierLevensnummer>`
+  }
+  if (params.selDierWerknummer) {
+    bodyXml += `\n      <dier:selDierWerknummer>${escapeXml(params.selDierWerknummer)}</dier:selDierWerknummer>`
+  }
+  if (params.selDierSoort) {
+    bodyXml += `\n      <dier:selDierSoort>${escapeXml(params.selDierSoort)}</dier:selDierSoort>`
+  }
+  if (params.selNummerGezondheidscertificaat) {
+    bodyXml += `\n      <dier:selNummerGezondheidscertificaat>${escapeXml(params.selNummerGezondheidscertificaat)}</dier:selNummerGezondheidscertificaat>`
+  }
+  if (params.indVerblijfplaatsen) {
+    bodyXml += `\n      <dier:indVerblijfplaatsen>${escapeXml(params.indVerblijfplaatsen)}</dier:indVerblijfplaatsen>`
+  }
+  if (params.indBuitenlandseVerblijven) {
+    bodyXml += `\n      <dier:indBuitenlandseVerblijven>${escapeXml(params.indBuitenlandseVerblijven)}</dier:indBuitenlandseVerblijven>`
+  }
+  if (params.indVlaggen) {
+    bodyXml += `\n      <dier:indVlaggen>${escapeXml(params.indVlaggen)}</dier:indVlaggen>`
+  }
+  if (params.indNakomelingen) {
+    bodyXml += `\n      <dier:indNakomelingen>${escapeXml(params.indNakomelingen)}</dier:indNakomelingen>`
+  }
+  if (params.indPaspoorten) {
+    bodyXml += `\n      <dier:indPaspoorten>${escapeXml(params.indPaspoorten)}</dier:indPaspoorten>`
+  }
+  if (params.indMerken) {
+    bodyXml += `\n      <dier:indMerken>${escapeXml(params.indMerken)}</dier:indMerken>`
+  }
+  if (params.indRegistratiesEnInstanties) {
+    bodyXml += `\n      <dier:indRegistratiesEnInstanties>${escapeXml(params.indRegistratiesEnInstanties)}</dier:indRegistratiesEnInstanties>`
+  }
+  if (params.indAndereDatabases) {
+    bodyXml += `\n      <dier:indAndereDatabases>${escapeXml(params.indAndereDatabases)}</dier:indAndereDatabases>`
+  }
+  if (params.indExportwaardigheid) {
+    bodyXml += `\n      <dier:indExportwaardigheid>${escapeXml(params.indExportwaardigheid)}</dier:indExportwaardigheid>`
+  }
+  if (params.selCodeExportwaardigheid) {
+    bodyXml += `\n      <dier:selCodeExportwaardigheid>${escapeXml(params.selCodeExportwaardigheid)}</dier:selCodeExportwaardigheid>`
+  }
+  if (params.aantal !== undefined) {
+    bodyXml += `\n      <dier:aantal>${params.aantal}</dier:aantal>`
+  }
+
+  bodyXml += `\n    </dier:raadplegenDierDetails>`
+
+  return buildBmsEnvelope(params, bodyXml)
+}

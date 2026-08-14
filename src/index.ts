@@ -11,6 +11,8 @@ export { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
 export {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,
+  buildRaadplegenDierenRequest,
+  buildRaadplegenDierDetailsRequest,
   type SoapRequestParams,
   type RegelingspercelenMestRequestParams,
 } from "./soap/builder"

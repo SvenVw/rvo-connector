@@ -654,5 +654,19 @@
     "7135": "riet in een subsidiabele sloot",
     "7137": "bonen, overig",
     "7138": "palmkool"
+  },
+  "Diersoort": {
+    "1": "Rund",
+    "2": "Varken",
+    "3": "Schaap",
+    "4": "Geit",
+    "7": "Gezelschapsdieren",
+    "10": "Huisdieren",
+    "11": "Hond"
+  },
+  "DierGeslacht": {
+    "V": "Vrouwelijk",
+    "M": "Mannelijk",
+    "O": "Onbekend"
   }
 }
