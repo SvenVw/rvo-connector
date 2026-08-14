@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.2.5] - 2026-08-14
 
+### Changed
+
+- Tooling: Migrated build, typecheck, and linting infrastructure to TypeScript 7.
+
 ### Security
 
 - Patch for CVE-2026-13149

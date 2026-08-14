@@ -50,7 +50,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vitest --run --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ./node_modules/typescript-7/bin/tsc --noEmit",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "lint:fix-suggest": "oxlint --type-aware --fix-suggestions",
@@ -73,11 +73,12 @@
     "dotenv": "^17.4.2",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
-    "oxlint-tsgolint": "^0.23.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "tsdown": "^0.22.14",
     "tsx": "^4.23.12",
     "typedoc": "^0.28.20",
-    "typescript": "^6.0.3",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2",
     "vitest": "^4.1.10"
   },
   "engines": {
