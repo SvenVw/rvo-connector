@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
-import { RvoClient } from "../src/index"
+import { inspect } from "node:util"
+import { RvoClient, RvoRequestError } from "../src/index"
+import { MAX_BODY_BYTES, hasSoapFault, readBoundedText } from "../src/utils/safe-response"
 import "dotenv/config"
 
 global.fetch = vi.fn()
@@ -360,11 +362,15 @@ describe("RvoClient (Acceptance Environment)", () => {
       })
 
       await expect(client.opvragenBedrijfspercelen()).rejects.toThrow(
-        "Request failed: 500 - SOAP Fault",
+        expect.objectContaining({
+          kind: "http",
+          httpStatus: 500,
+          operation: "opvragenBedrijfspercelen",
+        }),
       )
     })
 
-    it("should re-throw non-AbortError fetch errors", async () => {
+    it("should map non-abort fetch errors to a safe network error", async () => {
       const client = new RvoClient({
         authMode: "ABA",
         clientId: "id",
@@ -376,7 +382,10 @@ describe("RvoClient (Acceptance Environment)", () => {
       const networkError = new Error("Network failure")
       mockFetch.mockRejectedValue(networkError)
 
-      await expect(client.opvragenBedrijfspercelen()).rejects.toThrow("Network failure")
+      await expect(client.opvragenBedrijfspercelen()).rejects.toMatchObject({
+        kind: "network",
+        operation: "opvragenBedrijfspercelen",
+      })
     })
   })
 
@@ -456,11 +465,12 @@ describe("RvoClient (Acceptance Environment)", () => {
       const mockFetch = global.fetch as any
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({
-          access_token: "new-access-token",
-          token_type: "Bearer",
-          expires_in: 3600,
-        }),
+        text: async () =>
+          JSON.stringify({
+            access_token: "new-access-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+          }),
       })
 
       const tokenData = await client.exchangeAuthCode("auth-code-123")
@@ -538,7 +548,12 @@ describe("RvoClient (Acceptance Environment)", () => {
       // We bypass the public method to hit the private executeSoapRequest branch
       // using a manual call to the private method via 'any'
       await expect(
-        (client as any).executeSoapRequest("<xml></xml>", "geojson", undefined),
+        (client as any).executeSoapRequest(
+          "opvragenBedrijfspercelen",
+          "<xml></xml>",
+          "geojson",
+          undefined,
+        ),
       ).rejects.toThrow("GeoJSON output requested but no transformer was provided.")
     })
   })
@@ -571,5 +586,327 @@ describe("RvoClient (Acceptance Environment)", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1)
       expect(result.type).toBe("FeatureCollection")
     })
+  })
+})
+
+const SENTINEL = "SECRET-SENTINEL-123"
+const mockFetch = () => global.fetch as any
+
+function expectSafe(error: unknown) {
+  expect(error).toBeInstanceOf(RvoRequestError)
+  const e = error as RvoRequestError
+  const dump = [
+    e.message,
+    JSON.stringify(e),
+    inspect(e, { depth: 5 }).split("\n    at ")[0],
+    JSON.stringify(Object.getOwnPropertyNames(e).map((k) => (e as any)[k] as unknown)),
+  ].join("\n")
+  expect(dump).not.toContain(SENTINEL)
+  expect((e as any).cause).toBeUndefined()
+  return e
+}
+
+async function capture(promise: Promise<unknown>): Promise<any> {
+  try {
+    await promise
+  } catch (error) {
+    return error
+  }
+  throw new Error("expected rejection")
+}
+
+const fault11 = `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>x</faultcode><faultstring>${SENTINEL}</faultstring><detail><description>${SENTINEL}</description></detail></soap:Fault></soap:Body></soap:Envelope>`
+const fault12 = `<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope"><env:Body><env:Fault><env:Reason><env:Text>${SENTINEL}</env:Text></env:Reason></env:Fault></env:Body></env:Envelope>`
+const okXml = `<Envelope><Body><Response><a>1</a></Response></Body></Envelope>`
+
+describe("RvoRequestError", () => {
+  it("is exported, safe and serializable", () => {
+    const e = new RvoRequestError({
+      operation: "token_exchange",
+      kind: "http",
+      httpStatus: 400,
+      oauthError: "invalid_grant",
+    })
+    expect(e).toBeInstanceOf(Error)
+    expect(e.name).toBe("RvoRequestError")
+    expect(JSON.parse(JSON.stringify(e))).toMatchObject({
+      operation: "token_exchange",
+      kind: "http",
+      httpStatus: 400,
+      oauthError: "invalid_grant",
+    })
+  })
+
+  it("drops non-allowlisted oauth values", () => {
+    const e = new RvoRequestError({
+      operation: "token_exchange",
+      kind: "http",
+      oauthError: SENTINEL as any,
+    })
+    expect(e.oauthError).toBeUndefined()
+    expect(e.message).not.toContain(SENTINEL)
+  })
+})
+
+describe("readBoundedText", () => {
+  it("reads a streamed body", async () => {
+    const result = await readBoundedText(new Response("héllo"))
+    expect(result).toEqual({ text: "héllo", oversized: false })
+  })
+
+  it("flags an oversized streamed body without returning content", async () => {
+    const result = await readBoundedText(new Response("x".repeat(MAX_BODY_BYTES + 1)))
+    expect(result).toEqual({ text: "", oversized: true })
+  })
+
+  it("accepts a body of exactly the limit", async () => {
+    const result = await readBoundedText(new Response("x".repeat(MAX_BODY_BYTES)))
+    expect(result.oversized).toBe(false)
+  })
+
+  it("falls back to text() when there is no stream", async () => {
+    const small = await readBoundedText({ text: async () => "abc" } as unknown as Response)
+    expect(small).toEqual({ text: "abc", oversized: false })
+
+    const big = await readBoundedText({
+      text: async () => "x".repeat(MAX_BODY_BYTES + 1),
+    } as unknown as Response)
+    expect(big).toEqual({ text: "", oversized: true })
+  })
+})
+
+describe("hasSoapFault", () => {
+  it.each([
+    [undefined],
+    ["text"],
+    [{}],
+    [{ Envelope: "x" }],
+    [{ Envelope: {} }],
+    [{ Envelope: { Body: "x" } }],
+    [{ Envelope: { Body: { Response: {} } } }],
+  ])("returns false for %j", (value) => {
+    expect(hasSoapFault(value)).toBe(false)
+  })
+
+  it("returns true for a Fault", () => {
+    expect(hasSoapFault({ Envelope: { Body: { Fault: "" } } })).toBe(true)
+  })
+})
+
+describe("RvoRequestError edge cases", () => {
+  it("omits invalid numeric input and unknown kinds fall back to a safe message", () => {
+    const e = new RvoRequestError({
+      operation: "opvragenBedrijfspercelen",
+      kind: "timeout",
+      httpStatus: 1.5,
+      timeoutMs: Number.NaN,
+    })
+    expect(e.httpStatus).toBeUndefined()
+    expect(e.timeoutMs).toBeUndefined()
+    expect(e.message).toBe("Request to RVO service timed out (opvragenBedrijfspercelen)")
+    expect(JSON.parse(JSON.stringify(e)).timeoutMs).toBeUndefined()
+  })
+
+  it("includes the timeout when known", () => {
+    const e = new RvoRequestError({ operation: "token_exchange", kind: "timeout", timeoutMs: 50 })
+    expect(e.message).toContain("after 50ms")
+    expect(e.toJSON().timeoutMs).toBe(50)
+  })
+})
+
+describe("SOAP errors", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const client = () =>
+    new RvoClient({
+      authMode: "ABA",
+      clientName: "n",
+      aba: { username: "u", password: SENTINEL },
+    })
+
+  const operations = [
+    "opvragenBedrijfspercelen",
+    "opvragenRegelingspercelenMest",
+    "opvragenRegelingspercelenGLB",
+  ] as const
+
+  describe.each(operations)("%s", (operation) => {
+    const call = (options: object = {}) => (client() as any)[operation](options)
+
+    it("classifies non-2xx with a Fault as soap_fault", async () => {
+      mockFetch().mockResolvedValue({ ok: false, status: 500, text: async () => fault11 })
+      expect(expectSafe(await capture(call()))).toMatchObject({
+        operation,
+        kind: "soap_fault",
+        httpStatus: 500,
+      })
+    })
+
+    it("classifies non-2xx without a Fault as http", async () => {
+      mockFetch().mockResolvedValue({ ok: false, status: 401, text: async () => SENTINEL })
+      expect(expectSafe(await capture(call()))).toMatchObject({
+        operation,
+        kind: "http",
+        httpStatus: 401,
+      })
+    })
+
+    it.each([
+      ["1.1", fault11],
+      ["1.2", fault12],
+    ])("detects a 2xx SOAP %s Fault for every output format", async (_v, body) => {
+      for (const outputFormat of [undefined, "xml", "geojson"]) {
+        mockFetch().mockResolvedValue({ ok: true, status: 200, text: async () => body })
+        expect(expectSafe(await capture(call({ outputFormat })))).toMatchObject({
+          operation,
+          kind: "soap_fault",
+          httpStatus: 200,
+        })
+      }
+    })
+
+    it("distinguishes timeout, network, invalid xml and transform failures", async () => {
+      const timeout = new Error("t")
+      timeout.name = "AbortError"
+      mockFetch().mockRejectedValue(timeout)
+      expect(expectSafe(await capture(call())).kind).toBe("timeout")
+
+      mockFetch().mockRejectedValue(new Error(SENTINEL))
+      expect(expectSafe(await capture(call())).kind).toBe("network")
+
+      mockFetch().mockResolvedValue({ ok: true, status: 200, text: async () => `<a>${SENTINEL}` })
+      expect(expectSafe(await capture(call())).kind).toBe("invalid_response")
+
+      mockFetch().mockResolvedValue({ ok: true, status: 200, text: async () => okXml })
+      const throwing = () => {
+        throw new Error(SENTINEL)
+      }
+      const e = expectSafe(
+        await capture((client() as any).executeSoapRequest(operation, "<x/>", "geojson", throwing)),
+      )
+      expect(e).toMatchObject({ operation, kind: "invalid_response", httpStatus: 200 })
+    })
+  })
+
+  it("supports consumer migration from message parsing to typed status checks", async () => {
+    mockFetch().mockResolvedValue({ ok: false, status: 401, text: async () => SENTINEL })
+    const error = await capture(client().opvragenBedrijfspercelen())
+    const isUpstreamDenial =
+      error instanceof RvoRequestError && (error.httpStatus === 401 || error.httpStatus === 403)
+    expect(isUpstreamDenial).toBe(true)
+  })
+
+  it("does not write application logs", async () => {
+    const spies = (["log", "warn", "error", "info", "debug"] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation(() => undefined),
+    )
+    mockFetch().mockResolvedValue({ ok: false, status: 500, text: async () => fault11 })
+    await capture(client().opvragenBedrijfspercelen())
+    spies.forEach((s) => {
+      expect(s).not.toHaveBeenCalled()
+      s.mockRestore()
+    })
+  })
+})
+
+describe("SOAP body handling edge cases", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const client = () =>
+    new RvoClient({ authMode: "ABA", clientName: "n", aba: { username: "u", password: "p" } })
+
+  it("maps a timeout while reading the body", async () => {
+    const error = new Error("x")
+    error.name = "TimeoutError"
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => {
+        throw error
+      },
+    })
+    const e = await capture(client().opvragenBedrijfspercelen())
+    expect(e).toMatchObject({ kind: "timeout", operation: "opvragenBedrijfspercelen" })
+  })
+
+  it("maps other failures while reading the body to network", async () => {
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => {
+        throw new Error("boom")
+      },
+    })
+    const e = await capture(client().opvragenBedrijfspercelen())
+    expect(e).toMatchObject({ kind: "network" })
+  })
+
+  it("maps a non-Error rejection to network", async () => {
+    mockFetch().mockRejectedValue("boom")
+    const e = await capture(client().opvragenBedrijfspercelen())
+    expect(e).toMatchObject({ kind: "network" })
+  })
+
+  it.each([
+    [true, "invalid_response"],
+    [false, "http"],
+  ])("handles an oversized body (ok=%s)", async (ok, kind) => {
+    mockFetch().mockResolvedValue({
+      ok,
+      status: ok ? 200 : 503,
+      text: async () => "x".repeat(MAX_BODY_BYTES + 1),
+    })
+    const e = await capture(client().opvragenBedrijfspercelen())
+    expect(e).toMatchObject({ kind, httpStatus: ok ? 200 : 503 })
+  })
+
+  it("returns parsed XML for a successful default request", async () => {
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "<Envelope><Body><R>1</R></Body></Envelope>",
+    })
+    await expect(client().opvragenBedrijfspercelen()).resolves.toEqual({
+      Envelope: { Body: { R: "1" } },
+    })
+  })
+
+  it("returns GeoJSON from a successful transform", async () => {
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "<Envelope><Body><R>1</R></Body></Envelope>",
+    })
+    const out = await (client() as any).executeSoapRequest(
+      "opvragenBedrijfspercelen",
+      "<x/>",
+      "geojson",
+      () => "transformed",
+    )
+    expect(out).toBe("transformed")
+  })
+})
+
+
+describe("SOAP non-Error body rejection", () => {
+  it("maps a non-Error rejection while reading the body to network", async () => {
+    const client = new RvoClient({ authMode: "ABA", clientName: "n", aba: { username: "u", password: "p" } })
+    mockFetch().mockResolvedValue({ ok: true, status: 200, text: async () => { throw "boom" } })
+    expect((await capture(client.opvragenBedrijfspercelen())).kind).toBe("network")
+  })
+})
+
+describe("stream edge cases", () => {
+  it("ignores a failing cancel on an oversized stream", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new Uint8Array(MAX_BODY_BYTES + 1))
+      },
+      cancel() {
+        throw new Error("cancel failed")
+      },
+    })
+    const result = await readBoundedText(new Response(stream))
+    expect(result).toEqual({ text: "", oversized: true })
   })
 })

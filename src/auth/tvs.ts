@@ -2,6 +2,35 @@ import { randomUUID } from "node:crypto"
 import jwt from "jsonwebtoken"
 import type { RvoAuthTvsConfig, RvoTokenResponse } from "../types"
 import { DEFAULT_REQUEST_TIMEOUT_MS } from "../utils/constants"
+import { RvoRequestError, isOAuthErrorCode, type OAuthErrorCode } from "../errors"
+import { readBoundedText } from "../utils/safe-response"
+
+function extractOAuthError(text: string): OAuthErrorCode | undefined {
+  try {
+    const parsed: unknown = JSON.parse(text)
+    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+      const code = (parsed as Record<string, unknown>).error
+      return isOAuthErrorCode(code) ? code : undefined
+    }
+  } catch {
+    // Not JSON: only the HTTP status is reported.
+  }
+  return undefined
+}
+
+function parseTokenResponse(text: string): RvoTokenResponse | undefined {
+  try {
+    const parsed: unknown = JSON.parse(text)
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined
+    const token = parsed as Record<string, unknown>
+    if (typeof token.access_token !== "string" || token.access_token === "") return undefined
+    if (token.token_type !== undefined && typeof token.token_type !== "string") return undefined
+    if (token.expires_in !== undefined && typeof token.expires_in !== "number") return undefined
+    return token as unknown as RvoTokenResponse
+  } catch {
+    return undefined
+  }
+}
 
 /**
  * Handles TVS (Routeringsdienst TVS4) / OAuth 2.0 authentication with eHerkenning.
@@ -86,6 +115,7 @@ export class TvsAuth {
 
     const signal = this.timeoutMs > 0 ? AbortSignal.timeout(this.timeoutMs) : undefined
 
+    const operation = "token_exchange" as const
     try {
       const response = await fetch(tokenEndpoint, {
         method: "POST",
@@ -96,17 +126,33 @@ export class TvsAuth {
         signal,
       })
 
+      const { text, oversized } = await readBoundedText(response)
+
       if (!response.ok) {
-        const errorBody = await response.text()
-        throw new Error(`Failed to obtain access token: ${response.status} ${errorBody}`)
+        throw new RvoRequestError({
+          operation,
+          kind: "http",
+          httpStatus: response.status,
+          oauthError: oversized ? undefined : extractOAuthError(text),
+        })
       }
 
-      return (await response.json()) as RvoTokenResponse
-    } catch (error: any) {
-      if (error.name === "TimeoutError" || error.name === "AbortError") {
-        throw new Error(`Request to token endpoint timed out after ${this.timeoutMs}ms`)
+      const token = oversized ? undefined : parseTokenResponse(text)
+      if (!token) {
+        throw new RvoRequestError({
+          operation,
+          kind: "invalid_response",
+          httpStatus: response.status,
+        })
       }
-      throw error
+      return token
+    } catch (error: unknown) {
+      if (error instanceof RvoRequestError) throw error
+      const name = error instanceof Error ? error.name : undefined
+      if (name === "TimeoutError" || name === "AbortError") {
+        throw new RvoRequestError({ operation, kind: "timeout", timeoutMs: this.timeoutMs })
+      }
+      throw new RvoRequestError({ operation, kind: "network" })
     }
   }
 
