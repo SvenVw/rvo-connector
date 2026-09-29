@@ -302,7 +302,6 @@ describe("token exchange errors", () => {
   })
 })
 
-
 describe("token response edge cases", () => {
   beforeEach(() => vi.clearAllMocks())
 
@@ -321,7 +320,11 @@ describe("token response edge cases", () => {
     ["null success body", true, "null"],
     ["empty access_token", true, JSON.stringify({ access_token: "" })],
     ["bad token_type", true, JSON.stringify({ access_token: "a", token_type: 1 })],
-    ["bad expires_in", true, JSON.stringify({ access_token: "a", expires_in: "3600" })],
+    [
+      "bad expires_in",
+      true,
+      JSON.stringify({ access_token: "a", token_type: "Bearer", expires_in: "3600" }),
+    ],
   ])("handles %s", async (_name, ok, body) => {
     mockFetch().mockResolvedValue({ ok, status: ok ? 200 : 400, text: async () => body })
     const e = await capture(run())
@@ -343,12 +346,47 @@ describe("token response edge cases", () => {
     mockFetch().mockResolvedValue({
       ok: true,
       status: 200,
+      text: async () => JSON.stringify({ access_token: "a", token_type: "Bearer" }),
+    })
+    await expect(run()).resolves.toEqual({ access_token: "a", token_type: "Bearer" })
+  })
+
+  it("rejects a token response without token_type", async () => {
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
       text: async () => JSON.stringify({ access_token: "a" }),
     })
-    await expect(run()).resolves.toEqual({ access_token: "a" })
+    expect((await capture(run())).kind).toBe("invalid_response")
+  })
+
+  it.each([
+    [true, "network", 200],
+    [false, "http", 502],
+  ])("keeps the status when reading the body fails (ok=%s)", async (ok, kind, status) => {
+    mockFetch().mockResolvedValue({
+      ok,
+      status,
+      text: async () => {
+        throw new Error("boom")
+      },
+    })
+    expect(await capture(run())).toMatchObject({ kind, httpStatus: status })
+  })
+
+  it("keeps the status when reading the body times out", async () => {
+    const err = new Error("t")
+    err.name = "TimeoutError"
+    mockFetch().mockResolvedValue({
+      ok: false,
+      status: 504,
+      text: async () => {
+        throw err
+      },
+    })
+    expect(await capture(run())).toMatchObject({ kind: "timeout", httpStatus: 504 })
   })
 })
-
 
 describe("TvsAuth non-Error rejection", () => {
   it("maps a non-Error rejection to network", async () => {

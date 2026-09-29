@@ -78,9 +78,11 @@ export class RvoRequestError extends Error {
   ): string {
     const target = operation === "token_exchange" ? "token endpoint" : "RVO service"
     const status = httpStatus !== undefined ? ` (HTTP ${httpStatus})` : ""
+    const after = timeoutMs !== undefined ? ` after ${timeoutMs}ms` : ""
+    const code = oauthError ? `: ${oauthError}` : ""
     switch (kind) {
       case "timeout":
-        return `Request to ${target} timed out${timeoutMs !== undefined ? ` after ${timeoutMs}ms` : ""} (${operation})`
+        return `Request to ${target} timed out${after} (${operation})`
       case "network":
         return `Network error while calling ${target} (${operation})`
       case "invalid_response":
@@ -88,7 +90,7 @@ export class RvoRequestError extends Error {
       case "soap_fault":
         return `SOAP fault returned by ${target} (${operation})${status}`
       default:
-        return `Request to ${target} failed (${operation})${status}${oauthError ? `: ${oauthError}` : ""}`
+        return `Request to ${target} failed (${operation})${status}${code}`
     }
   }
 

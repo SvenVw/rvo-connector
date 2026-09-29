@@ -24,7 +24,7 @@ function parseTokenResponse(text: string): RvoTokenResponse | undefined {
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined
     const token = parsed as Record<string, unknown>
     if (typeof token.access_token !== "string" || token.access_token === "") return undefined
-    if (token.token_type !== undefined && typeof token.token_type !== "string") return undefined
+    if (typeof token.token_type !== "string") return undefined
     if (token.expires_in !== undefined && typeof token.expires_in !== "number") return undefined
     return token as unknown as RvoTokenResponse
   } catch {
@@ -126,7 +126,26 @@ export class TvsAuth {
         signal,
       })
 
-      const { text, oversized } = await readBoundedText(response)
+      let text: string
+      let oversized: boolean
+      try {
+        ;({ text, oversized } = await readBoundedText(response))
+      } catch (readError: unknown) {
+        const readName = readError instanceof Error ? readError.name : undefined
+        if (readName === "TimeoutError" || readName === "AbortError") {
+          throw new RvoRequestError({
+            operation,
+            kind: "timeout",
+            httpStatus: response.status,
+            timeoutMs: this.timeoutMs,
+          })
+        }
+        throw new RvoRequestError({
+          operation,
+          kind: response.ok ? "network" : "http",
+          httpStatus: response.status,
+        })
+      }
 
       if (!response.ok) {
         throw new RvoRequestError({

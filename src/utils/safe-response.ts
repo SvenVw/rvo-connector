@@ -29,7 +29,8 @@ export async function readBoundedText(response: Response): Promise<BoundedBody> 
   }
 
   const text = await response.text()
-  if (text.length > MAX_BODY_BYTES) return { text: "", oversized: true }
+  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES)
+    return { text: "", oversized: true }
   return { text, oversized: false }
 }
 

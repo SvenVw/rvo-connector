@@ -664,6 +664,13 @@ describe("readBoundedText", () => {
     expect(result.oversized).toBe(false)
   })
 
+  it("measures the fallback size in UTF-8 bytes", async () => {
+    const multibyte = "é".repeat(MAX_BODY_BYTES / 2 + 1)
+    expect(multibyte.length).toBeLessThan(MAX_BODY_BYTES)
+    const result = await readBoundedText({ text: async () => multibyte } as unknown as Response)
+    expect(result).toEqual({ text: "", oversized: true })
+  })
+
   it("falls back to text() when there is no stream", async () => {
     const small = await readBoundedText({ text: async () => "abc" } as unknown as Response)
     expect(small).toEqual({ text: "abc", oversized: false })
@@ -826,7 +833,11 @@ describe("SOAP body handling edge cases", () => {
       },
     })
     const e = await capture(client().opvragenBedrijfspercelen())
-    expect(e).toMatchObject({ kind: "timeout", operation: "opvragenBedrijfspercelen" })
+    expect(e).toMatchObject({
+      kind: "timeout",
+      operation: "opvragenBedrijfspercelen",
+      httpStatus: 200,
+    })
   })
 
   it("maps other failures while reading the body to network", async () => {
@@ -838,7 +849,19 @@ describe("SOAP body handling edge cases", () => {
       },
     })
     const e = await capture(client().opvragenBedrijfspercelen())
-    expect(e).toMatchObject({ kind: "network" })
+    expect(e).toMatchObject({ kind: "network", httpStatus: 200 })
+  })
+
+  it("classifies a body read failure on a non-OK response as http", async () => {
+    mockFetch().mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => {
+        throw new Error("boom")
+      },
+    })
+    const e = await capture(client().opvragenBedrijfspercelen())
+    expect(e).toMatchObject({ kind: "http", httpStatus: 502 })
   })
 
   it("maps a non-Error rejection to network", async () => {
@@ -887,11 +910,20 @@ describe("SOAP body handling edge cases", () => {
   })
 })
 
-
 describe("SOAP non-Error body rejection", () => {
   it("maps a non-Error rejection while reading the body to network", async () => {
-    const client = new RvoClient({ authMode: "ABA", clientName: "n", aba: { username: "u", password: "p" } })
-    mockFetch().mockResolvedValue({ ok: true, status: 200, text: async () => { throw "boom" } })
+    const client = new RvoClient({
+      authMode: "ABA",
+      clientName: "n",
+      aba: { username: "u", password: "p" },
+    })
+    mockFetch().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => {
+        throw "boom"
+      },
+    })
     expect((await capture(client.opvragenBedrijfspercelen())).kind).toBe("network")
   })
 })

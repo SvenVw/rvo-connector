@@ -593,7 +593,7 @@ export interface RvoTokenResponse {
   /**
    * Token expiration time in seconds.
    */
-  expires_in: number
+  expires_in?: number
   /**
    * The refresh token (if provided by RVO).
    * Note: Not all flows or environments provide a refresh token.
