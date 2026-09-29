@@ -9,6 +9,14 @@ export * from "./types"
 export * from "./client"
 export { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
 export {
+  RvoRequestError,
+  OAUTH_ERROR_CODES,
+  type RvoOperation,
+  type RvoErrorKind,
+  type OAuthErrorCode,
+  type RvoRequestErrorInit,
+} from "./errors"
+export {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,
   type SoapRequestParams,

@@ -12,6 +12,26 @@ import type {
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
 import { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
+import { RvoRequestError, type RvoOperation } from "./errors"
+import { hasSoapFault, readBoundedText, type BoundedBody } from "./utils/safe-response"
+
+type SoapOperation = Exclude<RvoOperation, "token_exchange">
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
+}
+
+async function parseXml(text: string): Promise<{ result?: unknown; parseFailed: boolean }> {
+  const parser = new xml2js.Parser({
+    explicitArray: false,
+    tagNameProcessors: [xml2js.processors.stripPrefix],
+  })
+  try {
+    return { result: (await parser.parseStringPromise(text)) as unknown, parseFailed: false }
+  } catch {
+    return { parseFailed: true }
+  }
+}
 import {
   buildBedrijfspercelenRequest,
   buildRegelingspercelenMestRequest,
@@ -241,6 +261,7 @@ export class RvoClient {
     })
 
     return this.executeSoapRequest<BedrijfspercelenResponse>(
+      "opvragenBedrijfspercelen",
       soapXml,
       options.outputFormat,
       (result: unknown) =>
@@ -274,6 +295,7 @@ export class RvoClient {
     })
 
     return this.executeSoapRequest<RegelingspercelenMestResponse>(
+      "opvragenRegelingspercelenMest",
       soapXml,
       options.outputFormat,
       (result: unknown) =>
@@ -307,6 +329,7 @@ export class RvoClient {
     })
 
     return this.executeSoapRequest<RegelingspercelenGLBResponse>(
+      "opvragenRegelingspercelenGLB",
       soapXml,
       options.outputFormat,
       (result: unknown) =>
@@ -339,6 +362,7 @@ export class RvoClient {
    * @returns A promise resolving to the parsed XML result or transformed GeoJSON.
    */
   private async executeSoapRequest<TResult>(
+    operation: SoapOperation,
     soapXml: string,
     outputFormat?: "xml" | "geojson",
     transformer?: (result: unknown) => TResult,
@@ -359,45 +383,85 @@ export class RvoClient {
 
     let response: Response
     try {
-      response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: soapXml,
-        signal,
-      })
+      response = await fetch(url, { method: "POST", headers, body: soapXml, signal })
     } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        (error.name === "TimeoutError" || error.name === "AbortError")
-      ) {
-        throw new Error(`Request to RVO service timed out after ${timeout}ms`)
-      }
-      throw error
+      throw new RvoRequestError(
+        isTimeoutError(error)
+          ? { operation, kind: "timeout", timeoutMs: timeout }
+          : { operation, kind: "network" },
+      )
     }
 
-    const responseText = await response.text()
+    const { text: responseText, oversized } = await this.readSoapBody(operation, response, timeout)
+    const httpStatus = response.status
+
+    if (oversized) {
+      throw new RvoRequestError({
+        operation,
+        kind: response.ok ? "invalid_response" : "http",
+        httpStatus,
+      })
+    }
+
+    const { result, parseFailed } = await parseXml(responseText)
+
+    if (!parseFailed && hasSoapFault(result)) {
+      throw new RvoRequestError({ operation, kind: "soap_fault", httpStatus })
+    }
 
     if (!response.ok) {
-      throw new Error(`Request failed: ${response.status} - ${responseText}`)
+      throw new RvoRequestError({ operation, kind: "http", httpStatus })
     }
 
     if (outputFormat === "xml") {
       return responseText as TResult
     }
 
-    const parser = new xml2js.Parser({
-      explicitArray: false,
-      tagNameProcessors: [xml2js.processors.stripPrefix],
-    })
-    const result = (await parser.parseStringPromise(responseText)) as unknown
+    if (parseFailed) {
+      throw new RvoRequestError({ operation, kind: "invalid_response", httpStatus })
+    }
 
     if (outputFormat === "geojson") {
-      if (!transformer) {
-        throw new Error("GeoJSON output requested but no transformer was provided.")
-      }
-      return transformer(result)
+      return this.transformResult(operation, httpStatus, result, transformer)
     }
 
     return result as TResult
+  }
+
+  /** Reads the response body, keeping the received HTTP status on failure. */
+  private async readSoapBody(
+    operation: SoapOperation,
+    response: Response,
+    timeout: number,
+  ): Promise<BoundedBody> {
+    try {
+      return await readBoundedText(response)
+    } catch (error: unknown) {
+      const httpStatus = response.status
+      if (isTimeoutError(error)) {
+        throw new RvoRequestError({ operation, kind: "timeout", httpStatus, timeoutMs: timeout })
+      }
+      throw new RvoRequestError({
+        operation,
+        kind: response.ok ? "network" : "http",
+        httpStatus,
+      })
+    }
+  }
+
+  private transformResult<TResult>(
+    operation: SoapOperation,
+    httpStatus: number,
+    result: unknown,
+    transformer?: (result: unknown) => TResult,
+  ): TResult {
+    if (!transformer) {
+      throw new Error("GeoJSON output requested but no transformer was provided.")
+    }
+    try {
+      return transformer(result)
+    } catch {
+      throw new RvoRequestError({ operation, kind: "invalid_response", httpStatus })
+    }
   }
 }

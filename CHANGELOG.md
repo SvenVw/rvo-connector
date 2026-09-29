@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0-rc.1] - UNRELEASED
+
+### Added
+
+- `RvoRequestError` with typed `operation`, `kind`, `httpStatus` and allowlisted `oauthError` fields for token and SOAP failures.
+- SOAP Faults are detected, also on HTTP 2xx responses, and reported as `soap_fault`.
+- Exported `OAUTH_ERROR_CODES` and the `RvoOperation`, `RvoErrorKind` and `OAuthErrorCode` types.
+- Documented the error contract in the README, including migration from message parsing to typed status checks.
+
+### Changed
+
+- Token and SOAP errors no longer include response bodies. Messages like `Request failed: <status> - <body>` are replaced by safe fixed messages; use the typed fields instead of parsing the message.
+- Transport, invalid XML, invalid token response and transform failures are reported as typed errors without raw exception text.
+- Token responses must include a string `token_type`; `expires_in` is optional. Failures while reading a response body keep the received `httpStatus`.
+- Response bodies inspected for errors are limited to 256 KiB; larger bodies only report the HTTP status.
+- HTTP 401 and 403 are exposed as observed (`httpStatus`) and should not be read as a confirmed missing farm mandate; EDI-Crop also returns 401 for an invalid access token.
+
 ## [2.2.5] - 2026-08-14
 
 ### Changed

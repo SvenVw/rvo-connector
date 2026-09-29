@@ -222,6 +222,36 @@ const abaClient = new RvoClient({
 await abaClient.opvragenBedrijfspercelen({ ... });
 ```
 
+## Error Handling
+
+Failed OAuth token exchanges and SOAP requests throw an `RvoRequestError`. Its message and fields are safe to log or show: they never contain response bodies, SOAP fault details, URLs, credentials or underlying exceptions. The connector itself does not log; callers decide what to log.
+
+| Field        | Description                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `operation`  | `token_exchange`, `opvragenBedrijfspercelen`, `opvragenRegelingspercelenMest` or `opvragenRegelingspercelenGLB`                                                                                              |
+| `kind`       | `http`, `soap_fault`, `timeout`, `network` or `invalid_response`                                                                                                                                             |
+| `httpStatus` | HTTP status as observed, when a response was received                                                                                                                                                        |
+| `oauthError` | Only for token errors: one of `invalid_request`, `invalid_client`, `invalid_grant`, `unauthorized_client`, `unsupported_grant_type`, `invalid_scope` (RFC 6749 section 5.2). Any other value is not exposed. |
+
+A SOAP Fault is reported as `soap_fault` even when the HTTP status is 2xx. The Fault content (`faultstring`, `detail`, EDI-Crop `code` and `description`) is never included.
+
+```typescript
+import { RvoRequestError } from "@nmi-agro/rvo-connector"
+
+try {
+  await client.opvragenBedrijfspercelen()
+} catch (error) {
+  if (error instanceof RvoRequestError) {
+    if (error.kind === "http" && error.httpStatus === 401) {
+      // RVO rejected the request. This is not proof of a missing farm mandate:
+      // EDI-Crop also returns 401 for an invalid access token.
+    }
+  }
+}
+```
+
+Migrating: messages such as `Request failed: <status> - <body>` and `Failed to obtain access token: <status> <body>` no longer exist. Replace regular expressions on the message with checks on `error.httpStatus`, `error.kind` and `error.oauthError`. Configuration errors (missing token, invalid key) remain plain `Error`.
+
 ## Examples
 
 This project includes example scripts to demonstrate how to connect to RVO services using both ABA and TVS authentication.
