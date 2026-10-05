@@ -88,6 +88,14 @@ export interface AuthUrlOptions {
   state?: string
 }
 
+/** Replaces the ABA password in a SOAP request so it can be logged safely. */
+function redactSoapXml(xml: string): string {
+  return xml.replace(
+    /(<(?:[\w-]+:)?Password\b[^>]*>)[\s\S]*?(<\/(?:[\w-]+:)?Password>)/g,
+    "$1***$2",
+  )
+}
+
 /**
  * The main client for interacting with RVO webservices.
  * Handles authentication (ABA or TVS/eHerkenning) and SOAP request execution.
@@ -109,7 +117,12 @@ export class RvoClient {
     this.config = {
       authMode: "TVS", // Default authentication mode
       environment: "acceptance", // Default environment
+      logXml: "none", // Default: no XML logging
       ...config,
+    }
+
+    if (!["none", "request", "response", "both"].includes(this.config.logXml as string)) {
+      throw new Error('logXml must be one of "none", "request", "response" or "both".')
     }
 
     if (this.config.requestTimeoutMs !== undefined && this.config.requestTimeoutMs < 0) {
@@ -357,6 +370,11 @@ export class RvoClient {
     const timeout = this.config.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS
     const signal = timeout > 0 ? AbortSignal.timeout(timeout) : undefined
 
+    const logXml = this.config.logXml
+    if (logXml === "request" || logXml === "both") {
+      console.debug(`[rvo-connector] SOAP request to ${url}:\n${redactSoapXml(soapXml)}`)
+    }
+
     let response: Response
     try {
       response = await fetch(url, {
@@ -376,6 +394,10 @@ export class RvoClient {
     }
 
     const responseText = await response.text()
+
+    if (logXml === "response" || logXml === "both") {
+      console.debug(`[rvo-connector] SOAP response (${response.status}):\n${responseText}`)
+    }
 
     if (!response.ok) {
       throw new Error(`Request failed: ${response.status} - ${responseText}`)

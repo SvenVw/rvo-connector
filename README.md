@@ -266,6 +266,7 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 | `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                          |
 | `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                                                                                   |
 | `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                                                                                   |
+| `logXml`     | `'none' \| 'request' \| 'response' \| 'both'` | Logs the SOAP XML sent to and/or received from RVO via `console.debug`. The ABA password is redacted. Defaults to `'none'`. |
 
 ### Method Options: `opvragenBedrijfspercelen`
 

@@ -92,6 +92,14 @@ export interface RvoClientConfig {
    * @default DEFAULT_REQUEST_TIMEOUT_MS (30000ms)
    */
   requestTimeoutMs?: number
+
+  /**
+   * Logs the SOAP XML sent to and/or received from RVO via `console.debug`.
+   * The ABA password in the request XML is redacted in the log.
+   * Note: logged XML may contain personal or farm data.
+   * @default "none"
+   */
+  logXml?: "none" | "request" | "response" | "both"
 }
 
 /**

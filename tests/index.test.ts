@@ -270,6 +270,81 @@ describe("RvoClient (Acceptance Environment)", () => {
     })
   })
 
+  describe("logXml", () => {
+    const makeClient = (logXml?: "none" | "request" | "response" | "both") =>
+      new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "user", password: "s3cret-pw" },
+        ...(logXml ? { logXml } : {}),
+      })
+
+    const mockResponse = (ok = true, status = 200) => {
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({ ok, status, text: async () => "<xml>response</xml>" })
+      return mockFetch
+    }
+
+    const debugMessages = (spy: any): string[] => spy.mock.calls.map((c: unknown[]) => String(c[0]))
+
+    it("should not log by default", async () => {
+      const spy = vi.spyOn(console, "debug").mockImplementation(() => {})
+      mockResponse()
+      await makeClient().opvragenBedrijfspercelen({ farmId: "12345678" })
+      expect(spy).not.toHaveBeenCalled()
+      spy.mockRestore()
+    })
+
+    it("should log only the request for 'request'", async () => {
+      const spy = vi.spyOn(console, "debug").mockImplementation(() => {})
+      mockResponse()
+      await makeClient("request").opvragenBedrijfspercelen({ farmId: "12345678" })
+      const messages = debugMessages(spy)
+      expect(messages).toHaveLength(1)
+      expect(messages[0]).toContain("SOAP request")
+      spy.mockRestore()
+    })
+
+    it("should log only the response for 'response'", async () => {
+      const spy = vi.spyOn(console, "debug").mockImplementation(() => {})
+      mockResponse()
+      await makeClient("response").opvragenBedrijfspercelen({ farmId: "12345678" })
+      const messages = debugMessages(spy)
+      expect(messages).toHaveLength(1)
+      expect(messages[0]).toContain("SOAP response (200)")
+      expect(messages[0]).toContain("<xml>response</xml>")
+      spy.mockRestore()
+    })
+
+    it("should log request and response for 'both' and redact the password", async () => {
+      const spy = vi.spyOn(console, "debug").mockImplementation(() => {})
+      const mockFetch = mockResponse()
+      await makeClient("both").opvragenBedrijfspercelen({ farmId: "12345678" })
+      const messages = debugMessages(spy)
+      expect(messages).toHaveLength(2)
+      expect(messages[0]).toContain("<Password>***</Password>")
+      expect(messages[0]).not.toContain("s3cret-pw")
+      expect(mockFetch.mock.calls[0][1].body).toContain("s3cret-pw")
+      spy.mockRestore()
+    })
+
+    it("should log the response on a non-OK status and still throw", async () => {
+      const spy = vi.spyOn(console, "debug").mockImplementation(() => {})
+      mockResponse(false, 500)
+      await expect(
+        makeClient("response").opvragenBedrijfspercelen({ farmId: "12345678" }),
+      ).rejects.toThrow("Request failed: 500")
+      expect(debugMessages(spy)[0]).toContain("SOAP response (500)")
+      spy.mockRestore()
+    })
+
+    it("should throw on an invalid logXml value", () => {
+      expect(() => makeClient("bogus" as any)).toThrow("logXml must be one of")
+    })
+  })
+
   describe("Error Handling", () => {
     it("should throw if requestTimeoutMs is negative", () => {
       expect(

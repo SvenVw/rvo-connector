@@ -1,6 +1,6 @@
 {
   "name": "@nmi-agro/rvo-connector",
-  "version": "2.2.5",
+  "version": "2.3.0",
   "description": "A client to connect to RVO webservices for agricultural information.",
   "keywords": [
     "ABA",
@@ -61,25 +61,25 @@
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.3",
-    "proj4": "^2.21.0",
+    "proj4": "^2.22.0",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.4",
     "@types/xml2js": "^0.4.14",
-    "@vitest/coverage-v8": "^4.1.10",
-    "dotenv": "^17.4.2",
-    "oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "tsdown": "^0.22.14",
-    "tsx": "^4.23.12",
+    "@vitest/coverage-v8": "^5.0.3",
+    "dotenv": "^18.0.5",
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "tsdown": "^0.23.0",
+    "tsx": "^4.23.15",
     "typedoc": "^0.28.20",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=24"

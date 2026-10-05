@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-05
+
+### Added
+
+- `logXml` client option (`'none' | 'request' | 'response' | 'both'`) to log the SOAP XML sent to and received from RVO via `console.debug`. The ABA password is redacted in the logged request.
+
+### Security
+
+- Patch for CVE-2026-53571
+- Patch for CVE-2026-84373
+- Patch for CVE-2026-53632
+
 ## [2.2.5] - 2026-08-14
 
 ### Changed
