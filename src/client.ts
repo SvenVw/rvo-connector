@@ -11,6 +11,7 @@ import type {
   RvoTokenResponse,
 } from "./types"
 import { TvsAuth } from "./auth/tvs"
+import { RvoSoapFaultError, parseSoapFault, type RvoSoapFaultContext } from "./errors"
 import { DEFAULT_REQUEST_TIMEOUT_MS } from "./utils/constants"
 import {
   buildBedrijfspercelenRequest,
@@ -258,6 +259,7 @@ export class RvoClient {
       options.outputFormat,
       (result: unknown) =>
         transformBedrijfspercelenToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+      { farmIdSent: Boolean(options.farmId) },
     )
   }
 
@@ -291,6 +293,7 @@ export class RvoClient {
       options.outputFormat,
       (result: unknown) =>
         transformRegelingspercelenMestToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+      { farmIdSent: Boolean(options.farmId) },
     )
   }
 
@@ -324,6 +327,7 @@ export class RvoClient {
       options.outputFormat,
       (result: unknown) =>
         transformRegelingspercelenGLBToGeoJSON(result, { enrichResponse: options.enrichResponse }),
+      { farmIdSent: Boolean(options.farmId) },
     )
   }
 
@@ -349,12 +353,15 @@ export class RvoClient {
    * @param soapXml The complete SOAP XML request body.
    * @param outputFormat Preferred output format (xml or geojson).
    * @param transformer Function to convert parsed XML to GeoJSON.
+   * @param faultContext Context of the request, used to explain SOAP faults.
    * @returns A promise resolving to the parsed XML result or transformed GeoJSON.
+   * @throws RvoSoapFaultError if RVO responds with a SOAP fault.
    */
   private async executeSoapRequest<TResult>(
     soapXml: string,
     outputFormat?: "xml" | "geojson",
     transformer?: (result: unknown) => TResult,
+    faultContext?: RvoSoapFaultContext,
   ): Promise<TResult> {
     const isTvs = this.config.authMode === "TVS"
     const url = isTvs ? this.config.ediCropUrl! : this.config.ediCropAbaUrl!
@@ -397,6 +404,12 @@ export class RvoClient {
 
     if (logXml === "response" || logXml === "both") {
       console.debug(`[rvo-connector] SOAP response (${response.status}):\n${responseText}`)
+    }
+
+    // RVO normally returns HTTP 500 for faults, but check regardless of the status
+    const fault = await parseSoapFault(responseText)
+    if (fault) {
+      throw new RvoSoapFaultError(fault, response.status, responseText, faultContext)
     }
 
     if (!response.ok) {

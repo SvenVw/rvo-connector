@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-10-08
+
+### Added
+
+- `RvoSoapFaultError`: SOAP faults returned by RVO are now thrown as a typed error exposing `ediCode`, `ediDescription`, `faultCode`, `faultString`, `httpStatus` and `rawResponse`. Faults are detected regardless of the HTTP status.
+- `EDI009` (Toegang geweigerd) faults get an explanatory message. When `farmId` was sent, it points out that farmers querying their own farm should omit `farmId`.
+
+### Changed
+
+- Clarified in the README, TypeDoc and example scripts that `farmId` (sent as `ThirdPartyFarmID`) is only for advisors/intermediaries with a machtiging querying another farm, and must be omitted when querying your own farm.
+- SOAP fault responses no longer throw the generic `Request failed: <status> - <body>` error. Code matching on that message should check for `RvoSoapFaultError` instead.
+
 ## [2.3.0] - 2026-10-05
 
 ### Added
