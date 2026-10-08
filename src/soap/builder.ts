@@ -48,8 +48,9 @@ export function normalizeDateTime(dateTime?: string): string | undefined {
  */
 export interface SoapRequestParams {
   /**
-   * Farm ID to query (optional).
-   * Typically a KvK, BSN, or OIN.
+   * KvK number of the farm to query on behalf of (optional), sent as `ThirdPartyFarmID`.
+   * Only for advisors/intermediaries with a machtiging at RVO; omit when the
+   * authenticated account queries its own farm.
    */
   farmId?: string
   /**

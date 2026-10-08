@@ -49,6 +49,17 @@ This library supports two authentication methods for connecting to RVO webservic
 - **Primary Use Case**: TVS is more suitable for **interactive applications** where the farmer is present and logs in to initiate a data exchange.
 - **Authorization**: The key advantage of TVS is that it simplifies authorization. By logging in with their eHerkenning credentials, the farmer provides **on-the-spot consent** for your application to access their data for that session. This removes the need for them to pre-arrange a _machtiging_ in a separate portal, making the user experience smoother.
 
+### Farmer vs. advisor: when to pass `farmId`
+
+The `farmId` option is sent to RVO as `ThirdPartyFarmID`. It is **only** meant for requesting data of a _different_ farm than the company the authenticated account (eHerkenning / ABA) belongs to.
+
+| Scenario    | Who logs in                                               | Whose data is requested                                     | `farmId`                                      |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| **Farmer**  | The farmer, with eHerkenning linked to their own KvK      | Their own farm                                              | **Omit**. RVO derives the farm from the login |
+| **Advisor** | The advisor, with eHerkenning linked to the advisor's KvK | A client's farm, for which the advisor holds a _machtiging_ | **Provide** the KvK of the client's farm      |
+
+If a farmer passes their own KvK as `farmId`, RVO rejects the request with `EDI009 – Toegang geweigerd`. See [Troubleshooting](#troubleshooting).
+
 ## Installation
 
 ```bash
@@ -140,9 +151,8 @@ Retrieve registered `Bedrijfspercelen`.
 
 ```typescript
 try {
-  // Example 1: Get raw XML response (default)
+  // Example 1: Farmer requesting their own farm, raw XML response (default)
   const result = await client.opvragenBedrijfspercelen({
-    farmId: "KVK_NUMBER",
     periodBeginDate: "2024-01-01",
     periodEndDate: "2025-01-01",
   })
@@ -150,12 +160,18 @@ try {
 
   // Example 2: Get as GeoJSON (reprojected to WGS84)
   const geoJsonResult = await client.opvragenBedrijfspercelen({
-    farmId: "KVK_NUMBER",
     outputFormat: "geojson",
     // Optional: when true, adds a descriptiveValues object with labels and booleans (only for GeoJSON)
     enrichResponse: true,
   })
   console.log("GeoJSON Data:", geoJsonResult)
+
+  // Example 3: Advisor requesting a client's farm (requires a machtiging at RVO)
+  const clientResult = await client.opvragenBedrijfspercelen({
+    farmId: "KVK_NUMBER_OF_CLIENT_FARM",
+    outputFormat: "geojson",
+  })
+  console.log("Client farm GeoJSON Data:", clientResult)
 } catch (error) {
   console.error("Error fetching Bedrijfspercelen:", error)
 }
@@ -168,7 +184,8 @@ Retrieve `Regelingspercelen Mest`. This service supports filtering by mutation d
 ```typescript
 try {
   const mestResult = await client.opvragenRegelingspercelenMest({
-    farmId: "KVK_NUMBER",
+    // Optional: only when requesting another farm on behalf of a client (advisor)
+    // farmId: "KVK_NUMBER_OF_CLIENT_FARM",
     outputFormat: "geojson",
     // Optional: when true, adds a descriptiveValues object with labels and booleans (only for GeoJSON)
     enrichResponse: true,
@@ -190,7 +207,8 @@ Retrieve `Regelingspercelen nGLB` (BISS/ECO). This service includes detailed inf
 ```typescript
 try {
   const glbResult = await client.opvragenRegelingspercelenGLB({
-    farmId: "KVK_NUMBER",
+    // Optional: only when requesting another farm on behalf of a client (advisor)
+    // farmId: "KVK_NUMBER_OF_CLIENT_FARM",
     outputFormat: "geojson",
     enrichResponse: true,
     // Optional: fetch fields for a specific period
@@ -259,24 +277,24 @@ This project includes example scripts to demonstrate how to connect to RVO servi
 
 ## Configuration Options
 
-| Option       | Type               | Description                                                                                                                          |
-| ------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `authMode`   | `'TVS' \| 'ABA'`   | Authentication method. Defaults to `'TVS'`.                                                                                          |
-| `clientId`   | `string`           | **Deprecated** (use `tvs.clientId` instead). Your organization's Client ID (e.g., OIN or KvK). Only kept for backward compatibility. |
-| `clientName` | `string`           | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                          |
-| `tvs`        | `RvoAuthTvsConfig` | Required if `authMode` is `'TVS'`.                                                                                                   |
-| `aba`        | `RvoAuthAbaConfig` | Required if `authMode` is `'ABA'`.                                                                                                   |
-| `logXml`     | `'none' \| 'request' \| 'response' \| 'both'` | Logs the SOAP XML sent to and/or received from RVO via `console.debug`. The ABA password is redacted. Defaults to `'none'`. |
+| Option       | Type                                          | Description                                                                                                                          |
+| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `authMode`   | `'TVS' \| 'ABA'`                              | Authentication method. Defaults to `'TVS'`.                                                                                          |
+| `clientId`   | `string`                                      | **Deprecated** (use `tvs.clientId` instead). Your organization's Client ID (e.g., OIN or KvK). Only kept for backward compatibility. |
+| `clientName` | `string`                                      | **Required**. Your organization's name, used for Issuer and Sender in SOAP.                                                          |
+| `tvs`        | `RvoAuthTvsConfig`                            | Required if `authMode` is `'TVS'`.                                                                                                   |
+| `aba`        | `RvoAuthAbaConfig`                            | Required if `authMode` is `'ABA'`.                                                                                                   |
+| `logXml`     | `'none' \| 'request' \| 'response' \| 'both'` | Logs the SOAP XML sent to and/or received from RVO via `console.debug`. The ABA password is redacted. Defaults to `'none'`.          |
 
 ### Method Options: `opvragenBedrijfspercelen`
 
-| Option            | Type                 | Description                                                                                                                         |
-| ----------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `farmId`          | `string`             | Optional. KvK/BSN to query.                                                                                                         |
-| `periodBeginDate` | `string`             | Start date (YYYY-MM-DD).                                                                                                            |
-| `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                                                              |
-| `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
-| `enrichResponse`  | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
+| Option            | Type                 | Description                                                                                                                            |
+| ----------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `farmId`          | `string`             | Optional. Only for advisors/intermediaries with a machtiging: KvK of the farm to query on behalf of. Omit when querying your own farm. |
+| `periodBeginDate` | `string`             | Start date (YYYY-MM-DD).                                                                                                               |
+| `periodEndDate`   | `string`             | End date (YYYY-MM-DD).                                                                                                                 |
+| `outputFormat`    | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                       |
+| `enrichResponse`  | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.**    |
 
 ### Method Options: `opvragenRegelingspercelenGLB`
 
@@ -284,15 +302,41 @@ Same options as `opvragenRegelingspercelenMest`.
 
 ### Method Options: `opvragenRegelingspercelenMest`
 
-| Option                   | Type                 | Description                                                                                                                         |
-| ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `farmId`                 | `string`             | Optional. KvK/BSN to query.                                                                                                         |
-| `periodBeginDate`        | `string`             | Start date (YYYY-MM-DD).                                                                                                            |
-| `periodEndDate`          | `string`             | End date (YYYY-MM-DD).                                                                                                              |
-| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:mm:ss).                                                          |
-| `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                                                               |
-| `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                    |
-| `enrichResponse`         | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.** |
+| Option                   | Type                 | Description                                                                                                                            |
+| ------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `farmId`                 | `string`             | Optional. Only for advisors/intermediaries with a machtiging: KvK of the farm to query on behalf of. Omit when querying your own farm. |
+| `periodBeginDate`        | `string`             | Start date (YYYY-MM-DD).                                                                                                               |
+| `periodEndDate`          | `string`             | End date (YYYY-MM-DD).                                                                                                                 |
+| `mutationStartDate`      | `string`             | Optional. Only fetch fields mutated after this date (YYYY-MM-DD HH:mm:ss).                                                             |
+| `mandatedRepresentative` | `string`             | Optional. KVK of the mandated party (used with PKIO).                                                                                  |
+| `outputFormat`           | `'xml' \| 'geojson'` | Defaults to `'xml'`. Set to `'geojson'` for FeatureCollection output (always WGS84 / EPSG:4326).                                       |
+| `enrichResponse`         | `boolean`            | Optional. Adds `descriptiveValues` with boolean mappings and human-readable labels. **Only available for `geojson` output format.**    |
+
+## Troubleshooting
+
+### SOAP faults (`RvoSoapFaultError`)
+
+When RVO responds with a SOAP fault, the client throws an `RvoSoapFaultError`. It exposes `ediCode`, `ediDescription`, `faultCode`, `faultString`, `httpStatus` and `rawResponse`.
+
+```typescript
+import { RvoSoapFaultError } from "@nmi-agro/rvo-connector"
+
+try {
+  await client.opvragenBedrijfspercelen()
+} catch (error) {
+  if (error instanceof RvoSoapFaultError && error.ediCode === "EDI009") {
+    // Access denied, see below
+  }
+}
+```
+
+### `EDI009 – Toegang geweigerd. U bent niet gemachtigd om deze actie uit te voeren.`
+
+RVO denied access. Common causes:
+
+- **`farmId` was passed while querying your own farm.** Farmers should omit `farmId`. See [Farmer vs. advisor](#farmer-vs-advisor-when-to-pass-farmid).
+- **No (valid) machtiging.** The advisor has no machtiging at RVO for the given farm and service.
+- **Missing scope.** The service was not included in `services` when calling `getAuthorizationUrl` (TVS).
 
 ## Development & Testing
 

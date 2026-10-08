@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
-import { RvoClient } from "../src/index"
+import { RvoClient, RvoSoapFaultError } from "../src/index"
 import "dotenv/config"
 
 global.fetch = vi.fn()
@@ -342,6 +342,54 @@ describe("RvoClient (Acceptance Environment)", () => {
 
     it("should throw on an invalid logXml value", () => {
       expect(() => makeClient("bogus" as any)).toThrow("logXml must be one of")
+    })
+  })
+
+  describe("SOAP faults", () => {
+    const EDI009_FAULT = `<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns0:Fault xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"><faultcode>ns0:Server</faultcode><faultstring>Toegang geweigerd. U bent niet gemachtigd om deze actie uit te voeren.</faultstring><detail><ns1:EdiCropExceptionFault xmlns:ns1="http://www.minez.nl/ws/edicrop/1.0/EdiCropException"><code>EDI009</code><description>Toegang geweigerd. U bent niet gemachtigd om deze actie uit te voeren.</description></ns1:EdiCropExceptionFault></detail></ns0:Fault></S:Body></S:Envelope>`
+
+    const makeClient = () =>
+      new RvoClient({
+        authMode: "ABA",
+        environment: "acceptance",
+        clientId: "id",
+        clientName: "name",
+        aba: { username: "user", password: "pw" },
+      })
+
+    const mockFault = (status = 500) => {
+      const mockFetch = global.fetch as any
+      mockFetch.mockResolvedValue({ ok: status < 400, status, text: async () => EDI009_FAULT })
+    }
+
+    it("should throw an RvoSoapFaultError with a farmId hint when farmId was sent", async () => {
+      mockFault()
+      const error = await makeClient()
+        .opvragenBedrijfspercelen({ farmId: "12345678" })
+        .catch((e: unknown) => e)
+
+      expect(error).toBeInstanceOf(RvoSoapFaultError)
+      expect((error as RvoSoapFaultError).ediCode).toBe("EDI009")
+      expect((error as RvoSoapFaultError).httpStatus).toBe(500)
+      expect((error as Error).message).toContain("Farmers should omit `farmId`")
+    })
+
+    it("should not give the farmId hint when farmId was not sent", async () => {
+      mockFault()
+      const error = await makeClient()
+        .opvragenRegelingspercelenMest()
+        .catch((e: unknown) => e)
+
+      expect(error).toBeInstanceOf(RvoSoapFaultError)
+      expect((error as Error).message).toContain("RVO denied access (EDI009)")
+      expect((error as Error).message).not.toContain("farmId")
+    })
+
+    it("should detect a fault even when the HTTP status is OK", async () => {
+      mockFault(200)
+      await expect(
+        makeClient().opvragenRegelingspercelenGLB({ farmId: "12345678", outputFormat: "xml" }),
+      ).rejects.toBeInstanceOf(RvoSoapFaultError)
     })
   })
 

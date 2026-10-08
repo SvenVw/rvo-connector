@@ -41,6 +41,13 @@ describe("buildRegelingspercelenMestRequest", () => {
     )
   })
 
+  it("should omit ThirdPartyFarmID when farmId is undefined or empty", () => {
+    for (const farmId of [undefined, ""]) {
+      const xml = buildRegelingspercelenMestRequest({ issuerId: "I", senderId: "S", farmId })
+      expect(xml).not.toContain("ThirdPartyFarmID")
+    }
+  })
+
   it("should escape special characters in XML fields", () => {
     const xml = buildRegelingspercelenMestRequest({
       issuerId: "Test & Client",

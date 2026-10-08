@@ -84,7 +84,7 @@ try {
     console.log("Expires In (seconds):", tokenData.expires_in)
 
     const farmId = await ask(
-      "\nPlease enter the Farm ID (KvK-nummer) to query crop fields (optional, press Enter for test farm): ",
+      "\nFarm ID (KvK-nummer) of the farm you query ON BEHALF OF (advisors with a machtiging only, press Enter to query your own farm): ",
     )
     const formatRaw = await ask("\nChoose output format (xml/geojson) [default: geojson]: ")
     const formatInput = formatRaw.trim().toLowerCase() || "geojson"

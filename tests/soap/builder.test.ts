@@ -45,6 +45,22 @@ describe("buildBedrijfspercelenRequest", () => {
     expect(xml).toContain("<Password>pass&amp;word</Password>")
   })
 
+  it("should include ThirdPartyFarmID only when farmId is provided", () => {
+    const withFarmId = buildBedrijfspercelenRequest({
+      issuerId: "I",
+      senderId: "S",
+      farmId: "12345678",
+    })
+    expect(withFarmId).toContain(
+      '<opv:ThirdPartyFarmID schemeAgencyName="KVK">12345678</opv:ThirdPartyFarmID>',
+    )
+
+    for (const farmId of [undefined, ""]) {
+      const xml = buildBedrijfspercelenRequest({ issuerId: "I", senderId: "S", farmId })
+      expect(xml).not.toContain("ThirdPartyFarmID")
+    }
+  })
+
   it("should throw error if issuerId or senderId is missing", () => {
     expect(() => buildBedrijfspercelenRequest({ senderId: "S" })).toThrow("Client Name is required")
     expect(() => buildBedrijfspercelenRequest({ issuerId: "I" })).toThrow("Client Name is required")

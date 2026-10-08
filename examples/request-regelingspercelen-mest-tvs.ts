@@ -81,7 +81,9 @@ try {
     const tokenData = await client.exchangeAuthCode(authorizationCode)
     console.log("Expires In (seconds):", tokenData.expires_in)
 
-    const farmId = await ask("\nPlease enter the Farm ID (KvK-nummer) to query (optional): ")
+    const farmId = await ask(
+      "\nFarm ID (KvK-nummer) of the farm you query ON BEHALF OF (advisors with a machtiging only, press Enter to query your own farm): ",
+    )
 
     const beginDateInput = await ask(
       "\nPlease enter Period Begin Date (YYYY-MM-DD) [default: current year-01-01]: ",

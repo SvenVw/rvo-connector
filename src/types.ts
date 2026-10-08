@@ -107,8 +107,15 @@ export interface RvoClientConfig {
  */
 export interface BedrijfspercelenOptions {
   /**
-   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
-   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   * KvK number of the farm to query **on behalf of** (sent as `ThirdPartyFarmID`).
+   *
+   * Only provide this when the authenticated account (eHerkenning / ABA) requests data
+   * for a *different* company than the one it belongs to, i.e. an advisor or
+   * intermediary that holds a valid machtiging at RVO for this farm.
+   *
+   * Leave this `undefined` when a farmer requests data of their own farm. RVO derives
+   * the farm from the authenticated identity. Sending your own KvK here results in
+   * an `EDI009 – Toegang geweigerd` fault (see {@link RvoSoapFaultError}).
    */
   farmId?: string
   /**
@@ -251,8 +258,15 @@ export type BedrijfspercelenResponse = BedrijfspercelenXmlResponse | Bedrijfsper
  */
 export interface RegelingspercelenMestOptions {
   /**
-   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
-   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   * KvK number of the farm to query **on behalf of** (sent as `ThirdPartyFarmID`).
+   *
+   * Only provide this when the authenticated account (eHerkenning / ABA) requests data
+   * for a *different* company than the one it belongs to, i.e. an advisor or
+   * intermediary that holds a valid machtiging at RVO for this farm.
+   *
+   * Leave this `undefined` when a farmer requests data of their own farm. RVO derives
+   * the farm from the authenticated identity. Sending your own KvK here results in
+   * an `EDI009 – Toegang geweigerd` fault (see {@link RvoSoapFaultError}).
    */
   farmId?: string
   /**
@@ -383,8 +397,15 @@ export type RegelingspercelenMestResponse =
  */
 export interface RegelingspercelenGLBOptions {
   /**
-   * Farm ID to query (e.g., KvK, Vestigingsnummer, or BSN).
-   * If provided, this is sent as the `ThirdPartyFarmID` in the request.
+   * KvK number of the farm to query **on behalf of** (sent as `ThirdPartyFarmID`).
+   *
+   * Only provide this when the authenticated account (eHerkenning / ABA) requests data
+   * for a *different* company than the one it belongs to, i.e. an advisor or
+   * intermediary that holds a valid machtiging at RVO for this farm.
+   *
+   * Leave this `undefined` when a farmer requests data of their own farm. RVO derives
+   * the farm from the authenticated identity. Sending your own KvK here results in
+   * an `EDI009 – Toegang geweigerd` fault (see {@link RvoSoapFaultError}).
    */
   farmId?: string
   /**
